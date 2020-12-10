@@ -1,11 +1,11 @@
 <p align="center">
-<a target="_blank" rel="noopener noreferrer"><img src="https://github.com/maxisacoder/testchain/blob/master/doc/logo.png" alt="" style="max-width:100%;"></a>
+<a target="_blank" rel="noopener noreferrer"><img src="https://github.com/ledgeryi/LedgerYi/blob/master/doc/logo.png" alt="" style="max-width:100%;"></a>
 </p>
 
 
 <p align="center">
 <a href="https://www.codefactor.io/repository/github/maxisacoder/testchain"><img src="https://www.codefactor.io/repository/github/maxisacoder/testchain/badge" alt="CodeFactor" /></a>
-<a><img src="https://tokei.rs/b1/github/maxisacoder/testchain" alt="tokei" /></a>
+<a><img src="https://tokei.rs/b1/github/ledgeryi/LedgerYi" alt="tokei" /></a>
 </p>
 
 # LedgerYi
@@ -101,7 +101,7 @@ java -jar node-1.0-SNAPSHOT.jar -c config.conf
 
 **1.克隆最新代码**
 ```text
-git clone https://github.com/jingchan/jchain.git
+git clone https://github.com/ledgeryi/LedgerYi.git
 ```
 
 **2.切换到master分支**
@@ -329,7 +329,7 @@ rpc GetNodeInfo (EmptyMessage) returns (NodeInfo) {}
 ```
 # License
 
-LedgerYi的开源协议为LGPL-V3.0，详情参见[LICENSE](https://git.hubblerating.com/xbaas_team/jingchain-framework/blob/dev-1.0.4/LICENSE)。
+LedgerYi的开源协议为LGPL-V3.0，详情参见[LICENSE](https://github.com/ledgeryi/LedgerYi/blob/master/LICENSE)。
 
 
 
