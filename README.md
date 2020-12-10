@@ -4,8 +4,8 @@
 
 
 <p align="center">
-<a href="https://www.codefactor.io/repository/github/maxisacoder/testchain"><img src="https://www.codefactor.io/repository/github/maxisacoder/testchain/badge" alt="CodeFactor" /></a>
-<a><img src="https://tokei.rs/b1/github/ledgeryi/LedgerYi" alt="tokei" /></a>
+<a> <img src="https://www.codefactor.io/repository/github/ledgeryi/LedgerYi/badge" alt="CodeFactor" /></a>
+<a> <img src="https://tokei.rs/b1/github/ledgeryi/LedgerYi" alt="tokei" /></a>
 </p>
 
 # LedgerYi
