@@ -1,0 +1,219 @@
+syntax = "proto3";
+package protocol;
+
+import "core/ledger_yi.proto";
+import "core/contract/inner_contract.proto";
+
+import "google/api/annotations.proto";
+
+option java_package = "cn.ledgeryi.api";
+option java_outer_classname = "GrpcAPI";
+
+service Wallet {
+
+  rpc GetAccount (Account) returns (Account) {
+    option (google.api.http) = {
+      post: "/v1/getaccount"
+      body: "*"
+      additional_bindings {
+        get: "/v1/getaccount"
+      }
+    };
+  };
+
+  rpc CreateTransaction (SystemContract) returns (TransactionExtention) {
+  };
+
+  rpc BroadcastTransaction (Transaction) returns (Return) {
+    option (google.api.http) = {
+      post: "/v1/broadcasttransaction"
+      body: "*"
+      additional_bindings {
+        get: "/v1/broadcasttransaction"
+      }
+    };
+  };
+
+  rpc GetNodes (EmptyMessage) returns (NodeList) {
+    option (google.api.http) = {
+      post: "/v1/listnodes"
+      body: "*"
+      additional_bindings {
+        get: "/v1/listnodes"
+      }
+    };
+  }
+
+  rpc GetNowBlock (EmptyMessage) returns (BlockExtention) {
+  }
+
+  rpc GetBlockByNum (NumberMessage) returns (BlockExtention) {
+  }
+
+  rpc GetTransactionCountByBlockNum (NumberMessage) returns (NumberMessage) {
+  }
+
+  rpc GetBlockById (BytesMessage) returns (Block) {
+    option (google.api.http) = {
+      post: "/v1/getblockbyid"
+      body: "*"
+      additional_bindings {
+        get: "/v1/getblockbyid"
+      }
+    };
+  }
+
+  rpc GetBlockByLimitNext (BlockLimit) returns (BlockListExtention) {
+  }
+
+  rpc GetTransactionById (BytesMessage) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/v1/gettransactionbyid"
+      body: "*"
+      additional_bindings {
+        get: "/v1/gettransactionbyid"
+      }
+    };
+  }
+
+  rpc GetMasters (EmptyMessage) returns (MastersList) {
+    option (google.api.http) = {
+      post: "/v1/getmasters"
+      body: "*"
+      additional_bindings {
+        get: "/v1/getmasters"
+      }
+    };
+  };
+
+  rpc GetNodeInfo (EmptyMessage) returns (NodeInfo) {
+  };
+};
+
+// the api of jingChain's db
+service Database {
+  // for tapos
+  rpc getBlockReference (EmptyMessage) returns (BlockReference) {
+
+  }
+  rpc GetDynamicProperties (EmptyMessage) returns (DynamicProperties) {
+
+  }
+  rpc GetNowBlock (EmptyMessage) returns (Block) {
+
+  }
+  rpc GetBlockByNum (NumberMessage) returns (Block) {
+
+  }
+};
+
+message Return {
+  enum response_code {
+    SUCCESS = 0;
+    SIGERROR = 1; // error in signature
+    CONTRACT_VALIDATE_ERROR = 2;
+    CONTRACT_EXE_ERROR = 3;
+    BANDWITH_ERROR = 4;
+    DUP_TRANSACTION_ERROR = 5;
+    TAPOS_ERROR = 6;
+    TOO_BIG_TRANSACTION_ERROR = 7;
+    TRANSACTION_EXPIRATION_ERROR = 8;
+    SERVER_BUSY = 9;
+    NO_CONNECTION = 10;
+    NOT_ENOUGH_EFFECTIVE_CONNECTION = 11;
+    OTHER_ERROR = 20;
+  }
+
+  bool result = 1;
+  response_code code = 2;
+  bytes message = 3;
+}
+
+message BlockReference {
+  int64 block_num = 1;
+  bytes block_hash = 2;
+}
+
+service Network {
+
+};
+
+message MastersList {
+  repeated Master masters = 1;
+}
+
+message BlockList {
+  repeated Block block = 1;
+}
+message TransactionList {
+  repeated Transaction transaction = 1;
+}
+
+// Gossip node list
+message NodeList {
+  repeated Node nodes = 1;
+}
+
+// Gossip node
+message Node {
+  Address address = 1;
+}
+
+// Gossip node address
+message Address {
+  bytes host = 1;
+  int32 port = 2;
+}
+
+message EmptyMessage {
+}
+message NumberMessage {
+  int64 num = 1;
+}
+message BytesMessage {
+  bytes value = 1;
+}
+message TimeMessage {
+  int64 beginInMilliseconds = 1;
+  int64 endInMilliseconds = 2;
+}
+message BlockLimit {
+  int64 startNum = 1;
+  int64 endNum = 2;
+}
+message TransactionLimit {
+  bytes transactionId = 1;
+  int64 limitNum = 2;
+}
+
+message TransactionExtention {
+  Transaction transaction = 1;
+  bytes txid = 2; //transaction id =  sha256(transaction.rowdata)
+  repeated bytes constant_result = 3;
+  Return result = 4;
+}
+
+message BlockExtention {
+  repeated TransactionExtention transactions = 1;
+  BlockHeader block_header = 2;
+  bytes blockid = 3;
+}
+
+message BlockListExtention {
+  repeated BlockExtention block = 1;
+}
+
+message TransactionListExtention {
+  repeated TransactionExtention transaction = 1;
+}
+
+message Note {
+  int64 value = 1;
+  string payment_address = 2;
+  bytes rcm = 3; // random 32
+  bytes memo = 4;
+}
+
+message TransactionInfoList {
+  repeated TransactionInfo transactionInfo = 1;
+}

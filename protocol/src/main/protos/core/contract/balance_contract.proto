@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package protocol;
+
+option java_package = "cn.ledgeryi.protos.contract";
+
+message TransferContract {
+  bytes owner_address = 1;
+  bytes to_address = 2;
+  int64 amount = 3;
+}

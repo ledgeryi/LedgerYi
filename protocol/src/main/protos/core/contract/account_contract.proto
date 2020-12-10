@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package protocol;
+
+option java_package = "cn.ledgeryi.protos.contract";
+
+import "core/ledger_yi.proto";
+
+
+message AccountCreateContract {
+  bytes owner_address = 1;
+  bytes account_address = 2;
+  AccountType type = 3;
+}
+
+// Update account name. Account name is not unique now.
+message AccountUpdateContract {
+  bytes account_name = 1;
+  bytes owner_address = 2;
+}

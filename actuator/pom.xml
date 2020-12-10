@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>LedgerYi</artifactId>
+        <groupId>cn.ledgeryi</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>actuator</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>cn.ledgeryi</groupId>
+            <artifactId>chainbase</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.ledgeryi</groupId>
+            <artifactId>protocol</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.ledgeryi</groupId>
+            <artifactId>crypto</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.madgag.spongycastle</groupId>
+            <artifactId>core</artifactId>
+            <version>1.58.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.11</version>
+        </dependency>
+    </dependencies>
+</project>

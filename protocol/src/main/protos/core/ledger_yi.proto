@@ -1,0 +1,436 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "core/discover.proto";
+
+package protocol;
+
+option java_package = "cn.ledgeryi.protos";
+option java_outer_classname = "Protocol";
+
+enum AccountType {
+  Normal = 0;
+  AssetIssue = 1;
+  Contract = 2;
+}
+
+// AccountId, (name, address) use name, (null, address) use address, (name, null) use name,
+message AccountId {
+  bytes name = 1;
+  bytes address = 2;
+}
+
+// vote message
+message Vote {
+  // the super rep address
+  bytes vote_address = 1;
+  // the vote num to this super rep.
+  int64 vote_count = 2;
+}
+
+message ChainParameters {
+  repeated ChainParameter chainParameter = 1;
+  message ChainParameter {
+    string key = 1;
+    int64 value = 2;
+  }
+}
+
+message Account {
+  // account nick name
+  bytes account_name = 1;
+  AccountType type = 2;
+  // the create address
+  bytes address = 3;
+  // the tx balance
+  int64 balance = 4;
+  // the votes
+  repeated Vote votes = 5;
+  // this account create time
+  int64 create_time = 0x09;
+  // this last operation time, including transfer, voting and so on.
+  int64 latest_opration_time = 10;
+  // masters block producing allowance
+  int64 allowance = 0x0B;
+  // last withdraw time
+  int64 latest_withdraw_time = 0x0C;
+  // not used so far
+  bytes code = 13;
+  bool is_master = 14;
+  bool is_committee = 15;
+  // asset_issued_name
+  bytes asset_issued_name = 17;
+  bytes asset_issued_ID = 57;
+  map<string, int64> latest_asset_operation_time = 18;
+  map<string, int64> latest_asset_operation_timeV2 = 58;
+  int64 latest_consume_time = 21;
+
+  // the identity of this account, case insensitive
+  bytes account_id = 23;
+
+  //AccountResource account_resource = 26;
+  bytes codeHash = 30;
+  Permission owner_permission = 31;
+  Permission master_permission = 32;
+  repeated Permission active_permission = 33;
+}
+
+
+message Key {
+  bytes address = 1;
+  int64 weight = 2;
+}
+
+// Master
+message Master {
+  bytes address = 1;
+  int64 voteCount = 2;
+  bytes pubKey = 3;
+  string url = 4;
+  int64 totalProduced = 5;
+  int64 totalMissed = 6;
+  int64 latestBlockNum = 7;
+  int64 latestSlotNum = 8;
+  bool isJobs = 9;
+}
+
+// Vote Change
+message Votes {
+  bytes address = 1;
+  repeated Vote old_votes = 2;
+  repeated Vote new_votes = 3;
+}
+
+message ResourceReceipt {
+  Transaction.Result.contractResult result = 1;
+}
+
+message Transaction {
+  message Contract {
+    enum ContractType {
+      TransferContract = 0;
+    }
+    ContractType type = 1;
+    string version = 2;
+    google.protobuf.Any parameter = 3;
+    bytes provider = 4;
+    bytes ContractName = 5;
+    int32 Permission_id = 6;
+  }
+
+  message Result {
+    enum code {
+      SUCESS = 0;
+      FAILED = 1;
+    }
+    enum contractResult {
+      DEFAULT = 0;
+      SUCCESS = 1;
+      REVERT = 2;
+      UNKNOWN = 13;
+    }
+    code ret = 2;
+    contractResult contractRet = 3;
+  }
+
+  message raw {
+    bytes ref_block_bytes = 1;
+    int64 ref_block_num = 3;
+    bytes ref_block_hash = 4;
+    int64 expiration = 8;
+    // data not used
+    bytes data = 10;
+    //only support size = 1
+    Contract contract = 11;
+    // scripts not used
+    bytes scripts = 12;
+    int64 timestamp = 14;
+  }
+
+  raw raw_data = 1;
+  // only support size = 1
+  bytes signature = 2;
+  repeated Result ret = 3;
+}
+
+message TransactionInfo {
+  enum code {
+    SUCESS = 0;
+    FAILED = 1;
+  }
+  message Log {
+    bytes address = 1;
+    repeated bytes topics = 2;
+    bytes data = 3;
+  }
+  bytes id = 1;
+  int64 blockNumber = 2;
+  int64 blockTimeStamp = 3;
+  repeated bytes contractResult = 4;
+  bytes contract_address = 5;
+  ResourceReceipt receipt = 6;
+  repeated Log log = 7;
+  code result = 8;
+  bytes resMessage = 9;
+
+  repeated InternalTransaction internal_transactions = 17;
+}
+
+message TransactionRet {
+  int64 blockNumber = 1;
+  int64 blockTimeStamp = 2;
+  repeated TransactionInfo transaction_info = 3;
+}
+
+message Transactions {
+  repeated Transaction transactions = 1;
+}
+
+message TransactionSign {
+  Transaction transaction = 1;
+  bytes privateKey = 2;
+}
+
+message BlockHeader {
+  message raw {
+    int64 timestamp = 1;
+    bytes txTrieRoot = 2;
+    bytes parentHash = 3;
+    int64 number = 7;
+    int64 master_id = 8;
+    bytes master_address = 9;
+    int32 version = 10;
+    bytes accountStateRoot = 11;
+  }
+  raw raw_data = 1;
+  bytes master_signature = 2;
+}
+
+message Permission {
+  enum PermissionType {
+    Owner = 0;
+    Master = 1;
+    Active = 2;
+  }
+  PermissionType type = 1;
+  int32 id = 2; //Owner id=0, Master id=1, Active id start by 2
+  string permission_name = 3;
+  int64 threshold = 4;
+  int32 parent_id = 5;
+  bytes operations = 6; //1 bit 1 contract
+  repeated Key keys = 7;
+}
+
+// block
+message Block {
+  repeated Transaction transactions = 1;
+  BlockHeader block_header = 2;
+}
+
+message ChainInventory {
+  message BlockId {
+    bytes hash = 1;
+    int64 number = 2;
+  }
+  repeated BlockId ids = 1;
+  int64 remain_num = 2;
+}
+
+// Inventory
+message BlockInventory {
+  enum Type {
+    SYNC = 0;
+    ADVTISE = 1;
+    FETCH = 2;
+  }
+
+  message BlockId {
+    bytes hash = 1;
+    int64 number = 2;
+  }
+  repeated BlockId ids = 1;
+  Type type = 2;
+}
+
+message Inventory {
+  enum InventoryType {
+    TX = 0;
+    BLOCK = 1;
+  }
+  InventoryType type = 1;
+  repeated bytes ids = 2;
+}
+
+message Items {
+  enum ItemType {
+    ERR = 0;
+    TX = 1;
+    BLOCK = 2;
+    BLOCKHEADER = 3;
+  }
+
+  ItemType type = 1;
+  repeated Block blocks = 2;
+  repeated BlockHeader block_headers = 3;
+  repeated Transaction transactions = 4;
+}
+
+// DynamicProperties
+message DynamicProperties {
+  int64 last_solidity_block_num = 1;
+}
+
+enum ReasonCode {
+  REQUESTED = 0x00;
+  BAD_PROTOCOL = 0x02;
+  TOO_MANY_PEERS = 0x04;
+  DUPLICATE_PEER = 0x05;
+  INCOMPATIBLE_PROTOCOL = 0x06;
+  NULL_IDENTITY = 0x07;
+  PEER_QUITING = 0x08;
+  UNEXPECTED_IDENTITY = 0x09;
+  LOCAL_IDENTITY = 0x0A;
+  PING_TIMEOUT = 0x0B;
+  USER_REASON = 0x10;
+  RESET = 0x11;
+  SYNC_FAIL = 0x12;
+  FETCH_FAIL = 0x13;
+  BAD_TX = 0x14;
+  BAD_BLOCK = 0x15;
+  FORKED = 0x16;
+  UNLINKABLE = 0x17;
+  INCOMPATIBLE_VERSION = 0x18;
+  INCOMPATIBLE_CHAIN = 0x19;
+  TIME_OUT = 0x20;
+  CONNECT_FAIL = 0x21;
+  TOO_MANY_PEERS_WITH_SAME_IP = 0x22;
+  UNKNOWN = 0xFF;
+}
+
+message DisconnectMessage {
+  ReasonCode reason = 1;
+}
+
+message HelloMessage {
+  message BlockId {
+    bytes hash = 1;
+    int64 number = 2;
+  }
+
+  Endpoint from = 1;
+  int32 version = 2;
+  int64 timestamp = 3;
+  BlockId genesisBlockId = 4;
+  BlockId solidBlockId = 5;
+  BlockId headBlockId = 6;
+}
+
+message InternalTransaction {
+  // internalTransaction identity, the root InternalTransaction hash
+  // should equals to root transaction id.
+  bytes hash = 1;
+  // the one send tx via function
+  bytes caller_address = 2;
+  // the one recieve tx via function
+  bytes transferTo_address = 3;
+  message CallValueInfo {
+    int64 callValue = 1;
+  }
+  repeated CallValueInfo callValueInfo = 4;
+  bytes note = 5;
+  bool rejected = 6;
+}
+
+message NodeInfo {
+  int64 beginSyncNum = 1;
+  string block = 2;
+  string solidityBlock = 3;
+  //connect information
+  int32 currentConnectCount = 4;
+  int32 activeConnectCount = 5;
+  int32 passiveConnectCount = 6;
+  int64 totalFlow = 7;
+  repeated PeerInfo peerInfoList = 8;
+  ConfigNodeInfo configNodeInfo = 9;
+  MachineInfo machineInfo = 10;
+  map<string, string> cheatMasterInfoMap = 11;
+
+  message PeerInfo {
+    string lastSyncBlock = 1;
+    int64 remainNum = 2;
+    int64 lastBlockUpdateTime = 3;
+    bool syncFlag = 4;
+    int64 headBlockTimeWeBothHave = 5;
+    bool needSyncFromPeer = 6;
+    bool needSyncFromUs = 7;
+    string host = 8;
+    int32 port = 9;
+    string nodeId = 10;
+    int64 connectTime = 11;
+    double avgLatency = 12;
+    int32 syncToFetchSize = 13;
+    int64 syncToFetchSizePeekNum = 14;
+    int32 syncBlockRequestedSize = 15;
+    int64 unFetchSynNum = 16;
+    int32 blockInPorcSize = 17;
+    string headBlockWeBothHave = 18;
+    bool isActive = 19;
+    int32 score = 20;
+    int32 nodeCount = 21;
+    int64 inFlow = 22;
+    int32 disconnectTimes = 23;
+    string localDisconnectReason = 24;
+    string remoteDisconnectReason = 25;
+  }
+
+  message ConfigNodeInfo {
+    string codeVersion = 1;
+    string p2pVersion = 2;
+    int32 listenPort = 3;
+    bool discoverEnable = 4;
+    int32 activeNodeSize = 5;
+    int32 passiveNodeSize = 6;
+    int32 sendNodeSize = 7;
+    int32 maxConnectCount = 8;
+    int32 sameIpMaxConnectCount = 9;
+    int32 backupListenPort = 10;
+    int32 backupMemberSize = 11;
+    int32 backupPriority = 12;
+    int32 dbVersion = 13;
+    int32 minParticipationRate = 14;
+  }
+
+  message MachineInfo {
+    int32 threadCount = 1;
+    int32 deadLockThreadCount = 2;
+    int32 cpuCount = 3;
+    int64 totalMemory = 4;
+    int64 freeMemory = 5;
+    double cpuRate = 6;
+    string javaVersion = 7;
+    string osName = 8;
+    int64 jvmTotalMemoery = 9;
+    int64 jvmFreeMemory = 10;
+    double processCpuRate = 11;
+    repeated MemoryDescInfo memoryDescInfoList = 12;
+    repeated DeadLockThreadInfo deadLockThreadInfoList = 13;
+
+    message MemoryDescInfo {
+      string name = 1;
+      int64 initSize = 2;
+      int64 useSize = 3;
+      int64 maxSize = 4;
+      double useRate = 5;
+    }
+
+    message DeadLockThreadInfo {
+      string name = 1;
+      string lockName = 2;
+      string lockOwner = 3;
+      string state = 4;
+      int64 blockTime = 5;
+      int64 waitTime = 6;
+      string stackTrace = 7;
+    }
+  }
+}
