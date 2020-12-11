@@ -226,7 +226,7 @@ public class Args {
 
   @Getter
   @Setter
-  private int fullNodeHttpPort;
+  private int ledgerYiNodeHttpPort;
 
   @Getter
   @Setter
@@ -379,7 +379,7 @@ public class Args {
 
   @Getter
   @Setter
-  public boolean fullNodeHttpEnable = true;
+  public boolean ledgerYiNodeHttpEnable = true;
 
   @Getter
   @Setter
@@ -450,7 +450,7 @@ public class Args {
 
 
     if (config.hasPath(Constant.NODE_HTTP_FULLNODE_ENABLE)) {
-      INSTANCE.fullNodeHttpEnable = config.getBoolean(Constant.NODE_HTTP_FULLNODE_ENABLE);
+      INSTANCE.ledgerYiNodeHttpEnable = config.getBoolean(Constant.NODE_HTTP_FULLNODE_ENABLE);
     }
 
     if (config.hasPath(Constant.VM_LONG_RUNNING_TIME)) {
@@ -565,7 +565,7 @@ public class Args {
     INSTANCE.rpcPort =
         config.hasPath(Constant.NODE_RPC_PORT) ? config.getInt(Constant.NODE_RPC_PORT) : 50051;
 
-    INSTANCE.fullNodeHttpPort =
+    INSTANCE.ledgerYiNodeHttpPort =
         config.hasPath(Constant.NODE_HTTP_FULLNODE_PORT) ? config.getInt(Constant.NODE_HTTP_FULLNODE_PORT) : 8090;
 
     INSTANCE.rpcThreadNum =

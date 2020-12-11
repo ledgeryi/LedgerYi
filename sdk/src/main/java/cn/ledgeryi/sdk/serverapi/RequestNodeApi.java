@@ -18,11 +18,11 @@ public class RequestNodeApi {
     private static GrpcClient init() {
         Config config = Configuration.getConfig();
 
-        String fullNode = "";
-        if (config.hasPath("fullnode.ip.list")) {
-            fullNode = config.getStringList("fullnode.ip.list").get(0);
+        String ledgerYiNode = "";
+        if (config.hasPath("ledgernode.ip.list")) {
+            ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
         }
-        return new GrpcClient(fullNode);
+        return new GrpcClient(ledgerYiNode);
     }
 
     public static Sha256Hash createTransfer(byte[] ownerAddress, byte[] toAddress, long amount,  byte[] privateKeys){
@@ -71,6 +71,11 @@ public class RequestNodeApi {
         builder.setType(Protocol.AccountType.Normal);
         return builder.build();
     }
+
+    public static GrpcAPI.BlockExtention getNowBlock(){
+        return rpcCli.getNowBlock();
+    }
+
 
     public static GrpcAPI.BlockExtention getBlock(long blockNum) {
         return rpcCli.getBlockByNum(blockNum);

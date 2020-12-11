@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j(topic = "API")
-public class FullNodeHttpApiService implements Service {
+public class LedgerYiNodeHttpApiService implements Service {
 
-  private int port = Args.getInstance().getFullNodeHttpPort();
+  private int port = Args.getInstance().getLedgerYiNodeHttpPort();
 
   private Server server;
 
@@ -76,7 +76,7 @@ public class FullNodeHttpApiService implements Service {
 
       //transaction
       context.addServlet(new ServletHolder(transferServlet), "/createtransfertransaction");
-      context.addServlet(new ServletHolder(createTransactionServlet),"/createTransaction");
+      context.addServlet(new ServletHolder(createTransactionServlet),"/createtransaction");
       context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(getTransactionByIdServlet), "/gettransactionbyid");
       context.addServlet(new ServletHolder(getTransactionCountByBlockNumServlet), "/gettransactioncountbyblocknum");

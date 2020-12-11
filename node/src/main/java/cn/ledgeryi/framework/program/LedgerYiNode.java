@@ -14,10 +14,10 @@ import cn.ledgeryi.framework.common.application.LedgerYiApplicationContext;
 import cn.ledgeryi.framework.core.config.DefaultConfig;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.services.RpcApiService;
-import cn.ledgeryi.framework.core.services.http.FullNodeHttpApiService;
+import cn.ledgeryi.framework.core.services.http.LedgerYiNodeHttpApiService;
 
 @Slf4j(topic = "app")
-public class FullNode {
+public class LedgerYiNode {
 
   public static void load(String path) {
     try {
@@ -36,7 +36,7 @@ public class FullNode {
   }
 
   /**
-   * Start the FullNode.
+   * Start the LedgerYiNode.
    */
   public static void main(String[] args) {
     log.info("Full node running.");
@@ -64,8 +64,8 @@ public class FullNode {
     appT.addService(rpcApiService);
 
     // http api server
-    FullNodeHttpApiService httpApiService = context.getBean(FullNodeHttpApiService.class);
-    if (Args.getInstance().fullNodeHttpEnable) {
+    if (Args.getInstance().ledgerYiNodeHttpEnable) {
+      LedgerYiNodeHttpApiService httpApiService = context.getBean(LedgerYiNodeHttpApiService.class);
       appT.addService(httpApiService);
     }
 

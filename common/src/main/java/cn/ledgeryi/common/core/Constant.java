@@ -37,8 +37,8 @@ public class Constant {
   public static final String NODE_P2P_PING_INTERVAL = "node.p2p.pingInterval";
   public static final String NODE_P2P_VERSION = "node.p2p.version";
   public static final String NODE_RPC_PORT = "node.rpc.port";
-  public static final String NODE_HTTP_FULLNODE_PORT = "node.http.fullNodePort";
-  public static final String NODE_HTTP_FULLNODE_ENABLE = "node.http.fullNodeEnable";
+  public static final String NODE_HTTP_FULLNODE_PORT = "node.http.ledgerYiNodePort";
+  public static final String NODE_HTTP_FULLNODE_ENABLE = "node.http.ledgerYiNodeEnable";
   public static final String NODE_RPC_THREAD = "node.rpc.thread";
   public static final String NODE_RPC_MAX_CONCURRENT_CALLS_PER_CONNECTION = "node.rpc.maxConcurrentCallsPerConnection";
   public static final String NODE_RPC_FLOW_CONTROL_WINDOW = "node.rpc.flowControlWindow";

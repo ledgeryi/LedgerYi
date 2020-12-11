@@ -17,9 +17,9 @@ public class GrpcClient {
     private ManagedChannel channelFull = null;
     private WalletGrpc.WalletBlockingStub blockingStubFull = null;
 
-    public GrpcClient(String fullNode) {
-        if (!StringUtils.isEmpty(fullNode)) {
-            channelFull = ManagedChannelBuilder.forTarget(fullNode).usePlaintext(true).build();
+    public GrpcClient(String ledgerYiNode) {
+        if (!StringUtils.isEmpty(ledgerYiNode)) {
+            channelFull = ManagedChannelBuilder.forTarget(ledgerYiNode).usePlaintext(true).build();
             blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
         }
     }
@@ -56,6 +56,10 @@ public class GrpcClient {
             System.out.println("Message = " + response.getMessage().toStringUtf8());
         }
         return response.getResult();
+    }
+
+    public BlockExtention getNowBlock() {
+        return blockingStubFull.getNowBlock(EmptyMessage.newBuilder().build());
     }
 
 

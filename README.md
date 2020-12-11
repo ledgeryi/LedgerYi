@@ -90,7 +90,7 @@ java -jar node-1.0-SNAPSHOT.jar --master -c config.conf
 java -jar node-1.0-SNAPSHOT.jar -c config.conf
 ```
 
-# 使用IDEA运行FullNode节点
+# 使用IDEA运行MasterNode节点
 
 首先克隆代码到本地，然后切换到master分支。
 
@@ -108,7 +108,7 @@ git clone https://github.com/ledgeryi/LedgerYi.git
 
 **2.切换到master分支**
 ```text
-cd jchain
+cd LedgerYi
 git checkout -t origin/master
 ```
 
@@ -117,9 +117,9 @@ git checkout -t origin/master
 mvn clean compile -DskipTests
 ```
 
-**4.启动FullNode节点**
+**4.启动MasterNode节点**
 
-编译成功后，通过`cn.ledgeryi.framework.program.FullNode.java`路径找到主函数文件，启动一个全节点。
+编译成功后，通过`cn.ledgeryi.framework.program.LedgerYiNode.java`路径找到主函数文件，启动一个全节点。
 
 如果需要启动一个共识节点，可手动修改`Args.java`类的字段`private boolean master = true;`,master默认为false。
 
@@ -128,19 +128,18 @@ mvn clean compile -DskipTests
 # API接口说明
 
 ### HTTP API接口
-**1.FullNode**
 
-FullNode默认的http端口是8090，启动FullNode的时候会同时启动http服务。
+启用HTTP API接口功能，需要在配置文件config.conf中设置`node.http.ledgerYiNodeEnable = true`，默认的http端口是8090。
 http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 
 **节点**
 
-**(1)gettnodes**
+**(1)getnodes**
 
 |类别|说明|
 |:---|:---|
 |作用|查询P2P对等节点|
-|示例|curl -X POST  http://127.0.0.1:8090/v1/listnodes|
+|示例|curl -X POST  http://127.0.0.1:8090/v1/getnodes|
 |参数说明|无|
 |返回值|节点列表|
 
@@ -183,7 +182,7 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |作用|查询最新block|
 |示例 |curl -X POST  http://127.0.0.1:8090/v1/getnowblock|
 |参数说明|无|
-|返回值|FullNode上的最新block|
+|返回值|该节点账本的最新block|
 
 **(2)getblockbynum**
 
@@ -198,10 +197,10 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 
 |类别|说明|
 |:---|:---|
-|作用|按照范围查询块|
+|作用|按照范围查询block|
 |示例|curl -X POST http://127.0.0.1:8090/v1/getblockbylimitnext -d '{"startNum": 1, "endNum": 2}'|
 |参数说明|startNum：起始块高度，包含此块；endNum：截止块高度，不包含此此块|
-|返回值|指定范围的区块列表|
+|返回值|指定范围的block列表|
 
 
 **交易**
@@ -306,7 +305,7 @@ rpc GetAccount (Account) returns (Account) {}
 
 **(2)getMasters**
 
-作用：查询超级节点列表
+作用：查询MasterNode列表
 
 ```text
 rpc rpc GetMasters (EmptyMessage) returns (MastersList) {}

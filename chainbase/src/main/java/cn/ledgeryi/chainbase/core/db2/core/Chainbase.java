@@ -119,7 +119,7 @@ public class Chainbase implements IRevokingDB {
     Set<byte[]> result = new HashSet<>();
     Snapshot snapshot = head;
     long tmp = limit;
-    //fullNode
+    //ledgerYiNode
     for (; tmp > 0 && snapshot.getPrevious() != null; snapshot = snapshot.getPrevious()) {
       if (!((SnapshotImpl) snapshot).db.isEmpty()) {
         --tmp;
