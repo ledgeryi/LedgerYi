@@ -28,5 +28,4 @@ build/
 out/
 site/
 **/src/*/generated
-sdk/src/test/
 protocol/src/main/java/
