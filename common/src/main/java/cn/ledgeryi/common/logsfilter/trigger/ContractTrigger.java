@@ -3,7 +3,6 @@ package cn.ledgeryi.common.logsfilter.trigger;
 import cn.ledgeryi.common.logsfilter.capsule.RawData;
 import lombok.Getter;
 import lombok.Setter;
-import cn.ledgeryi.common.runtime.vm.LogInfo;
 
 public class ContractTrigger extends Trigger {
 
@@ -66,10 +65,6 @@ public class ContractTrigger extends Trigger {
   @Getter
   @Setter
   private long latestSolidifiedBlockNumber;
-
-  @Getter
-  @Setter
-  private LogInfo logInfo;
 
   @Getter
   @Setter
