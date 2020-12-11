@@ -67,9 +67,11 @@ mvn clean package -DskipTests
 
 (6)使用以下命令运行MasterNode
 ```text
-java -jar node-1.0-SNAPSHOT.jar -m true -c config.conf
+java -jar node-1.0-SNAPSHOT.jar --master -c config.conf
 ```
-参数`-m`用来指定该节点是否是超级（共识）节点，为`true`即为共识节点。
+命令行参数说明：
+- `--master`用来指定该节点是否是超级（共识）节点，默认为false，即FollowerNode
+- `-c`用来指定配置文件路径
 
 **2.启动FollowerNode**
 
