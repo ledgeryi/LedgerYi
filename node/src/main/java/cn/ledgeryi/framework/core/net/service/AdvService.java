@@ -309,8 +309,6 @@ public class AdvService {
                 }
                 //TYPE : INVENTORY
                 InventoryMessage inventoryMessage = new InventoryMessage(value, key);
-                log.info("send TX  or BLOCK to messageQueue, TX is {}", inventoryMessage);
-
                 peer.sendMessage(inventoryMessage);
             }));
         }

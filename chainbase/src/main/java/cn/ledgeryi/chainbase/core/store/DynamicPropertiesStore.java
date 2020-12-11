@@ -202,7 +202,7 @@ public class DynamicPropertiesStore extends LedgerYiStoreWithRevoking<BytesCapsu
    * save timestamp of creating global latest block.
    */
   public void saveLatestBlockHeaderTimestamp(long t) {
-    log.info("update latest block header timestamp = {}", t);
+    log.debug("update latest block header timestamp = {}", t);
     this.put(LATEST_BLOCK_HEADER_TIMESTAMP, new BytesCapsule(ByteArray.fromLong(t)));
   }
 
@@ -218,7 +218,7 @@ public class DynamicPropertiesStore extends LedgerYiStoreWithRevoking<BytesCapsu
    * save id of global latest block.
    */
   public void saveLatestBlockHeaderHash(ByteString h) {
-    log.info("update latest block header id = {}", ByteArray.toHexString(h.toByteArray()));
+    log.debug("update latest block header id = {}", ByteArray.toHexString(h.toByteArray()));
     this.put(LATEST_BLOCK_HEADER_HASH, new BytesCapsule(h.toByteArray()));
   }
 

@@ -693,11 +693,9 @@ public class Manager {
       return null;
     }
 
-    validateTapos(txCap);
-
-    validateCommon(txCap);
-
     validateDup(txCap);
+    validateTapos(txCap);
+    validateCommon(txCap);
 
     if (!txCap.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");
@@ -808,7 +806,7 @@ public class Manager {
         }
         blockCapsule.addTransaction(tx);
       } catch (Exception e) {
-        log.error("Process tx failed when generating block: {}, tx from pending: {}", e.getMessage(), fromPending);
+        log.debug("Process tx failed when generating block: {}, tx from pending: {}", e.getMessage(), fromPending);
       } finally {
         if (fromPending) {
           iterator.remove();
@@ -819,7 +817,7 @@ public class Manager {
     session.reset();
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(miner.getPrivateKey());
-    log.info("Generate block success, pendingCount: {}, repushCount: {}", pendingTransactions.size(), repushTransactions.size());
+    log.debug("Generate block success, pendingCount: {}, repushCount: {}", pendingTransactions.size(), repushTransactions.size());
     return blockCapsule;
   }
 
@@ -901,12 +899,12 @@ public class Manager {
     }
   }
 
-  public void updateRecentBlock(BlockCapsule block) {
+  private void updateRecentBlock(BlockCapsule block) {
     this.recentBlockStore.put(ByteArray.subArray( ByteArray.fromLong(block.getNum()), 6, 8),
         new BytesCapsule(ByteArray.subArray(block.getBlockId().getBytes(), 8, 16)));
   }
 
-  public void updateFork(BlockCapsule block) {
+  private void updateFork(BlockCapsule block) {
     forkController.update(block);
   }
 

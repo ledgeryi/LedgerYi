@@ -284,7 +284,7 @@ public class SnapshotManager implements RevokingDatabase {
       long checkPointEnd = System.currentTimeMillis();
       refresh();
       flushCount = 0;
-      log.info("flush cost:{}, create checkpoint cost:{}, refresh cost:{}",
+      log.debug("flush cost:{}, create checkpoint cost:{}, refresh cost:{}",
           System.currentTimeMillis() - start,
           checkPointEnd - start,
           System.currentTimeMillis() - checkPointEnd
