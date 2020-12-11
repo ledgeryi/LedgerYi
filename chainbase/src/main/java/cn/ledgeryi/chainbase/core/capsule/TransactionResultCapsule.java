@@ -4,7 +4,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import cn.ledgeryi.common.core.exception.BadItemException;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
-import cn.ledgeryi.protos.Protocol.Transaction.Result.contractResult;
+import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 
 @Slf4j(topic = "capsule")
 public class TransactionResultCapsule implements ProtoCapsule<Result> {
@@ -30,7 +30,7 @@ public class TransactionResultCapsule implements ProtoCapsule<Result> {
     this.transactionResult = Result.newBuilder().build();
   }
 
-  public TransactionResultCapsule(contractResult code) {
+  public TransactionResultCapsule(ContractResult code) {
     this.transactionResult = Result.newBuilder().setContractRet(code).build();
   }
 

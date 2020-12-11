@@ -8,7 +8,7 @@ import cn.ledgeryi.common.core.exception.ContractExeException;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.db.Manager;
-import cn.ledgeryi.protos.Protocol.Transaction.Result.contractResult;
+import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -47,10 +47,10 @@ public class RuntimeImpl implements Runtime {
   private void setResultCode(ProgramResult result) {
     RuntimeException exception = result.getException();
     if (Objects.isNull(exception) && StringUtils.isEmpty(result.getRuntimeError())) {
-      result.setResultCode(contractResult.SUCCESS);
+      result.setResultCode(ContractResult.SUCCESS);
       return;
     }
-    result.setResultCode(contractResult.UNKNOWN);
+    result.setResultCode(ContractResult.UNKNOWN);
   }
 
 }

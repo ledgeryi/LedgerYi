@@ -8,11 +8,9 @@ import cn.ledgeryi.chainbase.core.capsule.ReceiptCapsule;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.chainbase.core.db.TransactionTrace;
 import cn.ledgeryi.common.core.exception.BadItemException;
-import cn.ledgeryi.common.runtime.vm.LogInfo;
 import cn.ledgeryi.protos.Protocol;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -54,10 +52,10 @@ public class TransactionInfoCapsule implements ProtoCapsule<Protocol.Transaction
     builder.setId(ByteString.copyFrom(txCap.getTransactionId().getBytes()));
     ProgramResult programResult = trace.getRuntimeResult();
     ByteString contractResult = ByteString.copyFrom(programResult.getHReturn());
-    ByteString ContractAddress = ByteString.copyFrom(programResult.getContractAddress());
+    ByteString contractAddress = ByteString.copyFrom(programResult.getContractAddress());
 
     builder.addContractResult(contractResult);
-    builder.setContractAddress(ContractAddress);
+    builder.setContractAddress(contractAddress);
 
     if (Objects.nonNull(block)) {
       builder.setBlockNumber(block.getInstance().getBlockHeader().getRawData().getNumber());

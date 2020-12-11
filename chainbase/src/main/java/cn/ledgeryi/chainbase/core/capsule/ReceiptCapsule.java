@@ -28,11 +28,11 @@ public class ReceiptCapsule {
     return this.receiptAddress;
   }
 
-  public Transaction.Result.contractResult getResult() {
+  public Transaction.Result.ContractResult getResult() {
     return this.receipt.getResult();
   }
 
-  public void setResult(Transaction.Result.contractResult success) {
+  public void setResult(Transaction.Result.ContractResult success) {
     this.receipt = receipt.toBuilder().setResult(success).build();
   }
 

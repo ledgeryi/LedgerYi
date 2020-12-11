@@ -5,7 +5,6 @@ import cn.ledgeryi.chainbase.common.message.Message;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.chainbase.core.db.TransactionTrace;
-import cn.ledgeryi.chainbase.core.store.AccountStore;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.ReflectUtils;
@@ -16,9 +15,8 @@ import cn.ledgeryi.crypto.SignatureInterface;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
-import cn.ledgeryi.protos.Protocol.Transaction.Result.contractResult;
+import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import cn.ledgeryi.protos.Protocol.Transaction.raw;
-import cn.ledgeryi.protos.contract.AccountContract.AccountCreateContract;
 import com.google.protobuf.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -296,7 +294,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     this.setResultCode(context.getProgramResult().getResultCode());
   }
 
-  public void setResultCode(contractResult code) {
+  public void setResultCode(ContractResult code) {
     Result ret = Result.newBuilder().setContractRet(code).build();
     if (this.transaction.getRetCount() > 0) {
       ret = this.transaction.getRet(0).toBuilder().setContractRet(code).build();
@@ -306,7 +304,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     this.transaction = transaction.toBuilder().addRet(ret).build();
   }
 
-  public contractResult getContractRet() {
+  public ContractResult getContractRet() {
     if (this.transaction.getRetCount() <= 0) {
       return null;
     }

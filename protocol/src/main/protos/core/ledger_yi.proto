@@ -102,7 +102,7 @@ message Votes {
 }
 
 message ResourceReceipt {
-  Transaction.Result.contractResult result = 1;
+  Transaction.Result.ContractResult result = 1;
 }
 
 message Transaction {
@@ -123,14 +123,14 @@ message Transaction {
       SUCESS = 0;
       FAILED = 1;
     }
-    enum contractResult {
+    enum ContractResult {
       DEFAULT = 0;
       SUCCESS = 1;
       REVERT = 2;
       UNKNOWN = 13;
     }
     code ret = 2;
-    contractResult contractRet = 3;
+    ContractResult contractRet = 3;
   }
 
   message raw {
@@ -166,7 +166,7 @@ message TransactionInfo {
   bytes id = 1;
   int64 blockNumber = 2;
   int64 blockTimeStamp = 3;
-  repeated bytes contractResult = 4;
+  repeated bytes ContractResult = 4;
   bytes contract_address = 5;
   ResourceReceipt receipt = 6;
   repeated Log log = 7;
