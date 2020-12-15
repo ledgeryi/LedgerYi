@@ -3,10 +3,14 @@ package cn.ledgeryi.common.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
+import static cn.ledgeryi.common.core.Constant.ADD_PRE_FIX_BYTE_MAINNET;
+
 @Slf4j(topic = "Commons")
 public class DecodeUtil {
 
   public static final int ADDRESS_SIZE = 42;
+
+  public static byte addressPreFixByte = ADD_PRE_FIX_BYTE_MAINNET;
 
   public static byte[] clone(byte[] value) {
     byte[] clone = new byte[value.length];

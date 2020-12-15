@@ -8,11 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 public class CommonUtils {
 
-    /**
-     * 将账户Base58地址转换为字节数组
-     * @param addressBase58  e.g.: TTNDp3W8uVKScU5t5F9FztjEzJX9TQLAwC
-     * @return byte[]
-     */
     public static byte[] decodeFromBase58Check(String addressBase58) {
         if (StringUtils.isEmpty(addressBase58)) {
             return null;
@@ -34,10 +29,10 @@ public class CommonUtils {
         if (address.length != Parameter.CommonConstant.ADDRESS_SIZE) {
             return false;
         }
-        /*byte preFixbyte = address[0];
+        byte preFixbyte = address[0];
         if (preFixbyte != Parameter.CommonConstant.ADD_PRE_FIX_BYTE_MAINNET) {
             return false;
-        }*/
+        }
         return true;
     }
 

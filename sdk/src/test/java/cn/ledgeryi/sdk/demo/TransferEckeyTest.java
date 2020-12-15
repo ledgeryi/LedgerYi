@@ -20,8 +20,8 @@ public class TransferEckeyTest {
         byte[] to = ecKey.getAddress();
         System.out.println("toAddress: " + CommonUtils.encode58Check(to));
 
-        String from = "2dUPZ5UmUGFmdRqHcGiaTSQ4B7EWxDGs15a";
-        String fromPrivateKey = "6e86b8ec5336823447ada7215f444fba190844ce4e67270f9c19f1353bee6df1";
+        String from = "Ycq5ho1cfrtdH5HNxmAtQwXseqFxYFprdA";
+        String fromPrivateKey = "65bf254f32b0a19629954531265fdac1d29874d831ffd151ce44de9ac7daf2d";
         SignInterface signInterface = SignUtils.fromPrivate(Hex.decode(fromPrivateKey), true);
 
         if (!fromPrivateKey.equals(Hex.toHexString(signInterface.getPrivateKey()))) {
@@ -35,8 +35,8 @@ public class TransferEckeyTest {
 
     @Test
     public void createTransfer(){
-        String gensisAddress = "2dUPZ5UmUGFmdRqHcGiaTSQ4B7EWxDGs15a";
-        String gensisPrivateKey = "6e86b8ec5336823447ada7215f444fba190844ce4e67270f9c19f1353bee6df1";
+        String gensisAddress = "Ycq5ho1cfrtdH5HNxmAtQwXseqFxYFprdA";
+        String gensisPrivateKey = "65bf254f32b0a19629954531265fdac1d29874d831ffd151ce44de9ac7daf2d";
         SignInterface signInterface = SignUtils.fromPrivate(Hex.decode(gensisPrivateKey), true);
 
         if (!gensisPrivateKey.equals(Hex.toHexString(signInterface.getPrivateKey()))) {
@@ -44,7 +44,7 @@ public class TransferEckeyTest {
             return;
         }
 
-        String burnAddress = "2fmsuB6xPii1pcaHwjd1mGvtDZ8rpnbqUat";
+        String burnAddress = "YhKWnv7ribByKTjoSVbszYRNUzUf4EB78Q";
         RequestNodeApi.createTransfer(CommonUtils.decodeFromBase58Check(gensisAddress),
                 CommonUtils.decodeFromBase58Check(burnAddress), 1, signInterface.getPrivateKey());
     }
@@ -62,14 +62,14 @@ public class TransferEckeyTest {
         byte[] address = ecKey.getAddress();
         System.out.println("AddressStr: " + Hex.toHexString(address));
         System.out.println("AddressBase58: " + CommonUtils.encode58Check(address));
-        System.out.println("AddressStr: " + Hex.toHexString(CommonUtils.decode58Check(CommonUtils.encode58Check(address))));
+        //System.out.println("AddressStr: " + Hex.toHexString(CommonUtils.decode58Check(CommonUtils.encode58Check(address))));
         System.out.println("privateStr: " + Hex.toHexString(ecKey.getPrivateKey()));
     }
 
     @Test
     public void queryAccount(){
-        String gensis = "2dUPZ5UmUGFmdRqHcGiaTSQ4B7EWxDGs15a";
-        String burn = "2fmsuB6xPii1pcaHwjd1mGvtDZ8rpnbqUat";
+        String gensis = "Ycq5ho1cfrtdH5HNxmAtQwXseqFxYFprdA";
+        String burn = "YhKWnv7ribByKTjoSVbszYRNUzUf4EB78Q";
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(queryAccount(CommonUtils.decodeFromBase58Check(gensis)), true)));
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(queryAccount(CommonUtils.decodeFromBase58Check(burn)), true)));
     }

@@ -1,5 +1,6 @@
 package cn.ledgeryi.crypto.utils;
 
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.crypto.jce.LedgerYiCastleProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.math.ec.ECPoint;
@@ -119,6 +120,7 @@ public class Hash {
   public static byte[] sha3omit12(byte[] input) {
     byte[] hash = sha3(input);
     byte[] address = copyOfRange(hash, 11, hash.length);
+    address[0] = DecodeUtil.addressPreFixByte;
     return address;
   }
 
