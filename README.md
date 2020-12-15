@@ -168,7 +168,7 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |类别|说明|
 |:---|:---|
 |作用|查询一个账号的信息|
-|示例|curl -X POST  http://127.0.0.1:8090/v1/getaccount -d '{"address": "41E552F6487585C2B58BC2C9BB4492BC1F17132CD0"}'|
+|示例|curl -X POST  http://127.0.0.1:8090/v1/getaccount -d '{"address": "4e23514ccc74f7e10fe7da1c84346a98f14de1b65a"}'|
 |参数说明|address默认为hexString|
 |返回值|Account对象|
 
@@ -205,12 +205,12 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 
 **交易**
 
-**(1)createtransaction**
+**(1)createtransfertransaction**
 
 |类别|说明|
 |:---|:---|
-|作用|创建一个(转账的)Transaction(，如果转账的to地址不存在，则在区块链上创建该账号)|
-|示例|curl -X POST  http://127.0.0.1:8090/v1/createtransaction -d '{"to_address": "41e9d79cc47518930bc<br>322d9bf7cddd260a0260a8d", "owner_address": "41D1E7A6BC354106CB410E65FF8B181C600FF14292", "amount": 1000 }'|
+|作用|创建一个转账Transaction(，如果转账的to地址不存在，则在区块链上创建该账号)|
+|示例|curl -X POST http://127.0.0.1:8090/v1/createtransfertransaction -d '{"to_address":  <br>"4e23514ccc74f7e10fe7da1c84346a98f14de1b65a", "owner_address": "4e50381e6c0ad007d59b321f2f39f8800e43045a1a", "amount": 1}'|
 |参数说明|to_address是转账转入地址，默认为hexString；owner_address是转账转出地址，默认为hexString；amount是转账数量|
 |返回值|转账合约|
 
@@ -219,7 +219,9 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |类别|说明|
 |:---|:---|
 |作用|对签名后的transaction进行广播|
-|示例|curl -X POST http://127.0.0.1:8090/v1/broadcasttransaction -d '{"signature":["97c825b41c77de2a8bd<br>65b3df55cd4c0df59c307c0187e42321dcc1cc455ddba583dd9502e17cfec5945b34cad0511985a6165999<br>092a6dec84c2bdd97e649fc01"],"txID":"454f156bf1256587ff6ccdbc56e64ad0c51e4f8efea5490d<br>cbc720ee606bc7b8","raw_data":{"contract":[{"parameter":{"value":{"amount":1000,<br>"owner_address":"41e552f6487585c2b58bc2c9bb4492bc1f17132cd0","to_address":"41d1e7a6bc354106cb410e65ff8b181c600ff14292"},<br>"type_url":"type.googleapis.com/protocol.TransferContract"},"type":"TransferContract"}],"ref_block_bytes":"267e",<br>"ref_block_hash":"9a447d222e8de9f2","expiration":1530893064000,"timestamp":1530893006233}}'|
+|示例|curl -X POST http://127.0.0.1:8090/v1/broadcasttransaction -d '{"signature":  <br>["97c825b41c77de2a8bd65b3df55cd4c0df59c307c0187e42321dcc1cc455ddba583dd9502e17cfec5945b34cad0511985a6165999092a6dec84c2bdd97e649fc01"], <br>"txID":"e5bdf8fb25fc9b93b8f8bda4ff0356b54f46ea9e6211ad31cd5101125c6a2012", <br>"raw_data":{"contract":[{"parameter":{"value":{"amount":1,"owner_address":"4e50381e6c0ad007d59b321f2f39f8800e43045a1a", <br>"to_address":"4e23514ccc74f7e10fe7da1c84346a98f14de1b65a"},
+ <br>"type_url":"type.googleapis.com/protocol.TransferContract"},"type":"TransferContract"}], <br>"ref_block_bytes":"0047","ref_block_hash":"9465d7aff769ec1c","expiration":1607675676000,"timestamp":1607913591421},
+ <br>"raw_data_hex":"0a02004722089465d7aff769ec1c40e08ac087e52e5a631a610a2d747970652e676f6f676c656<br>17069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412300a15d8598fe888d5e6ca98450730518e5b439760d<br>b7db712159e127afced01bdfb90db1769dac6f79658966015aa180170fda4f9f8e52e"}|
 |参数说明|签名之后的Transaction|
 |返回值|广播是否成功|
 
