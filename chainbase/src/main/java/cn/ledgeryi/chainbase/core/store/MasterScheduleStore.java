@@ -2,6 +2,7 @@ package cn.ledgeryi.chainbase.core.store;
 
 import cn.ledgeryi.chainbase.core.capsule.BytesCapsule;
 import cn.ledgeryi.chainbase.core.db.LedgerYiStoreWithRevoking;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +18,8 @@ import cn.ledgeryi.common.utils.ByteArray;
 public class MasterScheduleStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
 
   private static final byte[] ACTIVE_MASTERS = "active_masters".getBytes();
-  private static final byte[] CURRENT_SHUFFLED_MASTERS = "current_shuffled_masters".getBytes();
 
-  private static final int ADDRESS_BYTE_ARRAY_LENGTH = 21;
+  private static final int ADDRESS_BYTE_ARRAY_LENGTH = DecodeUtil.ADDRESS_SIZE / 2;
 
   @Autowired
   private MasterScheduleStore(@Value("master_schedule") String dbName) {
@@ -60,13 +60,5 @@ public class MasterScheduleStore extends LedgerYiStoreWithRevoking<BytesCapsule>
 
   public List<ByteString> getActiveMasters() {
     return getData(ACTIVE_MASTERS);
-  }
-
-  public void saveCurrentShuffledMasters(List<ByteString> mastersAddressList) {
-    saveData(CURRENT_SHUFFLED_MASTERS, mastersAddressList);
-  }
-
-  public List<ByteString> getCurrentShuffledMasters() {
-    return getData(CURRENT_SHUFFLED_MASTERS);
   }
 }

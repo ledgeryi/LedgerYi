@@ -30,9 +30,30 @@ LedgerYi网络采用Peer-to-Peer(P2P)的网络架构，网络中的节点地位�
 
 ### 环境准备
 
-- 开放UDP端口号
-- 服务器最低配置要求，CPU：16核 内存：32G 带宽：100M 硬盘：500T
+- 开放UDP端口号，安装Docker
+- 服务器最低配置要求，CPU：2核 内存：4G  硬盘：50G
 - 安装Oracle JDK1.8，暂不支持JDK1.9+，且不支持Open JDK
+
+### 拉取镜像
+```text
+
+```
+### 准备config.conf文件
+
+- 在node模块中获取config.conf配置文件，修改创世块内容、网络链接信息、签名算法等配置信息。
+- 将修改好的config.conf文件拷贝到'/opt/ledgeryi/data'路径下(路径可自定义)。
+
+### 启动容器
+```text
+docker run --rm --name="ledgeryi-master" -d \
+      -p 6667:6666 -p 50052:50051 -p 8081:8080 \
+      -v /opt/ledgeryi/data:/ledgeryi/data \
+      ledgeryi/ledgeryi:alpha -m -c /ledgeryi/data/config.conf
+```
+
+命令行参数说明：
+- `-m`用来指定该节点是否是超级（共识）节点，默认为false，即FollowerNode
+- `-c`用来指定自定义配置文件路径
 
 ### 克隆代码
 
