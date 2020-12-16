@@ -5,8 +5,6 @@ public class Constant {
   //config for mainnet
   public static final String MAINNET_CONF = "config.conf";
 
-  public static final byte ADD_PRE_FIX_BYTE_MAINNET = (byte) 0x4E;
-
   // config for transaction
   public static final long TRANSACTION_MAX_BYTE_SIZE = 500 * 1_024L;
   public static final long MAXIMUM_TIME_UNTIL_EXPIRATION = 24 * 60 * 60 * 1_000L; //one day

@@ -1,12 +1,11 @@
 package cn.ledgeryi.sdk.common.crypto;
 
 import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.sdk.core.config.Configuration;
+import cn.ledgeryi.sdk.config.Configuration;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
-import com.typesafe.config.Config;
 import org.spongycastle.crypto.digests.SM3Digest;
 
 import java.io.File;

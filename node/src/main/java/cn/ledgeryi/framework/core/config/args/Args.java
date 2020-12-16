@@ -1,14 +1,15 @@
 package cn.ledgeryi.framework.core.config.args;
 
+import cn.ledgeryi.chainbase.common.utils.AdjustBalanceUtil;
 import cn.ledgeryi.chainbase.core.config.Parameter.NetConstants;
 import cn.ledgeryi.chainbase.core.config.Parameter.NodeConstant;
 import cn.ledgeryi.chainbase.common.storage.rocksdb.RocksDbSettings;
-import cn.ledgeryi.chainbase.common.utils.Commons;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.config.args.Account;
 import cn.ledgeryi.chainbase.core.config.args.GenesisBlock;
 import cn.ledgeryi.chainbase.core.store.AccountStore;
 import cn.ledgeryi.common.core.Constant;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.core.config.Configuration;
 import cn.ledgeryi.framework.core.db.backup.DbBackupConfig;
@@ -50,15 +51,15 @@ public class Args {
   @Parameter(names = {"-c", "--config"}, description = "Config File")
   private String shellConfFileName = "";
 
-  @Parameter(names = {"-d", "--output-directory"}, description = "Directory")
+  //@Parameter(names = {"-d", "--output-directory"}, description = "Directory")
   private String outputDirectory = "output-directory";
 
   @Getter
-  @Parameter(names = {"--log-config"})
+  //@Parameter(names = {"--log-config"})
   private String logbackPath = "";
 
   @Getter
-  @Parameter(names = {"-h", "--help"}, help = true, description = "HELP message")
+  //@Parameter(names = {"-h", "--help"}, help = true, description = "HELP message")
   private boolean help = false;
 
   @Getter
@@ -68,17 +69,17 @@ public class Args {
 
   @Getter
   @Setter
-  @Parameter(names = {"--debug"})
+  //@Parameter(names = {"--debug"})
   private boolean debug = false;
 
   @Getter
   @Setter
-  @Parameter(names = {"--long-running-time"})
+  //@Parameter(names = {"--long-running-time"})
   private int longRunningTime = 10;
 
   @Getter
   @Setter
-  @Parameter(names = {"--max-connect-number"})
+  //@Parameter(names = {"--max-connect-number"})
   private int maxHttpConnectNumber = 50;
 
   @Getter
@@ -91,43 +92,41 @@ public class Args {
   @Parameter(names = {"--master-address"}, description = "master-address")
   private String masterAddress = "";
 
-  @Parameter(names = {"--storage-db-directory"}, description = "Storage db directory")
+  //@Parameter(names = {"--storage-db-directory"}, description = "Storage db directory")
   private String storageDbDirectory = "";
 
-  @Parameter(names = {"--storage-db-version"}, description = "Storage db version.(1 or 2)")
+  //@Parameter(names = {"--storage-db-version"}, description = "Storage db version.(1 or 2)")
   private String storageDbVersion = "";
 
-  @Parameter(names = {
-      "--storage-db-engine"}, description = "Storage db engine.(leveldb or rocksdb)")
+  //@Parameter(names = {"--storage-db-engine"}, description = "Storage db engine.(leveldb or rocksdb)")
   private String storageDbEngine = "";
 
-  @Parameter(names = {
-      "--storage-db-synchronous"}, description = "Storage db is synchronous or not.(true or false)")
+  //@Parameter(names = {"--storage-db-synchronous"}, description = "Storage db is synchronous or not.(true or false)")
   private String storageDbSynchronous = "";
 
-  @Parameter(names = {
-      "--contract-parse-enable"}, description = "enable contract parses in java-ledgerYi or not.(true or false)")
+  /*@Parameter(names = {
+      "--contract-parse-enable"}, description = "enable contract parses in java-ledgerYi or not.(true or false)")*/
   private String contractParseEnable = "";
 
-  @Parameter(names = {"--storage-index-directory"}, description = "Storage index directory")
+  //@Parameter(names = {"--storage-index-directory"}, description = "Storage index directory")
   private String storageIndexDirectory = "";
 
-  @Parameter(names = {"--storage-index-switch"}, description = "Storage index switch.(on or off)")
+  //@Parameter(names = {"--storage-index-switch"}, description = "Storage index switch.(on or off)")
   private String storageIndexSwitch = "";
 
-  @Parameter(names = {
-      "--storage-transactionHistory-switch"}, description = "Storage transaction history switch.(on or off)")
+  /*@Parameter(names = {
+      "--storage-transactionHistory-switch"}, description = "Storage transaction history switch.(on or off)")*/
   private String storageTransactionHistoreSwitch = "";
 
   @Getter
-  @Parameter(names = {"--fast-forward"})
+  //@Parameter(names = {"--fast-forward"})
   private boolean fastForward = false;
 
   @Getter
   private Storage storage;
 
-  @Getter
-  private Overlay overlay;
+  /*@Getter
+  private Overlay overlay;*/
 
   @Getter
   private SeedNode seedNode;
@@ -209,7 +208,7 @@ public class Args {
 
   @Getter
   @Setter
-  @Parameter(names = {"--save-internaltx"})
+  //@Parameter(names = {"--save-internaltx"})
   private boolean saveInternalTx;
 
   @Getter
@@ -230,7 +229,7 @@ public class Args {
 
   @Getter
   @Setter
-  @Parameter(names = {"--rpc-thread"}, description = "Num of gRPC thread")
+  //@Parameter(names = {"--rpc-thread"}, description = "Num of gRPC thread")
   private int rpcThreadNum;
 
   @Getter
@@ -267,7 +266,7 @@ public class Args {
 
   @Getter
   @Setter
-  @Parameter(names = {"--validate-sign-thread"}, description = "Num of validate thread")
+  //@Parameter(names = {"--validate-sign-thread"}, description = "Num of validate thread")
   private int validateSignThreadNum;
 
   @Getter
@@ -340,11 +339,6 @@ public class Args {
 
   @Getter
   @Setter
-  @Parameter(names = {"--es"})
-  private boolean eventSubscribe = false;
-
-  @Getter
-  @Setter
   private String cryptoEngine = Constant.ECKey_ENGINE;
 
   @Getter
@@ -383,10 +377,6 @@ public class Args {
 
   @Getter
   @Setter
-  public boolean solidityNodeHttpEnable = true;
-
-  @Getter
-  @Setter
   public boolean isEckey=true;
 
   /**
@@ -400,17 +390,17 @@ public class Args {
     log.info("shell config file name: {}", INSTANCE.shellConfFileName);
 
     if (config.hasPath(Constant.CRYPTO_ENGINE)) {
-      INSTANCE.isEckey = "eckey".equalsIgnoreCase(config.getString(Constant.CRYPTO_ENGINE));
+      INSTANCE.isEckey = Constant.ECKey_ENGINE.equalsIgnoreCase(config.getString(Constant.CRYPTO_ENGINE));
     }
     if (config.hasPath(Constant.CRYPTO_ENGINE)) {
-      INSTANCE.cryptoEngine =config.getString(Constant.CRYPTO_ENGINE);
+      INSTANCE.cryptoEngine = config.getString(Constant.CRYPTO_ENGINE);
     }
     initEncryptoEngine(INSTANCE);
 
     if (StringUtils.isNoneBlank(INSTANCE.privateKey)) {
       INSTANCE.setLocalMasters(new LocalMasters(INSTANCE.privateKey));
       if (StringUtils.isNoneBlank(INSTANCE.masterAddress)) {
-        byte[] bytes = Commons.decodeFromBase58Check(INSTANCE.masterAddress);
+        byte[] bytes = DecodeUtil.decode(INSTANCE.masterAddress);
         if (bytes != null) {
           INSTANCE.localMasters.setMasterAccountAddress(bytes);
           log.debug("Got localMasterAccountAddress from cmd");
@@ -431,7 +421,7 @@ public class Args {
       INSTANCE.localMasters.setPrivateKeys(localMaster);
 
       if (config.hasPath(Constant.LOCAL_MASTER_ACCOUNT_ADDRESS)) {
-        byte[] bytes = Commons.decodeFromBase58Check(config.getString(Constant.LOCAL_MASTER_ACCOUNT_ADDRESS));
+        byte[] bytes = DecodeUtil.decode(config.getString(Constant.LOCAL_MASTER_ACCOUNT_ADDRESS));
         if (bytes != null) {
           INSTANCE.localMasters.setMasterAccountAddress(bytes);
           log.debug("Got localMasterAccountAddress from config.conf");
@@ -447,7 +437,6 @@ public class Args {
     if (INSTANCE.isMaster() && CollectionUtils.isEmpty(INSTANCE.localMasters.getPrivateKeys())) {
       log.warn("This is a master node,but localMasters is null");
     }
-
 
     if (config.hasPath(Constant.NODE_HTTP_FULLNODE_ENABLE)) {
       INSTANCE.ledgerYiNodeHttpEnable = config.getBoolean(Constant.NODE_HTTP_FULLNODE_ENABLE);
@@ -681,7 +670,7 @@ public class Args {
 
   private static Master createMaster(final ConfigObject masterAccount) {
     final Master master = new Master();
-    master.setAddress(Commons.decodeFromBase58Check(masterAccount.get("address").unwrapped().toString()));
+    master.setAddress(DecodeUtil.decode(masterAccount.get("address").unwrapped().toString()));
     master.setUrl(masterAccount.get("url").unwrapped().toString());
     master.setVoteCount(masterAccount.toConfig().getLong("voteCount"));
     return master;
@@ -696,7 +685,7 @@ public class Args {
     final Account account = new Account();
     account.setAccountName(asset.get("accountName").unwrapped().toString());
     account.setAccountType(asset.get("accountType").unwrapped().toString());
-    account.setAddress(Commons.decodeFromBase58Check(asset.get("address").unwrapped().toString()));
+    account.setAddress(DecodeUtil.decode(asset.get("address").unwrapped().toString()));
     account.setBalance(asset.get("balance").unwrapped().toString());
     return account;
   }

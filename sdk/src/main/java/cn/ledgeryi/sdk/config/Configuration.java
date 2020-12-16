@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.core.config;
+package cn.ledgeryi.sdk.config;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

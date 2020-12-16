@@ -1,8 +1,8 @@
 package cn.ledgeryi.framework.common.utils;
 
 import cn.ledgeryi.chainbase.common.utils.ForkUtils;
-import cn.ledgeryi.chainbase.common.utils.WalletUtil;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.google.protobuf.ByteString;
@@ -58,14 +58,14 @@ public class ForkController extends ForkUtils {
         "*******update hard fork:{}, master size:{}, solt:{}, master:{}, version:{}",
         Streams.zip(masters.stream(), Stream.of(ArrayUtils.toObject(stats)), Maps::immutableEntry)
             .map(e -> Maps
-                .immutableEntry(WalletUtil.encode58Check(e.getKey().toByteArray()), e.getValue()))
+                .immutableEntry(DecodeUtil.createReadableString(e.getKey().toByteArray()), e.getValue()))
             .map(e -> Maps
                 .immutableEntry(StringUtils.substring(e.getKey(), e.getKey().length() - 4),
                     e.getValue()))
             .collect(Collectors.toList()),
         masters.size(),
         slot,
-        WalletUtil.encode58Check(master.toByteArray()),
+        DecodeUtil.createReadableString(master.toByteArray()),
         version);
   }
 

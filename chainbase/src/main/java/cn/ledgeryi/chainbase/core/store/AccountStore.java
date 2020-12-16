@@ -1,8 +1,9 @@
 package cn.ledgeryi.chainbase.core.store;
 
-import cn.ledgeryi.chainbase.common.utils.Commons;
+import cn.ledgeryi.chainbase.common.utils.AdjustBalanceUtil;
 import cn.ledgeryi.chainbase.core.db.LedgerYiStoreWithRevoking;
 import cn.ledgeryi.chainbase.core.db.accountstate.AccountStateCallBackUtils;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import com.typesafe.config.ConfigObject;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,7 @@ public class AccountStore extends LedgerYiStoreWithRevoking<AccountCapsule> {
     for (int i = 0; i < list.size(); i++) {
       ConfigObject obj = (ConfigObject) list.get(i);
       String accountName = obj.get("accountName").unwrapped().toString();
-      byte[] address = Commons.decodeFromBase58Check(obj.get("address").unwrapped().toString());
+      byte[] address = DecodeUtil.decode(obj.get("address").unwrapped().toString());
       assertsAddress.put(accountName, address);
     }
   }

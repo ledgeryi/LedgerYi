@@ -1,7 +1,6 @@
 package cn.ledgeryi.chainbase.core.config.args;
 
-import cn.ledgeryi.chainbase.common.utils.Commons;
-import cn.ledgeryi.common.utils.StringUtil;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -23,17 +22,16 @@ public class Master implements Serializable {
   private long voteCount;
 
   public void setAddress(final byte[] address) {
-    if (!Commons.addressValid(address)) {
+    if (!DecodeUtil.addressValid(address)) {
       throw new IllegalArgumentException(
-          "The address(" + StringUtil.createReadableString(address) + ") must be a 21 bytes.");
+              "The address(" + DecodeUtil.createReadableString(address) + ") must be a 21 bytes.");
     }
     this.address = address;
   }
 
   public void setUrl(final String url) {
     if (StringUtils.isBlank(url)) {
-      throw new IllegalArgumentException(
-          "The url(" + url + ") format error.");
+      throw new IllegalArgumentException("The url(" + url + ") format error.");
     }
     this.url = url;
   }

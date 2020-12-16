@@ -1,16 +1,13 @@
 package cn.ledgeryi.common.utils;
 
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-
-import static cn.ledgeryi.common.core.Constant.ADD_PRE_FIX_BYTE_MAINNET;
 
 @Slf4j(topic = "Commons")
 public class DecodeUtil {
 
-  public static final int ADDRESS_SIZE = 42;
-
-  public static byte addressPreFixByte = ADD_PRE_FIX_BYTE_MAINNET;
+  public static final int ADDRESS_SIZE = 40;
 
   public static byte[] clone(byte[] value) {
     byte[] clone = new byte[value.length];
@@ -27,13 +24,19 @@ public class DecodeUtil {
       log.warn("Warning: Address length need " + ADDRESS_SIZE + " but " + address.length + " !!");
       return false;
     }
-
-    //Other rule;
     return true;
   }
 
   public static String createReadableString(byte[] bytes) {
     return ByteArray.toHexString(bytes);
+  }
+
+  public static String createReadableString(ByteString string) {
+    return createReadableString(string.toByteArray());
+  }
+
+  public static byte[] decode(String data){
+    return ByteArray.fromHexString(data);
   }
 
 }

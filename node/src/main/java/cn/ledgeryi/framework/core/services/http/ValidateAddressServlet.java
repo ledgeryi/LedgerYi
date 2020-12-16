@@ -1,6 +1,6 @@
 package cn.ledgeryi.framework.core.services.http;
 
-import cn.ledgeryi.chainbase.common.utils.Commons;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import java.io.IOException;
@@ -22,14 +22,10 @@ public class ValidateAddressServlet extends RateLimiterServlet {
     boolean result = true;
     String msg;
     try {
-      if (input.length() == Commons.ADDRESS_SIZE) {
+      if (input.length() == DecodeUtil.ADDRESS_SIZE) {
         //hex
         address = ByteArray.fromHexString(input);
         msg = "Hex string format";
-      } else if (input.length() == 34) {
-        //base58check
-        address = Commons.decodeFromBase58Check(input);
-        msg = "Base58check format";
       } else if (input.length() == 28) {
         //base64
         address = Base64.getDecoder().decode(input);
@@ -39,7 +35,7 @@ public class ValidateAddressServlet extends RateLimiterServlet {
         msg = "Length error";
       }
       if (result) {
-        result = Commons.addressValid(address);
+        result = DecodeUtil.addressValid(address);
         if (!result) {
           msg = "Invalid address";
         }

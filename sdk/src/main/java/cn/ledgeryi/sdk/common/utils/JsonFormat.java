@@ -1,8 +1,8 @@
 package cn.ledgeryi.sdk.common.utils;
 
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.crypto.utils.HttpSelfFormatFieldName;
-import cn.ledgeryi.sdk.serverapi.RequestNodeApi;
 import com.google.protobuf.*;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.CharBuffer;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.*;
@@ -21,7 +20,6 @@ import java.util.regex.Pattern;
 
 public class JsonFormat {
 
-  private static final int BUFFER_SIZE = 4096;
   private static final Pattern DIGITS = Pattern.compile(
       "[0-9]",
       Pattern.CASE_INSENSITIVE);
@@ -80,56 +78,6 @@ public class JsonFormat {
     }
   }
 
-  /**
-   * Parse a text-format message from {@code input} and merge the contents into {@code builder}.
-   */
-  public static void merge(Readable input, Message.Builder builder) throws IOException {
-    merge(input, ExtensionRegistry.getEmptyRegistry(), builder, true);
-  }
-
-  /**
-   * Parse a text-format message from {@code input} and merge the contents into {@code builder}.
-   */
-  public static void merge(CharSequence input, Message.Builder builder) throws ParseException {
-    merge(input, ExtensionRegistry.getEmptyRegistry(), builder, true);
-  }
-
-  /**
-   * Like {@code print()}, but writes directly to a {@code String} and returns it.
-   */
-  public static String printToString(Message message) {
-    try {
-      StringBuilder text = new StringBuilder();
-      print(message, text, true);
-      return text.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(WRITING_STRING_BUILDER_EXCEPTION, e);
-    }
-  }
-
-  /**
-   * Like {@code print()}, but writes directly to a {@code String} and returns it.
-   */
-  public static String printToString(UnknownFieldSet fields, boolean selfType) {
-    try {
-      StringBuilder text = new StringBuilder();
-      print(fields, text, selfType);
-      return text.toString();
-    } catch (IOException e) {
-      throw new RuntimeException(WRITING_STRING_BUILDER_EXCEPTION, e);
-    }
-  }
-
-  public static String printErrorMsg(Exception ex) {
-    StringBuilder text = new StringBuilder();
-    text.append("{");
-    text.append("\"Error\":");
-    text.append("\"");
-    text.append(ex.getMessage());
-    text.append("\"");
-    text.append("}");
-    return text.toString();
-  }
 
   public static void printField(FieldDescriptor field, Object value, JsonGenerator generator,
       boolean selfType)
@@ -334,78 +282,6 @@ public class JsonFormat {
       // the number is negative, then set it again using setBit().
       return BigInteger.valueOf(value & 0x7FFFFFFFFFFFFFFFL).setBit(63).toString();
     }
-  }
-
-  /**
-   * Parse a text-format message from {@code input} and merge the contents into {@code builder}.
-   */
-  public static void merge(Readable input, Message.Builder builder, boolean selfType)
-      throws IOException {
-    merge(input, ExtensionRegistry.getEmptyRegistry(), builder, selfType);
-  }
-
-  /**
-   * Parse a text-format message from {@code input} and merge the contents into {@code builder}.
-   */
-  public static void merge(CharSequence input, Message.Builder builder, boolean selfType)
-      throws ParseException {
-    merge(input, ExtensionRegistry.getEmptyRegistry(), builder, selfType);
-  }
-
-  /**
-   * Parse a text-format message from {@code input} and merge the contents into {@code builder}.
-   * Extensions will be recognized if they are registered in {@code extensionRegistry}.
-   */
-  public static void merge(Readable input,
-      ExtensionRegistry extensionRegistry,
-      Message.Builder builder, boolean selfType) throws IOException {
-    // Read the entire input to a String then parse that.
-
-    // If StreamTokenizer were not quite so crippled, or if there were a kind
-    // of Reader that could read in chunks that match some particular regex,
-    // or if we wanted to write a custom Reader to tokenize our stream, then
-    // we would not have to read to one big String. Alas, none of these is
-    // the case. Oh well.
-
-    merge(toStringBuilder(input), extensionRegistry, builder, selfType);
-  }
-
-  /**
-   * Parse a text-format message from {@code input} and merge the contents into {@code builder}.
-   * Extensions will be recognized if they are registered in {@code extensionRegistry}.
-   */
-  public static void merge(CharSequence input,
-      ExtensionRegistry extensionRegistry,
-      Message.Builder builder, boolean selfType) throws ParseException {
-    Tokenizer tokenizer = new Tokenizer(input);
-
-    // Based on the state machine @ http://json.org/
-
-    tokenizer.consume("{"); // Needs to happen when the object starts.
-    while (!tokenizer.tryConsume("}")) { // Continue till the object is done
-      mergeField(tokenizer, extensionRegistry, builder, selfType);
-    }
-    // Test to make sure the tokenizer has reached the end of the stream.
-    if (!tokenizer.atEnd()) {
-      throw tokenizer.parseException(
-          "Expecting the end of the stream, but there seems to be more data!  "
-              + "Check the input for a valid JSON format.");
-    }
-  }
-
-  // overhead is worthwhile
-  protected static StringBuilder toStringBuilder(Readable input) throws IOException {
-    StringBuilder text = new StringBuilder();
-    CharBuffer buffer = CharBuffer.allocate(BUFFER_SIZE);
-    while (true) {
-      int n = input.read(buffer);
-      if (n == -1) {
-        break;
-      }
-      buffer.flip();
-      text.append(buffer, 0, n);
-    }
-    return text;
   }
 
   /**
@@ -676,17 +552,6 @@ public class JsonFormat {
     return subBuilder.build();
   }
 
-  /**
-   * Escapes bytes in the format used in protocol buffer text format, which is the same as the
-   * format used for C string literals. All bytes that are not printable 7-bit ASCII characters are
-   * escaped, as well as backslash, single-quote, and double-quote characters. Characters for which
-   * no defined short-hand escape sequence is defined will be escaped using 3-digit octal
-   * sequences.
-   */
-  static String escapeBytes(ByteString input) {
-    return ByteArray.toHexString(input.toByteArray());
-  }
-
   static String escapeBytes(ByteString input, final String fliedName, boolean selfType) {
     if (!selfType) {
       return ByteArray.toHexString(input.toByteArray());
@@ -698,7 +563,7 @@ public class JsonFormat {
   static String escapeBytesSelfType(ByteString input, final String fliedName) {
     //Address
     if (HttpSelfFormatFieldName.isAddressFormat(fliedName)) {
-      return CommonUtils.encode58Check(input.toByteArray());
+      return DecodeUtil.createReadableString(input.toByteArray());
     }
 
     //Normal String
@@ -708,25 +573,6 @@ public class JsonFormat {
 
     //HEX
     return ByteArray.toHexString(input.toByteArray());
-  }
-
-  static String unicodeEscaped(char ch) {
-    if (ch < 0x10) {
-      return "\\u000" + Integer.toHexString(ch);
-    } else if (ch < 0x100) {
-      return "\\u00" + Integer.toHexString(ch);
-    } else if (ch < 0x1000) {
-      return "\\u0" + Integer.toHexString(ch);
-    }
-    return "\\u" + Integer.toHexString(ch);
-  }
-
-  static ByteString unescapeBytes(CharSequence input) throws InvalidEscapeSequence {
-    try {
-      return ByteString.copyFrom(ByteArray.fromHexString(input.toString()));
-    } catch (Exception e) {
-      throw new InvalidEscapeSequence("invalidate hex String");
-    }
   }
 
   /**
@@ -859,35 +705,6 @@ public class JsonFormat {
     }
 
     return builder.toString();
-  }
-
-  /**
-   * Is this an octal digit.
-   */
-  private static boolean isOctal(char c) {
-    return ('0' <= c) && (c <= '7');
-  }
-
-  /**
-   * Is this a hex digit.
-   */
-  private static boolean isHex(char c) {
-    return (('0' <= c) && (c <= '9')) || (('a' <= c) && (c <= 'f'))
-        || (('A' <= c) && (c <= 'F'));
-  }
-
-  /**
-   * Interpret a character as a digit (in any base up to 36) and return the numeric value. This is
-   * like {@code Character.digit()} but we don't accept non-ASCII digits.
-   */
-  private static int digitValue(char c) {
-    if (('0' <= c) && (c <= '9')) {
-      return c - '0';
-    } else if (('a' <= c) && (c <= 'z')) {
-      return c - 'a' + 10;
-    } else {
-      return c - 'A' + 10;
-    }
   }
 
   /**
@@ -1151,11 +968,10 @@ public class JsonFormat {
       }
     }
 
-    static ByteString unescapeBytesSelfType(String input, final String fliedName)
-        throws InvalidEscapeSequence {
-      //Address base58 -> ByteString
+    static ByteString unescapeBytesSelfType(String input, final String fliedName) throws InvalidEscapeSequence {
+      //Address String -> ByteString
       if (HttpSelfFormatFieldName.isAddressFormat(fliedName)) {
-        return ByteString.copyFrom(Objects.requireNonNull(CommonUtils.decodeFromBase58Check(input)));
+        return ByteString.copyFrom(Objects.requireNonNull(DecodeUtil.decode(input)));
       }
 
       //Normal String -> ByteString
@@ -1442,27 +1258,6 @@ public class JsonFormat {
       }
     }
 
-    public ByteString consumeByteString() throws ParseException {
-      char quote = currentToken.length() > 0 ? currentToken.charAt(0) : '\0';
-      if ((quote != '\"') && (quote != '\'')) {
-        throw parseException("Expected string.");
-      }
-
-      if ((currentToken.length() < 2)
-          || (currentToken.charAt(currentToken.length() - 1) != quote)) {
-        throw parseException("String missing ending quote.");
-      }
-
-      try {
-        String escaped = currentToken.substring(1, currentToken.length() - 1);
-        ByteString result = unescapeBytes(escaped);
-        nextToken();
-        return result;
-      } catch (InvalidEscapeSequence e) {
-        throw parseException(e.getMessage());
-      }
-    }
-
     public ByteString consumeByteString(final String fieldName, boolean selfType)
         throws ParseException {
       char quote = currentToken.length() > 0 ? currentToken.charAt(0) : '\0';
@@ -1538,10 +1333,7 @@ public class JsonFormat {
     }
   }
 
-  /**
-   * Thrown by {@link JsonFormat#unescapeBytes} and {@link JsonFormat#unescapeText} when an invalid
-   * escape sequence is seen.
-   */
+
   static class InvalidEscapeSequence extends IOException {
 
     private static final long serialVersionUID = 1L;

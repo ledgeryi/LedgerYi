@@ -1,9 +1,8 @@
 package cn.ledgeryi.chainbase.core.db.accountstate;
 
+import cn.ledgeryi.common.utils.DecodeUtil;
 import lombok.extern.slf4j.Slf4j;
 import cn.ledgeryi.protos.Protocol.Account;
-
-import static cn.ledgeryi.chainbase.common.utils.WalletUtil.encode58Check;
 
 @Slf4j(topic = "AccountState")
 public class AccountStateEntity {
@@ -44,7 +43,7 @@ public class AccountStateEntity {
 
   @Override
   public String toString() {
-    return "address:" + encode58Check(account.getAddress().toByteArray()) + "; " + account
+    return "address:" + DecodeUtil.createReadableString(account.getAddress().toByteArray()) + "; " + account
         .toString();
   }
 }

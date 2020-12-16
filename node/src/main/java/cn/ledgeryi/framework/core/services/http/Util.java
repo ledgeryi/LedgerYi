@@ -1,51 +1,39 @@
 package cn.ledgeryi.framework.core.services.http;
 
-import javax.servlet.http.HttpServletResponse;
 import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.chainbase.actuator.TransactionFactory;
-import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
-import cn.ledgeryi.crypto.utils.Hash;
-import cn.ledgeryi.protos.contract.BalanceContract;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.GeneratedMessageV3;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Message;
-
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.math.BigDecimal;
-import java.security.InvalidParameterException;
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.util.StringUtil;
-import org.pf4j.util.StringUtils;
-import org.spongycastle.util.encoders.Base64;
-import org.spongycastle.util.encoders.Hex;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.services.http.JsonFormat.ParseException;
 import cn.ledgeryi.protos.Protocol.Block;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
+import cn.ledgeryi.protos.contract.BalanceContract;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.google.protobuf.*;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.util.StringUtil;
+import org.spongycastle.util.encoders.Base64;
 
-import static cn.ledgeryi.chainbase.common.utils.Commons.decodeFromBase58Check;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.List;
 
 @Slf4j(topic = "API")
 public class Util {
 
-  public static final String PERMISSION_ID = "Permission_id";
-  public static final String VISIBLE = "visible";
-  public static final String VALUE = "value";
-  public static final String CONTRACT_TYPE = "contractType";
-  public static final String EXTRA_DATA = "extra_data";
+  private static final String PERMISSION_ID = "Permission_id";
+  private static final String VISIBLE = "visible";
+  private static final String VALUE = "value";
+  private static final String CONTRACT_TYPE = "contractType";
+  private static final String EXTRA_DATA = "extra_data";
 
   public static String printErrorMsg(Exception e) {
     JSONObject jsonObject = new JSONObject();
@@ -69,7 +57,7 @@ public class Util {
     return printBlockToJSON(block, selfType).toJSONString();
   }
 
-  public static JSONObject printBlockToJSON(Block block, boolean selfType) {
+  private static JSONObject printBlockToJSON(Block block, boolean selfType) {
     BlockCapsule blockCapsule = new BlockCapsule(block);
     String blockID = ByteArray.toHexString(blockCapsule.getBlockId().getBytes());
     JSONObject jsonObject = JSONObject.parseObject(JsonFormat.printToString(block, selfType));
@@ -81,7 +69,7 @@ public class Util {
     return jsonObject;
   }
 
-  public static JSONArray printTransactionListToJSON(List<TransactionCapsule> list,
+  private static JSONArray printTransactionListToJSON(List<TransactionCapsule> list,
       boolean selfType) {
     JSONArray transactions = new JSONArray();
     list.stream().forEach(transactionCapsule -> {
@@ -101,7 +89,7 @@ public class Util {
     return jsonObject.toJSONString();
   }
 
-  public static JSONObject printTransactionToJSON(Transaction transaction, boolean selfType) {
+  private static JSONObject printTransactionToJSON(Transaction transaction, boolean selfType) {
     JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction, selfType));
     JSONArray contracts = new JSONArray();
     Transaction.Contract contract = transaction.getRawData().getContract();
@@ -138,20 +126,6 @@ public class Util {
     String txID = ByteArray.toHexString(Sha256Hash.hash(true, transaction.getRawData().toByteArray()));
     jsonTransaction.put("txID", txID);
     return jsonTransaction;
-  }
-
-
-  public static byte[] generateContractAddress(Transaction tx, byte[] ownerAddress) {
-    // get tx hash
-    byte[] txRawDataHash = Sha256Hash.of(DBConfig.isECKeyCryptoEngine(),
-        tx.getRawData().toByteArray()).getBytes();
-
-    // combine
-    byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
-    System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
-    System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
-
-    return Hash.sha3omit12(combined);
   }
 
   public static Transaction packTransaction(String strTransaction, boolean selfType) {
@@ -233,19 +207,6 @@ public class Util {
     return contractType;
   }
 
-  public static String getHexAddress(final String address) {
-    if (address != null) {
-      byte[] addressByte = decodeFromBase58Check(address);
-      return ByteArray.toHexString(addressByte);
-    } else {
-      return null;
-    }
-  }
-
-  public static String getHexString(final String string) {
-    return ByteArray.toHexString(ByteString.copyFromUtf8(string).toByteArray());
-  }
-
   public static Transaction setTransactionPermissionId(JSONObject jsonObject,
       Transaction transaction) {
     if (jsonObject.containsKey(PERMISSION_ID)) {
@@ -273,28 +234,6 @@ public class Util {
       }
     }
     return transaction;
-  }
-
-  public static String parseMethod(String methodSign, String input) {
-    byte[] selector = new byte[4];
-    System.arraycopy(Hash.sha3(methodSign.getBytes()), 0, selector, 0, 4);
-    if (StringUtils.isNullOrEmpty(input)) {
-      return Hex.toHexString(selector);
-    }
-
-    return Hex.toHexString(selector) + input;
-  }
-
-  public static long getJsonLongValue(final JSONObject jsonObject, final String key) {
-    return getJsonLongValue(jsonObject, key, false);
-  }
-
-  public static long getJsonLongValue(JSONObject jsonObject, String key, boolean required) {
-    BigDecimal bigDecimal = jsonObject.getBigDecimal(key);
-    if (required && bigDecimal == null) {
-      throw new InvalidParameterException("key [" + key + "] not exist");
-    }
-    return (bigDecimal == null) ? 0L : bigDecimal.longValueExact();
   }
 
   public static void processError(Exception e, HttpServletResponse response) {

@@ -7,7 +7,7 @@ import cn.ledgeryi.crypto.SignatureInterface;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.contract.*;
 import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
-import cn.ledgeryi.sdk.core.config.Configuration;
+import cn.ledgeryi.sdk.config.Configuration;
 import com.google.protobuf.ByteString;
 
 import java.security.SignatureException;

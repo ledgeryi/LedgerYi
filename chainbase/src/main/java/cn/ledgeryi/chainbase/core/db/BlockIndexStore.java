@@ -15,11 +15,9 @@ import java.util.Arrays;
 @Component
 public class BlockIndexStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
 
-
   @Autowired
   public BlockIndexStore(@Value("block-index") String dbName) {
     super(dbName);
-
   }
 
   public void put(BlockId id) {

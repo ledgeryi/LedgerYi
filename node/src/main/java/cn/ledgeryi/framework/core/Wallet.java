@@ -10,7 +10,6 @@ import cn.ledgeryi.chainbase.core.capsule.*;
 import cn.ledgeryi.chainbase.core.store.AccountIdIndexStore;
 import cn.ledgeryi.chainbase.core.store.AccountStore;
 import cn.ledgeryi.common.core.exception.*;
-import cn.ledgeryi.common.utils.Base58;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.crypto.SignInterface;
@@ -19,7 +18,6 @@ import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
 import cn.ledgeryi.framework.common.utils.Utils;
 import cn.ledgeryi.framework.core.actuator.ActuatorFactory;
-import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.DupTransactionException;
@@ -47,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static cn.ledgeryi.chainbase.common.utils.Commons.ADDRESS_SIZE;
+import static cn.ledgeryi.common.utils.DecodeUtil.ADDRESS_SIZE;
 import static cn.ledgeryi.chainbase.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
 
 @Slf4j
@@ -74,60 +72,10 @@ public class Wallet {
         Args.getInstance().isECKeyCryptoEngine());
   }
 
-  /**
-   * Creates a Wallet with an existing ECKey.
-   */
+
   public Wallet(final SignInterface cryptoEngine) {
     this.cryptoEngine = cryptoEngine;
     log.info("wallet address: {}", ByteArray.toHexString(this.cryptoEngine.getAddress()));
-  }
-
-  public static boolean addressValid(byte[] address) {
-    if (ArrayUtils.isEmpty(address)) {
-      log.warn("Warning: Address is empty !!");
-      return false;
-    }
-    if (address.length != ADDRESS_SIZE / 2) {
-      log.warn(
-          "Warning: Address length requires " + ADDRESS_SIZE + " but " + address.length + " !!");
-      return false;
-    }
-    //Other rule;
-    return true;
-  }
-
-  private static byte[] decode58Check(String input) {
-    byte[] decodeCheck = Base58.decode(input);
-    if (decodeCheck.length <= 4) {
-      return null;
-    }
-    byte[] decodeData = new byte[decodeCheck.length - 4];
-    System.arraycopy(decodeCheck, 0, decodeData, 0, decodeData.length);
-    byte[] hash0 = Sha256Hash.hash(DBConfig.isECKeyCryptoEngine(), decodeData);
-    byte[] hash1 = Sha256Hash.hash(DBConfig.isECKeyCryptoEngine(), hash0);
-    if (hash1[0] == decodeCheck[decodeData.length] &&
-        hash1[1] == decodeCheck[decodeData.length + 1] &&
-        hash1[2] == decodeCheck[decodeData.length + 2] &&
-        hash1[3] == decodeCheck[decodeData.length + 3]) {
-      return decodeData;
-    }
-    return null;
-  }
-
-
-  public static byte[] decodeFromBase58Check(String addressBase58) {
-    if (StringUtils.isEmpty(addressBase58)) {
-      log.warn("Warning: Address is empty !!");
-      return null;
-    }
-    byte[] address = decode58Check(addressBase58);
-    if (address == null) {
-      return null;
-    }
-    if (!addressValid(address)) {
-      return null;
-    }
-    return address;
   }
 
   public byte[] getAddress() {

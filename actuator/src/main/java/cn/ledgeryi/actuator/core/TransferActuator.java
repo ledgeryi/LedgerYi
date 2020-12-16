@@ -1,6 +1,6 @@
 package cn.ledgeryi.actuator.core;
 
-import cn.ledgeryi.chainbase.common.utils.Commons;
+import cn.ledgeryi.chainbase.common.utils.AdjustBalanceUtil;
 import cn.ledgeryi.chainbase.core.capsule.AccountCapsule;
 import cn.ledgeryi.chainbase.core.capsule.TransactionResultCapsule;
 import cn.ledgeryi.chainbase.core.store.AccountStore;
@@ -14,7 +14,6 @@ import cn.ledgeryi.protos.contract.BalanceContract;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.rocksdb.Transaction;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -46,8 +45,8 @@ public class TransferActuator extends AbstractActuator {
         accountStore.put(toAddress, toAccount);
       }
       ret.setStatus(Protocol.Transaction.Result.code.SUCESS);
-      Commons.adjustBalance(accountStore, ownerAddress, -amount);
-      Commons.adjustBalance(accountStore, toAddress, amount);
+      AdjustBalanceUtil.adjustBalance(accountStore, ownerAddress, -amount);
+      AdjustBalanceUtil.adjustBalance(accountStore, toAddress, amount);
     } catch (BalanceInsufficientException | ArithmeticException | InvalidProtocolBufferException e) {
       log.debug(e.getMessage(), e);
       ret.setStatus(Protocol.Transaction.Result.code.FAILED);

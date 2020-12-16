@@ -2,13 +2,13 @@ package cn.ledgeryi.chainbase.core.db;
 
 import cn.ledgeryi.chainbase.common.storage.WriteOptionsWrapper;
 import cn.ledgeryi.chainbase.common.storage.leveldb.LevelDbDataSourceImpl;
-import cn.ledgeryi.chainbase.common.utils.Commons;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.db.common.SourceInter;
 import cn.ledgeryi.chainbase.core.db2.common.IRevokingDB;
 import cn.ledgeryi.chainbase.core.db2.core.ISession;
 import cn.ledgeryi.chainbase.core.db2.core.RevokingDBWithCachingOldValue;
 import cn.ledgeryi.common.core.exception.RevokingStoreIllegalStateException;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -130,7 +130,7 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
       return;
     }
 
-    state.oldValues.put(tuple, Commons.clone(value));
+    state.oldValues.put(tuple, DecodeUtil.clone(value));
   }
 
   public synchronized void onRemove(RevokingTuple tuple, byte[] value) {
@@ -155,7 +155,7 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
       return;
     }
 
-    state.removed.put(tuple, Commons.clone(value));
+    state.removed.put(tuple, DecodeUtil.clone(value));
   }
 
   @Override

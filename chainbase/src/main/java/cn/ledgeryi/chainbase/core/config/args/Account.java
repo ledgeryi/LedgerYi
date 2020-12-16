@@ -1,12 +1,11 @@
 package cn.ledgeryi.chainbase.core.config.args;
 
-import cn.ledgeryi.chainbase.common.utils.Commons;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import com.google.protobuf.ByteString;
 import java.io.Serializable;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.common.utils.StringUtil;
 import cn.ledgeryi.protos.Protocol.AccountType;
 
 public class Account implements Serializable {
@@ -29,9 +28,9 @@ public class Account implements Serializable {
    * Account address is a 21-bits hex string.
    */
   public void setAddress(final byte[] address) {
-    if (!Commons.addressValid(address)) {
+    if (!DecodeUtil.addressValid(address)) {
       throw new IllegalArgumentException(
-          "The address(" + StringUtil.createReadableString(address) + ") must be a 21 bytes.");
+          "The address(" + DecodeUtil.createReadableString(address) + ") must be a 21 bytes.");
     }
     this.address = address;
   }

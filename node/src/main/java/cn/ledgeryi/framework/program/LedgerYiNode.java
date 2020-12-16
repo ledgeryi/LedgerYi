@@ -39,7 +39,7 @@ public class LedgerYiNode {
    * Start the LedgerYiNode.
    */
   public static void main(String[] args) {
-    log.info("Full node running.");
+    log.info("LedgerYi node running.");
     Args.setParam(args, Constant.MAINNET_CONF);
     Args cfgArgs = Args.getInstance();
 

@@ -1,7 +1,7 @@
 package cn.ledgeryi.framework.core.capsule.utils;
 
-import cn.ledgeryi.chainbase.common.utils.Commons;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.contract.BalanceContract;
 import com.google.protobuf.ByteString;
@@ -13,7 +13,7 @@ public class TransactionUtil {
   public static Protocol.Transaction newGenesisTransaction(byte[] key, long value)
       throws IllegalArgumentException {
 
-    if (!Commons.addressValid(key)) {
+    if (!DecodeUtil.addressValid(key)) {
       throw new IllegalArgumentException("Invalid address");
     }
     BalanceContract.TransferContract transferContract = BalanceContract.TransferContract.newBuilder()

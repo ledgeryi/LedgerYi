@@ -3,10 +3,9 @@ package cn.ledgeryi.sdk.serverapi;
 import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.protos.Protocol;
-import cn.ledgeryi.protos.contract.AccountContract;
 import cn.ledgeryi.protos.contract.BalanceContract;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
-import cn.ledgeryi.sdk.core.config.Configuration;
+import cn.ledgeryi.sdk.config.Configuration;
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ public class RequestNodeApi {
 
     private static GrpcClient init() {
         Config config = Configuration.getConfig();
-
         String ledgerYiNode = "";
         if (config.hasPath("ledgernode.ip.list")) {
             ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
@@ -64,23 +62,13 @@ public class RequestNodeApi {
         return Sha256Hash.of(true, transaction.getRawData().toByteArray());
     }
 
-    private static AccountContract.AccountCreateContract createAccountContract(byte[] owner, byte[] address) {
-        AccountContract.AccountCreateContract.Builder builder = AccountContract.AccountCreateContract.newBuilder();
-        builder.setOwnerAddress(ByteString.copyFrom(owner));
-        builder.setAccountAddress(ByteString.copyFrom(address));
-        builder.setType(Protocol.AccountType.Normal);
-        return builder.build();
-    }
-
     public static GrpcAPI.BlockExtention getNowBlock(){
         return rpcCli.getNowBlock();
     }
 
-
     public static GrpcAPI.BlockExtention getBlock(long blockNum) {
         return rpcCli.getBlockByNum(blockNum);
     }
-
 
     public static GrpcAPI.BlockListExtention getBlockByLimitNext(long start, long end){
         return rpcCli.getBlockByLimitNext(start,end);
