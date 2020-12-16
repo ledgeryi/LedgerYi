@@ -34,10 +34,13 @@ LedgerYi网络采用Peer-to-Peer(P2P)的网络架构，网络中的节点地位�
 - 服务器最低配置要求，CPU：2核 内存：4G  硬盘：50G
 - 安装Oracle JDK1.8，暂不支持JDK1.9+，且不支持Open JDK
 
+## 使用镜像快速部署
 ### 拉取镜像
-```text
 
+```text
+docker push ledgeryi/ledgeryi-alpha:alpha
 ```
+
 ### 准备config.conf文件
 
 - 在node模块中获取config.conf配置文件，修改创世块内容、网络链接信息、签名算法等配置信息。
@@ -55,6 +58,7 @@ docker run --rm --name="ledgeryi-master" -d \
 - `-m`用来指定该节点是否是超级（共识）节点，默认为false，即FollowerNode
 - `-c`用来指定自定义配置文件路径
 
+## 使用JAR包部署
 ### 克隆代码
 
 **1.克隆最新代码**
@@ -88,7 +92,7 @@ mvn clean package -DskipTests
 
 (6)使用以下命令运行MasterNode
 ```text
-java -jar node-1.0-SNAPSHOT.jar --master -c config.conf
+java -Xms128m -Xmx2048m -jar node-1.0-SNAPSHOT.jar --master -c config.conf
 ```
 命令行参数说明：
 - `--master`用来指定该节点是否是超级（共识）节点，默认为false，即FollowerNode
