@@ -38,7 +38,7 @@ LedgerYi网络采用Peer-to-Peer(P2P)的网络架构，网络中的节点地位�
 ### 拉取镜像
 
 ```text
-docker push ledgeryi/ledgeryi-alpha:alpha
+docker pull ledgeryi/ledgeryi:alpha
 ```
 
 ### 准备config.conf文件
