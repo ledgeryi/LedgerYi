@@ -5,7 +5,7 @@
     <parent>
         <artifactId>LedgerYi</artifactId>
         <groupId>cn.ledgeryi</groupId>
-        <version>ledgeryi-alpha</version>
+        <version>latest</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

@@ -8,7 +8,7 @@
     <artifactId>LedgerYi</artifactId>
     <packaging>pom</packaging>
 
-    <version>ledgeryi-alpha</version>
+    <version>latest</version>
 
     <description>Root project of LedgerYi.</description>
 
@@ -56,37 +56,37 @@
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>protocol</artifactId>
-                <version>ledgeryi-alpha</version>
+                <version>latest</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>crypto</artifactId>
-                <version>ledgeryi-alpha</version>
+                <version>latest</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>common</artifactId>
-                <version>ledgeryi-alpha</version>
+                <version>latest</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>node</artifactId>
-                <version>ledgeryi-alpha</version>
+                <version>latest</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>actuator</artifactId>
-                <version>ledgeryi-alpha</version>
+                <version>latest</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>chainbase</artifactId>
-                <version>ledgeryi-alpha</version>
+                <version>latest</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>consensus</artifactId>
-                <version>ledgeryi-alpha</version>
+                <version>latest</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
