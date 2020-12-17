@@ -8,7 +8,7 @@ RUN mkdir -p /ledgeryi/data \
 
 WORKDIR /ledgeryi/data
 
-COPY node-1.0-SNAPSHOT.jar /ledgeryi/app/node.jar
+COPY node-ledgeryi-alpha.jar /ledgeryi/app/node.jar
 
 ENTRYPOINT [ "java", "-Xms128m" ,"-Xmx2048m", "-jar", "/ledgeryi/app/node.jar" ]
 
