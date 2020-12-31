@@ -26,7 +26,7 @@ public class Configuration {
     Config config = Configuration.getByPath("config.conf");
     if (config.hasPath("crypto.engine")) {
       isEckey = config.getString("crypto.engine").equalsIgnoreCase("eckey");
-      log.debug("Sha256Sm3Hash getConfig isEckey: " + isEckey);
+      log.info("Sha256Sm3Hash getConfig isEckey: " + isEckey);
     }
   }
 

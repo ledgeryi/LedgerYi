@@ -9,7 +9,7 @@ public class VmConfig {
     private static boolean vmTrace = false;
 
     @Setter
-    private static boolean ALLOW_TVM_CONSTANTINOPLE = false;
+    private static boolean ALLOW_TVM_CONSTANTINOPLE = true;
 
     public static final int MAX_FEE_LIMIT = 1_000_000_000;
 

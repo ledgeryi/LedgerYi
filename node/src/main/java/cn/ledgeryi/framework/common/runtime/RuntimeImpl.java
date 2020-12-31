@@ -6,8 +6,10 @@ import cn.ledgeryi.chainbase.common.runtime.Runtime;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.common.core.exception.ContractExeException;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
+import cn.ledgeryi.contract.vm.VMActuator;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.db.Manager;
+import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,11 +20,11 @@ import java.util.Objects;
 @Slf4j(topic = "VM")
 public class RuntimeImpl implements Runtime {
 
-  TransactionContext context;
-
   Manager dbManger;
 
-  List<Actuator> actuatorList = null;
+  Actuator actuator = null;
+
+  TransactionContext context;
 
   public RuntimeImpl(Manager manager) {
     this.dbManger = manager;
@@ -31,10 +33,18 @@ public class RuntimeImpl implements Runtime {
   @Override
   public void execute(TransactionContext context) throws ContractValidateException, ContractExeException {
     this.context = context;
-    actuatorList = ActuatorCreator.getINSTANCE().createActuator(context.getTxCap());
-    for (Actuator act : actuatorList) {
-      act.validate(context);
-      act.execute(context.getProgramResult().getRet());
+    ContractType contractType = context.getTxCap().getInstance().getRawData().getContract().getType();
+    switch (contractType.getNumber()) {
+      case ContractType.TriggerSmartContract_VALUE:
+      case ContractType.CreateSmartContract_VALUE:
+        actuator = new VMActuator(context.isStatic());
+        break;
+      default:
+        break;
+    }
+    if (actuator != null) {
+      actuator.validate(context);
+      actuator.execute(context);
     }
     setResultCode(context.getProgramResult());
   }

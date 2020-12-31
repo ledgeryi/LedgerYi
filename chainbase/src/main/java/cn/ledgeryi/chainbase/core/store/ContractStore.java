@@ -7,9 +7,13 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract.ABI;
 import com.google.common.collect.Streams;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.Iterator;
+import java.util.Map;
 
 @Slf4j(topic = "DB")
 @Component
@@ -32,11 +36,21 @@ public class ContractStore extends LedgerYiStoreWithRevoking<ContractCapsule> {
         return Streams.stream(revokingDB.iterator()).count();
     }
 
+    public void listContract(){
+        Iterator<Map.Entry<byte[], byte[]>> iterator = revokingDB.iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<byte[], byte[]> next = iterator.next();
+            System.out.println("=============key: " + Hex.toHexString(next.getKey()));
+            System.out.println("=============value: " + Hex.toHexString(next.getValue()));
+        }
+    }
+
+
     /**
      * find a transaction  by it's id.
      */
-    public byte[] findContractByHash(byte[] trxHash) {
-        return revokingDB.getUnchecked(trxHash);
+    public byte[] findContractByHash(byte[] txHash) {
+        return revokingDB.getUnchecked(txHash);
     }
 
     /**

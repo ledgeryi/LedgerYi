@@ -16,6 +16,7 @@ import cn.ledgeryi.chainbase.core.store.ContractStore;
 import cn.ledgeryi.chainbase.core.store.StoreFactory;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.contract.vm.VMActuator;
 import cn.ledgeryi.crypto.SignInterface;
@@ -145,8 +146,7 @@ public class Wallet {
     }*/
 
     if (contractType == ContractType.CreateSmartContract) {
-      SmartContractOuterClass.CreateSmartContract contract = ContractCapsule
-              .getSmartContractFromTransaction(tx.getInstance());
+      SmartContractOuterClass.CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx.getInstance());
       long percent = contract.getNewContract().getConsumeUserResourcePercent();
       if (percent < 0 || percent > 100) {
         throw new ContractValidateException("percent must be >= 0 and <= 100");
@@ -340,6 +340,8 @@ public class Wallet {
           throws ContractValidateException, ContractExeException, HeaderNotFound, VMIllegalException {
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
+    System.out.println("==============合约总数为：" + contractStore.getTotalContracts());
+    contractStore.listContract();
     byte[] isContractExiste = contractStore.findContractByHash(contractAddress);
     if (ArrayUtils.isEmpty(isContractExiste)) {
       throw new ContractValidateException("No contract or not a smart contract");

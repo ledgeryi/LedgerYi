@@ -411,11 +411,9 @@ public class ECKey implements Serializable, SignInterface {
       header -= 4;
     }
     int recId = header - 27;
-    byte[] key = ECKey.recoverPubBytesFromSignature(recId, sig,
-        messageHash);
+    byte[] key = ECKey.recoverPubBytesFromSignature(recId, sig, messageHash);
     if (key == null) {
-      throw new SignatureException("Could not recover public key from " +
-          "signature");
+      throw new SignatureException("Could not recover public key from signature");
     }
     return key;
   }
@@ -429,8 +427,7 @@ public class ECKey implements Serializable, SignInterface {
    */
   public static byte[] signatureToAddress(byte[] messageHash, String
       signatureBase64) throws SignatureException {
-    return Hash.computeAddress(signatureToKeyBytes(messageHash,
-        signatureBase64));
+    return Hash.computeAddress(signatureToKeyBytes(messageHash, signatureBase64));
   }
 
   /**

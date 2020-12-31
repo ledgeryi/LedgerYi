@@ -146,6 +146,12 @@ public class DynamicPropertiesStore extends LedgerYiStoreWithRevoking<BytesCapsu
       this.saveTotalEnergyWeight(0L);
     }
 
+    try {
+      this.getAllowCreationOfContracts();
+    } catch (IllegalArgumentException e) {
+      this.saveAllowCreationOfContracts(1);
+    }
+
   }
 
   public void saveAllowAdaptiveEnergy(long value) {

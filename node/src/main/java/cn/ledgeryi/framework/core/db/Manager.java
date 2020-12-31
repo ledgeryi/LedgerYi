@@ -739,6 +739,9 @@ public class Manager {
     }
 
     trace.finalization();
+    if (Objects.nonNull(blockCap) && getDynamicPropertiesStore().supportVM()) {
+      txCap.setResult(trace.getTransactionContext());
+    }
     if (Objects.nonNull(blockCap)){
       TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, blockCap, trace);
       this.transactionHistoryStore.put(txCap.getTransactionId().getBytes(), transactionInfo);

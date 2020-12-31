@@ -26,6 +26,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.omg.CORBA.TRANSACTION_MODE;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -65,7 +66,7 @@ public class Args {
   @Getter
   @Setter
   @Parameter(names = {"-m", "--master"})
-  private boolean master = false;
+  private boolean master = true;
 
   @Getter
   @Setter
@@ -85,7 +86,7 @@ public class Args {
   @Getter
   @Setter
   @Parameter(names = {"--support-constant"})
-  private boolean supportConstant = false;
+  private boolean supportConstant = true;
 
   @Getter
   @Parameter(description = "--seed-nodes")

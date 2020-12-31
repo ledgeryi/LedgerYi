@@ -318,7 +318,7 @@ public class VMActuator implements Actuator {
         }
         energyLimit = getAccountEnergyLimitWithFixRatio(creator, feeLimit, callValue);
       } else {
-        energyLimit = getAccountEnergyLimitWithFloatRatio(creator, feeLimit, callValue);
+        energyLimit = 0;//getAccountEnergyLimitWithFloatRatio(creator, feeLimit, callValue);
       }
       checkTokenValueAndId(tokenValue, tokenId);
       //获取合约的操作字节码

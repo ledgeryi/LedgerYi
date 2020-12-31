@@ -15,6 +15,7 @@ import cn.ledgeryi.protos.Protocol.Account;
 import cn.ledgeryi.protos.Protocol.Transaction;
 
 public class GrpcClient {
+
     private ManagedChannel channelFull = null;
     private WalletGrpc.WalletBlockingStub blockingStubFull = null;
 
@@ -92,12 +93,6 @@ public class GrpcClient {
         return blockingStubFull.getTransactionCountByBlockNum(builder.build());
     }
 
-    public SmartContractOuterClass.SmartContract getContract(byte[] address) {
-        ByteString byteString = ByteString.copyFrom(address);
-        BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
-        return blockingStubFull.getContract(bytesMessage);
-    }
-
     public TransactionExtention triggerContract(SmartContractOuterClass.TriggerSmartContract request) {
         return blockingStubFull.triggerContract(request);
     }
@@ -110,9 +105,13 @@ public class GrpcClient {
         return blockingStubFull.triggerConstantContract(request);
     }
 
+    public SmartContractOuterClass.SmartContract getContract(byte[] address) {
+        ByteString byteString = ByteString.copyFrom(address);
+        BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
+        return blockingStubFull.getContract(bytesMessage);
+    }
+
     public TransactionExtention clearContractABI(SmartContractOuterClass.ClearABIContract request) {
         return blockingStubFull.clearContractABI(request);
     }
-
-
 }

@@ -17,6 +17,8 @@ import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
 import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import cn.ledgeryi.protos.Protocol.Transaction.raw;
+import cn.ledgeryi.protos.contract.BalanceContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import com.google.protobuf.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -85,14 +87,14 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   }
 
   public TransactionCapsule(com.google.protobuf.Message message, ContractType contractType) {
-    Transaction.raw.Builder transactionBuilder = Transaction.raw.newBuilder().setContract(
+    Transaction.raw.Builder rawBuilder = Transaction.raw.newBuilder().setContract(
         Transaction.Contract.newBuilder().setType(contractType).setParameter(
             (message instanceof Any ? (Any) message : Any.pack(message))).build());
-    transaction = Transaction.newBuilder().setRawData(transactionBuilder.build()).build();
+    transaction = Transaction.newBuilder().setRawData(rawBuilder.build()).build();
   }
 
   public static byte[] getOwner(Transaction.Contract contract) {
-    try {
+    /*try {
       Any contractParameter = contract.getParameter();
       Class<? extends GeneratedMessageV3> clazz = TransactionFactory.getContract(contract.getType());
       if (clazz == null) {
@@ -108,6 +110,26 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       return owner.toByteArray();
     } catch (Exception ex) {
       log.error(ex.getMessage());
+      return null;
+    }*/
+    ByteString owner;
+    try {
+      switch (contract.getType()) {
+        case TransferContract:
+          owner = contract.getParameter().unpack(BalanceContract.TransferContract.class).getOwnerAddress();
+          break;
+        case CreateSmartContract:
+          owner = contract.getParameter().unpack(SmartContractOuterClass.CreateSmartContract.class).getOwnerAddress();
+          break;
+        case TriggerSmartContract:
+          owner = contract.getParameter().unpack(SmartContractOuterClass.TriggerSmartContract.class).getOwnerAddress();
+          break;
+        default:
+          return null;
+      }
+      return owner.toByteArray();
+    } catch (Exception ex) {
+      ex.printStackTrace();
       return null;
     }
   }

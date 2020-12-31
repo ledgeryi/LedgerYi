@@ -5,14 +5,12 @@ import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.SignUtils;
 import cn.ledgeryi.crypto.SignatureInterface;
-import cn.ledgeryi.crypto.ecdsa.ECKey;
 import cn.ledgeryi.crypto.utils.Hash;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.contract.BalanceContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
 import cn.ledgeryi.sdk.config.Configuration;
-import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +60,7 @@ public class TransactionUtils {
     byte[] hash = Sha256Sm3Hash.hash(signedTransaction.getRawData().toByteArray());
     try {
       byte[] owner = getOwner(contract);
-      byte[] address = ECKey.signatureToAddress( hash, getBase64FromByteString(signedTransaction.getSignature()));
+      byte[] address = SignUtils.signatureToAddress(hash, getBase64FromByteString(signedTransaction.getSignature()), Configuration.isEckey());
       if (!Arrays.equals(owner, address)) {
         return false;
       }
@@ -73,11 +71,17 @@ public class TransactionUtils {
     return true;
   }
 
-  public static Protocol.Transaction sign(Protocol.Transaction transaction, byte[] privKeyBytes) {
+  public static Protocol.Transaction sign(Protocol.Transaction transaction, byte[] privKeyBytes) throws SignatureException, InvalidProtocolBufferException {
     Protocol.Transaction.Builder transactionBuilderSigned = transaction.toBuilder();
     byte[] hash = Sha256Sm3Hash.hash(transaction.getRawData().toByteArray());
     SignInterface ecKeyEngine = SignUtils.fromPrivate(privKeyBytes, Configuration.isEckey());
     ByteString sig = ByteString.copyFrom(ecKeyEngine.Base64toBytes(ecKeyEngine.signHash(hash)));
+
+    /*byte[] address = SignUtils.signatureToAddress(hash, getBase64FromByteString(sig), Configuration.isEckey());
+    ByteString owner = transaction.getRawData().getContract().getParameter().unpack(SmartContractOuterClass.CreateSmartContract.class).getOwnerAddress();
+    if (!Arrays.equals(address, owner.toByteArray())) {
+      System.out.println("address decode error!");
+    }*/
     transactionBuilderSigned.setSignature(sig);
     transaction = transactionBuilderSigned.build();
     return transaction;

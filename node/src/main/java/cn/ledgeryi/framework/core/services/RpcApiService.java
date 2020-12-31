@@ -402,12 +402,12 @@ public class RpcApiService implements Service {
 
     private void createTransactionExtention(Message request, ContractType contractType,
                                             StreamObserver<TransactionExtention> responseObserver) {
-      TransactionExtention.Builder trxExtBuilder = TransactionExtention.newBuilder();
+      TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
       Return.Builder retBuilder = Return.newBuilder();
       try {
-        TransactionCapsule trx = createTransactionCapsule(request, contractType);
-        trxExtBuilder.setTransaction(trx.getInstance());
-        trxExtBuilder.setTxid(trx.getTransactionId().getByteString());
+        TransactionCapsule tx = createTransactionCapsule(request, contractType);
+        txExtBuilder.setTransaction(tx.getInstance());
+        txExtBuilder.setTxid(tx.getTransactionId().getByteString());
         retBuilder.setResult(true).setCode(response_code.SUCCESS);
       } catch (ContractValidateException e) {
         retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
@@ -418,8 +418,8 @@ public class RpcApiService implements Service {
                 .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
         log.info("exception caught" + e.getMessage());
       }
-      trxExtBuilder.setResult(retBuilder);
-      responseObserver.onNext(trxExtBuilder.build());
+      txExtBuilder.setResult(retBuilder);
+      responseObserver.onNext(txExtBuilder.build());
       responseObserver.onCompleted();
     }
 
@@ -442,40 +442,46 @@ public class RpcApiService implements Service {
       callContract(request, responseObserver, false);
     }
 
+    @Override
+    public void triggerConstantContract(SmartContractOuterClass.TriggerSmartContract request,
+                                        StreamObserver<TransactionExtention> responseObserver) {
+      callContract(request, responseObserver, true);
+    }
+
+
     private void callContract(SmartContractOuterClass.TriggerSmartContract request,
                               StreamObserver<TransactionExtention> responseObserver, boolean isConstant) {
-      TransactionExtention.Builder trxExtBuilder = TransactionExtention.newBuilder();
+      TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
       Return.Builder retBuilder = Return.newBuilder();
       try {
-        TransactionCapsule trxCap = createTransactionCapsule(request,
-                ContractType.TriggerSmartContract);
-        Transaction trx;
+        TransactionCapsule txCap = createTransactionCapsule(request, ContractType.TriggerSmartContract);
+        Transaction tx;
         if (isConstant) {
-          trx = wallet.triggerConstantContract(request, trxCap, trxExtBuilder, retBuilder);
+          tx = wallet.triggerConstantContract(request, txCap, txExtBuilder, retBuilder);
         } else {
-          trx = wallet.triggerContract(request, trxCap, trxExtBuilder, retBuilder);
+          tx = wallet.triggerContract(request, txCap, txExtBuilder, retBuilder);
         }
-        trxExtBuilder.setTransaction(trx);
-        trxExtBuilder.setTxid(trxCap.getTransactionId().getByteString());
+        txExtBuilder.setTransaction(tx);
+        txExtBuilder.setTxid(txCap.getTransactionId().getByteString());
         retBuilder.setResult(true).setCode(response_code.SUCCESS);
-        trxExtBuilder.setResult(retBuilder);
+        txExtBuilder.setResult(retBuilder);
       } catch (ContractValidateException | VMIllegalException e) {
         retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
                 .setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
-        trxExtBuilder.setResult(retBuilder);
+        txExtBuilder.setResult(retBuilder);
         log.warn(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
       } catch (RuntimeException e) {
         retBuilder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR)
                 .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
-        trxExtBuilder.setResult(retBuilder);
+        txExtBuilder.setResult(retBuilder);
         log.warn("When run constant call in VM, have RuntimeException: " + e.getMessage());
       } catch (Exception e) {
         retBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
                 .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
-        trxExtBuilder.setResult(retBuilder);
+        txExtBuilder.setResult(retBuilder);
         log.warn("unknown exception caught: " + e.getMessage(), e);
       } finally {
-        responseObserver.onNext(trxExtBuilder.build());
+        responseObserver.onNext(txExtBuilder.build());
         responseObserver.onCompleted();
       }
     }
