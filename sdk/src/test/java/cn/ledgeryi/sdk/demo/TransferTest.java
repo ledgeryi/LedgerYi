@@ -33,7 +33,8 @@ public class TransferTest {
     public void createAddressAndPrivateKey(){
         SignInterface signEngine = createSignEngine();
         byte[] address = signEngine.getAddress();
-        System.out.println("AddressStr: " + DecodeUtil.createReadableString(address));
+        System.out.println("AddressStr: " + address.length);
+        System.out.println("AddressStr: " + DecodeUtil.createReadableString(address).length());
         System.out.println("privateStr: " + DecodeUtil.createReadableString(signEngine.getPrivateKey()));
         if (!Arrays.equals(address, DecodeUtil.decode(DecodeUtil.createReadableString(address)))) {
             System.out.println("address decode error!");

@@ -3,6 +3,7 @@ package protocol;
 
 import "core/ledger_yi.proto";
 import "core/contract/inner_contract.proto";
+import "core/contract/smart_contract.proto";
 
 import "google/api/annotations.proto";
 
@@ -87,7 +88,23 @@ service Wallet {
   };
 
   rpc GetNodeInfo (EmptyMessage) returns (NodeInfo) {
-  };
+  }
+
+  rpc DeployContract (CreateSmartContract) returns (TransactionExtention) {
+  }
+
+  rpc TriggerContract (TriggerSmartContract) returns (TransactionExtention) {
+  }
+
+  rpc TriggerConstantContract (TriggerSmartContract) returns (TransactionExtention) {
+  }
+
+  rpc GetContract (BytesMessage) returns (SmartContract) {
+  }
+
+  rpc ClearContractABI (ClearABIContract) returns (TransactionExtention) {
+  }
+
 };
 
 // the api of jingChain's db

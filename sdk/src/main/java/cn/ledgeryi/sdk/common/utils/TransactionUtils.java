@@ -1,20 +1,27 @@
 package cn.ledgeryi.sdk.common.utils;
 
-import cn.ledgeryi.crypto.SignUtils;
-import cn.ledgeryi.crypto.ecdsa.ECKey;
+import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.crypto.SignInterface;
+import cn.ledgeryi.crypto.SignUtils;
 import cn.ledgeryi.crypto.SignatureInterface;
+import cn.ledgeryi.crypto.ecdsa.ECKey;
+import cn.ledgeryi.crypto.utils.Hash;
 import cn.ledgeryi.protos.Protocol;
-import cn.ledgeryi.protos.contract.*;
+import cn.ledgeryi.protos.contract.BalanceContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
 import cn.ledgeryi.sdk.config.Configuration;
+import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.SignatureException;
 import java.util.Arrays;
 
+@Slf4j
 public class TransactionUtils {
-
 
   public static byte[] getOwner(Protocol.Transaction.Contract contract) {
     ByteString owner;
@@ -22,6 +29,12 @@ public class TransactionUtils {
       switch (contract.getType()) {
         case TransferContract:
           owner = contract.getParameter().unpack(BalanceContract.TransferContract.class).getOwnerAddress();
+          break;
+        case CreateSmartContract:
+          owner = contract.getParameter().unpack(SmartContractOuterClass.CreateSmartContract.class).getOwnerAddress();
+          break;
+        case TriggerSmartContract:
+          owner = contract.getParameter().unpack(SmartContractOuterClass.TriggerSmartContract.class).getOwnerAddress();
           break;
         default:
           return null;
@@ -38,10 +51,9 @@ public class TransactionUtils {
     byte[] s = sign.substring(32, 64).toByteArray();
     byte v = sign.byteAt(64);
     if (v < 27) {
-      v += 27; // revId -> v
+      v += 27;
     }
     SignatureInterface signature = SignUtils.fromComponents(r, s, v, Configuration.isEckey());
-    //ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v);
     return signature.toBase64();
   }
 
@@ -91,4 +103,23 @@ public class TransactionUtils {
     }
     return transaction;
   }
+
+  public void showTransactionAfterSign(Protocol.Transaction transaction) throws InvalidProtocolBufferException {
+    log.info("after sign transaction hex string is " + ByteArray.toHexString(transaction.toByteArray()));
+    log.info("txid is " + ByteArray.toHexString(Sha256Sm3Hash.hash(transaction.getRawData().toByteArray())));
+    if (transaction.getRawData().getContract().getType() == Protocol.Transaction.Contract.ContractType.CreateSmartContract) {
+      SmartContractOuterClass.CreateSmartContract createSmartContract = transaction.getRawData().getContract().getParameter().unpack(SmartContractOuterClass.CreateSmartContract.class);
+      byte[] contractAddress = generateContractAddress(createSmartContract.getOwnerAddress().toByteArray(), transaction);
+      log.info("Your smart contract address will be: " + DecodeUtil.createReadableString(contractAddress));
+    }
+  }
+
+  private byte[] generateContractAddress(byte[] ownerAddress, Protocol.Transaction trx) {
+    byte[] txRawDataHash = Sha256Sm3Hash.of(trx.getRawData().toByteArray()).getBytes();
+    byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
+    System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
+    System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
+    return Hash.sha3omit12(combined);
+  }
+
 }

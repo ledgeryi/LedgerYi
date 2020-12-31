@@ -5,32 +5,38 @@ import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.GrpcAPI.Return.response_code;
 import cn.ledgeryi.chainbase.actuator.Actuator;
 import cn.ledgeryi.chainbase.common.message.Message;
+import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
+import cn.ledgeryi.chainbase.common.utils.ContractUtils;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.capsule.*;
+import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.chainbase.core.store.AccountIdIndexStore;
 import cn.ledgeryi.chainbase.core.store.AccountStore;
+import cn.ledgeryi.chainbase.core.store.ContractStore;
+import cn.ledgeryi.chainbase.core.store.StoreFactory;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
+import cn.ledgeryi.contract.vm.VMActuator;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.SignUtils;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
+import cn.ledgeryi.framework.common.storage.DepositImpl;
 import cn.ledgeryi.framework.common.utils.Utils;
 import cn.ledgeryi.framework.core.actuator.ActuatorFactory;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
-import cn.ledgeryi.framework.core.exception.DupTransactionException;
-import cn.ledgeryi.framework.core.exception.TaposException;
-import cn.ledgeryi.framework.core.exception.TooBigTransactionException;
-import cn.ledgeryi.framework.core.exception.TransactionExpirationException;
+import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.framework.core.net.LedgerYiNetDelegate;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
 import cn.ledgeryi.framework.core.net.message.TransactionMessage;
 import cn.ledgeryi.protos.Protocol.Account;
 import cn.ledgeryi.protos.Protocol.Block;
 import cn.ledgeryi.protos.Protocol.Transaction;
+import cn.ledgeryi.protos.Protocol.Transaction.Result;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -131,9 +137,20 @@ public class Wallet {
   public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType)
           throws ContractValidateException {
     TransactionCapsule tx = new TransactionCapsule(message, contractType);
-    List<Actuator> actList = ActuatorFactory.createActuator(tx, dbManager);
-    for (Actuator act : actList) {
-      act.validate();
+    /*if (contractType != ContractType.CreateSmartContract && contractType != ContractType.TriggerSmartContract) {
+      List<Actuator> actList = ActuatorFactory.createActuator(tx, dbManager);
+      for (Actuator act : actList) {
+        act.validate();
+      }
+    }*/
+
+    if (contractType == ContractType.CreateSmartContract) {
+      SmartContractOuterClass.CreateSmartContract contract = ContractCapsule
+              .getSmartContractFromTransaction(tx.getInstance());
+      long percent = contract.getNewContract().getConsumeUserResourcePercent();
+      if (percent < 0 || percent > 100) {
+        throw new ContractValidateException("percent must be >= 0 and <= 100");
+      }
     }
     return createTransactionCapsuleWithoutValidate(message,contractType);
   }
@@ -317,5 +334,111 @@ public class Wallet {
         });
     return nodeListBuilder.build();
   }
+
+  public Transaction triggerConstantContract(SmartContractOuterClass.TriggerSmartContract triggerSmartContract,
+                                             TransactionCapsule trxCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
+          throws ContractValidateException, ContractExeException, HeaderNotFound, VMIllegalException {
+    ContractStore contractStore = dbManager.getContractStore();
+    byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
+    byte[] isContractExiste = contractStore.findContractByHash(contractAddress);
+    if (ArrayUtils.isEmpty(isContractExiste)) {
+      throw new ContractValidateException("No contract or not a smart contract");
+    }
+    if (!Args.getInstance().isSupportConstant()) {
+      throw new ContractValidateException("this node does not support constant");
+    }
+    return callConstantContract(trxCap, builder, retBuilder);
+  }
+
+  public Transaction callConstantContract(TransactionCapsule trxCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
+          throws ContractValidateException, ContractExeException, HeaderNotFound, VMIllegalException {
+    if (!Args.getInstance().isSupportConstant()) {
+      throw new ContractValidateException("this node does not support constant");
+    }
+    //DepositImpl deposit = DepositImpl.createRoot(dbManager);
+    Block headBlock;
+    List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
+    if (CollectionUtils.isEmpty(blockCapsuleList)) {
+      throw new HeaderNotFound("latest block not found");
+    } else {
+      headBlock = blockCapsuleList.get(0).getInstance();
+    }
+
+    TransactionContext context = new TransactionContext(new BlockCapsule(headBlock), trxCap,
+            StoreFactory.getInstance(), true,false);
+
+    /*VMConfig.initVmHardFork(ForkController.instance().pass(ForkBlockVersionConsts.ENERGY_LIMIT));
+    VMConfig.initAllowMultiSign(dbManager.getDynamicPropertiesStore().getAllowMultiSign());
+    VMConfig.initAllowTvmTransferTrc10(dbManager.getDynamicPropertiesStore().getAllowTvmTransferTrc10());
+    VMConfig.initAllowTvmConstantinople(dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople());
+    VMConfig.initAllowTvmSolidity059(dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059());*/
+
+    VMActuator vmActuator = new VMActuator(true);
+    vmActuator.validate(context);
+    vmActuator.execute(context);
+
+    ProgramResult result = context.getProgramResult();
+    if (result.getException() != null) {
+      RuntimeException e = result.getException();
+      log.warn("Constant call has error {}", e.getMessage());
+      throw e;
+    }
+    TransactionResultCapsule ret = new TransactionResultCapsule();
+    builder.addConstantResult(ByteString.copyFrom(result.getHReturn()));
+    ret.setStatus(Result.code.SUCESS);
+    if (StringUtils.isNoneEmpty(result.getRuntimeError())) {
+      ret.setStatus(Result.code.FAILED);
+      retBuilder.setMessage(ByteString.copyFromUtf8(result.getRuntimeError())).build();
+    }
+    if (result.isRevert()) {
+      ret.setStatus(Result.code.FAILED);
+      retBuilder.setMessage(ByteString.copyFromUtf8("REVERT opcode executed")).build();
+    }
+    trxCap.setResult(ret);
+    return trxCap.getInstance();
+  }
+
+  public SmartContractOuterClass.SmartContract getContract(GrpcAPI.BytesMessage bytesMessage) {
+    byte[] address = bytesMessage.getValue().toByteArray();
+    AccountCapsule accountCapsule = dbManager.getAccountStore().get(address);
+    if (accountCapsule == null) {
+      log.error("Get contract failed, the account does not exist or the account does not have a code hash!");
+      return null;
+    }
+    ContractCapsule contractCapsule = dbManager.getContractStore().get(bytesMessage.getValue().toByteArray());
+    if (Objects.nonNull(contractCapsule)) {
+      return contractCapsule.getInstance();
+    }
+    return null;
+  }
+
+  public Transaction triggerContract(SmartContractOuterClass.TriggerSmartContract triggerSmartContract,
+                                     TransactionCapsule trxCap, TransactionExtention.Builder builder,
+                                     Return.Builder retBuilder)
+          throws ContractValidateException, ContractExeException, HeaderNotFound, VMIllegalException {
+    ContractStore contractStore = dbManager.getContractStore();
+    byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
+    SmartContractOuterClass.SmartContract.ABI abi = contractStore.getABI(contractAddress);
+    if (abi == null) {
+      throw new ContractValidateException("No contract or not a valid smart contract");
+    }
+    byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());
+    if (ContractUtils.isConstant(abi, selector)) {
+      return callConstantContract(trxCap, builder, retBuilder);
+    } else {
+      return trxCap.getInstance();
+    }
+  }
+  private static byte[] getSelector(byte[] data) {
+    if (data == null ||
+            data.length < 4) {
+      return null;
+    }
+
+    byte[] ret = new byte[4];
+    System.arraycopy(data, 0, ret, 0, 4);
+    return ret;
+  }
+
 
 }

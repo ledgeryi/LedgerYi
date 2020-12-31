@@ -1,6 +1,6 @@
 package cn.ledgeryi.framework.core.db;
 
-import cn.ledgeryi.actuator.utils.TransactionRegister;
+import cn.ledgeryi.contract.utils.TransactionRegister;
 import cn.ledgeryi.chainbase.common.message.Message;
 import cn.ledgeryi.chainbase.core.ChainBaseManager;
 import cn.ledgeryi.chainbase.core.capsule.*;
@@ -86,6 +86,11 @@ public class Manager {
   private TransactionHistoryStore transactionHistoryStore;
   @Autowired
   private CodeStore codeStore;
+  @Autowired
+  private ContractStore contractStore;
+  @Autowired
+  @Getter
+  private StorageRowStore storageRowStore;
   @Autowired
   private NullifierStore nullifierStore;
   @Getter
@@ -219,6 +224,17 @@ public class Manager {
 
   public void stopRepushThread() {
     isRunRepushThread = false;
+  }
+
+  public ContractStore getContractStore() {
+    return contractStore;
+  }
+
+  public VotesStore getVotesStore() {
+    return this.votesStore;
+  }
+  public CodeStore getCodeStore() {
+    return codeStore;
   }
 
   @PostConstruct

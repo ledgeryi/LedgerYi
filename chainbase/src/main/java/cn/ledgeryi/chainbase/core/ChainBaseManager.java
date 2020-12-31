@@ -44,6 +44,12 @@ public class ChainBaseManager {
   private CodeStore codeStore;
   @Autowired
   @Getter
+  private ContractStore contractStore;
+  @Autowired
+  @Getter
+  private StorageRowStore storageRowStore;
+  @Autowired
+  @Getter
   private NullifierStore nullifierStore;
   @Autowired
   @Getter

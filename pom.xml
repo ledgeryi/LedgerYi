@@ -17,7 +17,7 @@
         <module>crypto</module>
         <module>common</module>
         <module>node</module>
-        <module>actuator</module>
+        <module>contract</module>
         <module>chainbase</module>
         <module>consensus</module>
         <module>sdk</module>
@@ -75,7 +75,7 @@
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
-                <artifactId>actuator</artifactId>
+                <artifactId>contract</artifactId>
                 <version>latest</version>
             </dependency>
             <dependency>

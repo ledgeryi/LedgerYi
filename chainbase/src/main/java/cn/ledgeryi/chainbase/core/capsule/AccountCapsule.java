@@ -93,12 +93,78 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * get account from address.
    */
+  public AccountCapsule(ByteString address,
+                        AccountType accountType, long createTime,
+                        boolean withDefaultPermission, DynamicPropertiesStore dynamicPropertiesStore) {
+    if (withDefaultPermission) {
+      Permission owner = createDefaultOwnerPermission(address);
+      Permission active = createDefaultActivePermission(address, dynamicPropertiesStore);
+
+      this.account = Account.newBuilder()
+              .setType(accountType)
+              .setAddress(address)
+              .setCreateTime(createTime)
+              .setOwnerPermission(owner)
+              .addActivePermission(active)
+              .build();
+    } else {
+      this.account = Account.newBuilder()
+              .setType(accountType)
+              .setAddress(address)
+              .setCreateTime(createTime)
+              .build();
+    }
+
+  }
+
+  /**
+   * get account from address.
+   */
   public AccountCapsule(ByteString address, AccountType accountType, long createTime) {
     this.account = Account.newBuilder()
             .setType(accountType)
             .setAddress(address)
             .setCreateTime(createTime)
             .build();
+  }
+
+  public static Permission createDefaultOwnerPermission(ByteString address) {
+    Key.Builder key = Key.newBuilder();
+    key.setAddress(address);
+    key.setWeight(1);
+
+    Permission.Builder owner = Permission.newBuilder();
+    owner.setType(PermissionType.Owner);
+    owner.setId(0);
+    owner.setPermissionName("owner");
+    owner.setThreshold(0);
+    owner.setParentId(0);
+    owner.addKeys(key);
+
+    return owner.build();
+  }
+
+  public static Permission createDefaultActivePermission(ByteString address,
+                                                         DynamicPropertiesStore dynamicPropertiesStore) {
+    Key.Builder key = Key.newBuilder();
+    key.setAddress(address);
+    key.setWeight(1);
+
+    Permission.Builder active = Permission.newBuilder();
+    active.setType(PermissionType.Active);
+    active.setId(2);
+    active.setPermissionName("active");
+    active.setThreshold(1);
+    active.setParentId(0);
+    active.setOperations(getActiveDefaultOperations(dynamicPropertiesStore));
+    active.addKeys(key);
+
+    return active.build();
+  }
+
+  private static ByteString getActiveDefaultOperations(
+          DynamicPropertiesStore dynamicPropertiesStore) {
+    return ByteString.copyFrom(dynamicPropertiesStore.getActiveDefaultOperations());
   }
 
   /**
@@ -212,6 +278,22 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     }
   }
 
+  public long getAllFrozenBalanceForEnergy() {
+    return getEnergyFrozenBalance() + getAcquiredDelegatedFrozenBalanceForEnergy();
+  }
+
+  public long getEnergyFrozenBalance() {
+    return this.account.getAccountResource().getFrozenBalanceForEnergy().getFrozenBalance();
+  }
+
+  public long getAcquiredDelegatedFrozenBalanceForEnergy() {
+    return getAccountResource().getAcquiredDelegatedFrozenBalanceForEnergy();
+  }
+
+  public Account.AccountResource getAccountResource() {
+    return this.account.getAccountResource();
+  }
+
   public long getLatestAssetOperationTimeV2(String assetName) {
     return this.account.getLatestAssetOperationTimeV2OrDefault(assetName, 0);
   }
@@ -261,4 +343,14 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public int compareTo(AccountCapsule otherObject) {
     return 0;
   }
+
+  // just for vm create2 instruction
+  /*public void clearDelegatedResource() {
+    Builder builder = account.toBuilder();
+    AccountResource newAccountResource = getAccountResource().toBuilder()
+            .setAcquiredDelegatedFrozenBalanceForEnergy(0L).build();
+    builder.setAccountResource(newAccountResource);
+    builder.setAcquiredDelegatedFrozenBalanceForBandwidth(0L);
+    this.account = builder.build();
+  }*/
 }

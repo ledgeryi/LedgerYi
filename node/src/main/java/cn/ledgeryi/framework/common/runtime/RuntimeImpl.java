@@ -33,7 +33,7 @@ public class RuntimeImpl implements Runtime {
     this.context = context;
     actuatorList = ActuatorCreator.getINSTANCE().createActuator(context.getTxCap());
     for (Actuator act : actuatorList) {
-      act.validate();
+      act.validate(context);
       act.execute(context.getProgramResult().getRet());
     }
     setResultCode(context.getProgramResult());

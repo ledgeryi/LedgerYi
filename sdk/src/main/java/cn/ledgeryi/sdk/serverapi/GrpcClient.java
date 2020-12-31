@@ -5,6 +5,7 @@ import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.WalletGrpc;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.protos.contract.InnerContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
@@ -38,7 +39,7 @@ public class GrpcClient {
         return blockingStubFull.createTransaction(builder.build());
     }
 
-    boolean broadcastTransaction(Transaction signaturedTransaction) {
+    public boolean broadcastTransaction(Transaction signaturedTransaction) {
         int i = 10;
         Return response = blockingStubFull.broadcastTransaction(signaturedTransaction);
         while (!response.getResult() && response.getCode() == Return.response_code.SERVER_BUSY && i > 0) {
@@ -90,4 +91,28 @@ public class GrpcClient {
         builder.setNum(blockNum);
         return blockingStubFull.getTransactionCountByBlockNum(builder.build());
     }
+
+    public SmartContractOuterClass.SmartContract getContract(byte[] address) {
+        ByteString byteString = ByteString.copyFrom(address);
+        BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
+        return blockingStubFull.getContract(bytesMessage);
+    }
+
+    public TransactionExtention triggerContract(SmartContractOuterClass.TriggerSmartContract request) {
+        return blockingStubFull.triggerContract(request);
+    }
+
+    public TransactionExtention deployContract(SmartContractOuterClass.CreateSmartContract request) {
+        return blockingStubFull.deployContract(request);
+    }
+
+    public TransactionExtention triggerConstantContract(SmartContractOuterClass.TriggerSmartContract request) {
+        return blockingStubFull.triggerConstantContract(request);
+    }
+
+    public TransactionExtention clearContractABI(SmartContractOuterClass.ClearABIContract request) {
+        return blockingStubFull.clearContractABI(request);
+    }
+
+
 }

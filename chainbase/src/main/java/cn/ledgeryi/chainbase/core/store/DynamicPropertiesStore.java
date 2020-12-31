@@ -33,6 +33,13 @@ public class DynamicPropertiesStore extends LedgerYiStoreWithRevoking<BytesCapsu
   private static final byte[] ALLOW_PROTO_FILTER_NUM = "ALLOW_PROTO_FILTER_NUM".getBytes();
   //Used only for account state root, once，value is {0,1} allow is 1
   private static final byte[] ALLOW_ACCOUNT_STATE_ROOT = "ALLOW_ACCOUNT_STATE_ROOT".getBytes();
+  private static final byte[] ACTIVE_DEFAULT_OPERATIONS = "ACTIVE_DEFAULT_OPERATIONS".getBytes();
+  private static final byte[] MAX_CPU_TIME_OF_ONE_TX = "MAX_CPU_TIME_OF_ONE_TX".getBytes();
+  //If the parameter is larger than 0, the contract is allowed to be created.
+  private static final byte[] ALLOW_CREATION_OF_CONTRACTS = "ALLOW_CREATION_OF_CONTRACTS".getBytes();
+  private static final byte[] ENERGY_FEE = "ENERGY_FEE".getBytes();
+  //This value is only allowed to be 0, 1, -1
+  private static final byte[] ALLOW_ADAPTIVE_ENERGY = "ALLOW_ADAPTIVE_ENERGY".getBytes();
 
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
@@ -88,6 +95,68 @@ public class DynamicPropertiesStore extends LedgerYiStoreWithRevoking<BytesCapsu
       this.saveAllowProtoFilterNum(0);
     }
 
+    try {
+      this.getActiveDefaultOperations();
+    } catch (IllegalArgumentException e) {
+      String contractType = "7fff1fc0033e0000000000000000000000000000000000000000000000000000";
+      byte[] bytes = ByteArray.fromHexString(contractType);
+      this.saveActiveDefaultOperations(bytes);
+    }
+
+    try {
+      this.getMaxCpuTimeOfOneTx();
+    } catch (IllegalArgumentException e) {
+      this.saveMaxCpuTimeOfOneTx(50L);
+    }
+
+    try {
+      this.getEnergyFee();
+    } catch (IllegalArgumentException e) {
+      this.saveEnergyFee(100L);// 100 sun per energy
+    }
+
+    try {
+      this.getAdaptiveResourceLimitTargetRatio();
+    } catch (IllegalArgumentException e) {
+      this.saveAdaptiveResourceLimitTargetRatio(14400);// 24 * 60 * 10,one minute 1/10 total limit
+    }
+
+    try {
+      this.getTotalEnergyLimit();
+    } catch (IllegalArgumentException e) {
+      this.saveTotalEnergyLimit(50_000_000_000L);
+    }
+
+    try {
+      this.getTotalEnergyCurrentLimit();
+    } catch (IllegalArgumentException e) {
+      this.saveTotalEnergyCurrentLimit(getTotalEnergyLimit());
+    }
+
+
+    try {
+      this.getAllowAdaptiveEnergy();
+    } catch (IllegalArgumentException e) {
+      this.saveAllowAdaptiveEnergy(0);
+    }
+
+    try {
+      this.getTotalEnergyWeight();
+    } catch (IllegalArgumentException e) {
+      this.saveTotalEnergyWeight(0L);
+    }
+
+  }
+
+  public void saveAllowAdaptiveEnergy(long value) {
+    this.put(ALLOW_ADAPTIVE_ENERGY, new BytesCapsule(ByteArray.fromLong(value)));
+  }
+
+
+  public void saveTotalEnergyLimit(long totalEnergyLimit) {
+    this.put(DynamicResourceProperties.TOTAL_ENERGY_LIMIT, new BytesCapsule(ByteArray.fromLong(totalEnergyLimit)));
+    long ratio = getAdaptiveResourceLimitTargetRatio();
+    saveTotalEnergyTargetLimit(totalEnergyLimit / ratio);
   }
 
   public String intArrayToString(int[] a) {
@@ -130,6 +199,18 @@ public class DynamicPropertiesStore extends LedgerYiStoreWithRevoking<BytesCapsu
         .map(ByteArray::toStr)
         .map(this::stringToIntArray)
         .orElseThrow(() -> new IllegalArgumentException("not found latest SOLIDIFIED_BLOCK_NUM timestamp"));
+  }
+
+  public void saveTotalEnergyWeight(long totalEnergyWeight) {
+    this.put(DynamicResourceProperties.TOTAL_ENERGY_WEIGHT,
+            new BytesCapsule(ByteArray.fromLong(totalEnergyWeight)));
+  }
+
+  public long getTotalEnergyWeight() {
+    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_WEIGHT))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(() -> new IllegalArgumentException("not found TOTAL_ENERGY_WEIGHT"));
   }
 
   public int getBlockFilledSlotsNumber() {
@@ -258,5 +339,138 @@ public class DynamicPropertiesStore extends LedgerYiStoreWithRevoking<BytesCapsu
     log.info("update allow protobuf number = {}", num);
     this.put(ALLOW_PROTO_FILTER_NUM, new BytesCapsule(ByteArray.fromLong(num)));
   }
+
+  public void saveActiveDefaultOperations(byte[] value) {
+    this.put(ACTIVE_DEFAULT_OPERATIONS,
+            new BytesCapsule(value));
+  }
+
+  public byte[] getActiveDefaultOperations() {
+    return Optional.ofNullable(getUnchecked(ACTIVE_DEFAULT_OPERATIONS))
+            .map(BytesCapsule::getData)
+            .orElseThrow(
+                    () -> new IllegalArgumentException("not found ACTIVE_DEFAULT_OPERATIONS"));
+  }
+
+  public void saveMaxCpuTimeOfOneTx(long time) {
+    this.put(MAX_CPU_TIME_OF_ONE_TX,
+            new BytesCapsule(ByteArray.fromLong(time)));
+  }
+
+  public long getMaxCpuTimeOfOneTx() {
+    return Optional.ofNullable(getUnchecked(MAX_CPU_TIME_OF_ONE_TX))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(
+                    () -> new IllegalArgumentException("not found MAX_CPU_TIME_OF_ONE_TX"));
+  }
+
+  public void saveEnergyFee(long totalEnergyFee) {
+    this.put(ENERGY_FEE, new BytesCapsule(ByteArray.fromLong(totalEnergyFee)));
+  }
+
+  public long getEnergyFee() {
+    return Optional.ofNullable(getUnchecked(ENERGY_FEE))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(
+                    () -> new IllegalArgumentException("not found ENERGY_FEE"));
+  }
+
+  public boolean supportVM() {
+    return getAllowCreationOfContracts() == 1L;
+  }
+
+  public void saveAllowCreationOfContracts(long allowCreationOfContracts) {
+    this.put(ALLOW_CREATION_OF_CONTRACTS, new BytesCapsule(ByteArray.fromLong(allowCreationOfContracts)));
+  }
+
+  public long getAllowCreationOfContracts() {
+    return Optional.ofNullable(getUnchecked(ALLOW_CREATION_OF_CONTRACTS))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(() -> new IllegalArgumentException("not found ALLOW_CREATION_OF_CONTRACTS"));
+  }
+
+  public void saveTotalEnergyCurrentLimit(long totalEnergyCurrentLimit) {
+    this.put(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT,
+            new BytesCapsule(ByteArray.fromLong(totalEnergyCurrentLimit)));
+  }
+
+  public long getTotalEnergyCurrentLimit() {
+    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(
+                    () -> new IllegalArgumentException("not found TOTAL_ENERGY_CURRENT_LIMIT"));
+  }
+
+  public void saveTotalEnergyTargetLimit(long targetTotalEnergyLimit) {
+    this.put(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT,
+            new BytesCapsule(ByteArray.fromLong(targetTotalEnergyLimit)));
+  }
+
+  public long getAllowAdaptiveEnergy() {
+    return Optional.ofNullable(getUnchecked(ALLOW_ADAPTIVE_ENERGY))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(
+                    () -> new IllegalArgumentException("not found ALLOW_ADAPTIVE_ENERGY"));
+  }
+
+  public void saveTotalEnergyLimit2(long totalEnergyLimit) {
+    this.put(DynamicResourceProperties.TOTAL_ENERGY_LIMIT,
+            new BytesCapsule(ByteArray.fromLong(totalEnergyLimit)));
+
+    long ratio = getAdaptiveResourceLimitTargetRatio();
+    saveTotalEnergyTargetLimit(totalEnergyLimit / ratio);
+    if (getAllowAdaptiveEnergy() == 0) {
+      saveTotalEnergyCurrentLimit(totalEnergyLimit);
+    }
+  }
+
+  public long getTotalEnergyLimit() {
+    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_LIMIT))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(() -> new IllegalArgumentException("not found TOTAL_ENERGY_LIMIT"));
+  }
+
+  public void saveAdaptiveResourceLimitTargetRatio(long adaptiveResourceLimitTargetRatio) {
+    this.put(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO,
+            new BytesCapsule(ByteArray.fromLong(adaptiveResourceLimitTargetRatio)));
+  }
+
+  public long getAdaptiveResourceLimitTargetRatio() {
+    return Optional
+            .ofNullable(getUnchecked(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(() -> new IllegalArgumentException("not found ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO"));
+  }
+
+  private static class DynamicResourceProperties {
+    private static final byte[] ONE_DAY_NET_LIMIT = "ONE_DAY_NET_LIMIT".getBytes();
+    //public free bandwidth
+    private static final byte[] PUBLIC_NET_USAGE = "PUBLIC_NET_USAGE".getBytes();
+    //fixed
+    private static final byte[] PUBLIC_NET_LIMIT = "PUBLIC_NET_LIMIT".getBytes();
+    private static final byte[] PUBLIC_NET_TIME = "PUBLIC_NET_TIME".getBytes();
+    private static final byte[] FREE_NET_LIMIT = "FREE_NET_LIMIT".getBytes();
+    private static final byte[] TOTAL_NET_WEIGHT = "TOTAL_NET_WEIGHT".getBytes();
+    //ONE_DAY_NET_LIMIT - PUBLIC_NET_LIMIT，current TOTAL_NET_LIMIT
+    private static final byte[] TOTAL_NET_LIMIT = "TOTAL_NET_LIMIT".getBytes();
+    private static final byte[] TOTAL_ENERGY_TARGET_LIMIT = "TOTAL_ENERGY_TARGET_LIMIT".getBytes();
+    private static final byte[] TOTAL_ENERGY_CURRENT_LIMIT = "TOTAL_ENERGY_CURRENT_LIMIT".getBytes();
+    private static final byte[] TOTAL_ENERGY_AVERAGE_USAGE = "TOTAL_ENERGY_AVERAGE_USAGE".getBytes();
+    private static final byte[] TOTAL_ENERGY_AVERAGE_TIME = "TOTAL_ENERGY_AVERAGE_TIME".getBytes();
+    private static final byte[] TOTAL_ENERGY_WEIGHT = "TOTAL_ENERGY_WEIGHT".getBytes();
+    private static final byte[] TOTAL_ENERGY_LIMIT = "TOTAL_ENERGY_LIMIT".getBytes();
+    private static final byte[] BLOCK_ENERGY_USAGE = "BLOCK_ENERGY_USAGE".getBytes();
+    private static final byte[] ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER = "ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER".getBytes();
+    private static final byte[] ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO = "ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO".getBytes();
+
+  }
+
 
 }

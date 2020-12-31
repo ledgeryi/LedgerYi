@@ -1,7 +1,12 @@
 package cn.ledgeryi.chainbase.common.runtime;
 
+import cn.ledgeryi.chainbase.common.utils.ContractUtils;
+import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
+import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
+import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.crypto.utils.Hash;
 import cn.ledgeryi.protos.Protocol.Transaction;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import com.google.common.primitives.Longs;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
@@ -20,6 +25,8 @@ public class InternalTransaction {
   private byte[] parentHash;
   /* the amount of tx to transfer (calculated as sun) */
   private long value;
+
+  private Map<String, Long> tokenInfo = new HashMap<>();
 
   /* the address of the destination account (for message)
    * In creation transaction the receive address is - 0 */
@@ -41,6 +48,47 @@ public class InternalTransaction {
   private boolean rejected;
   private String note;
   private byte[] protoEncoded;
+
+  /**
+   * Construct a root InternalTransaction
+   */
+  public InternalTransaction(Transaction tx, InternalTransaction.TxType trxType) throws ContractValidateException {
+    this.transaction = tx;
+    TransactionCapsule trxCap = new TransactionCapsule(tx);
+    this.protoEncoded = trxCap.getData();
+    this.nonce = 0;
+    // outside transaction should not have deep, so use -1 to mark it is root.
+    // It will not count in vm trace. But this deep will be shown in program result.
+    this.deep = -1;
+    if (trxType == TxType.TX_CONTRACT_CREATION_TYPE) {
+      SmartContractOuterClass.CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);
+      if (contract == null) {
+        throw new ContractValidateException("Invalid CreateSmartContract Protocol");
+      }
+      this.sendAddress = contract.getOwnerAddress().toByteArray();
+      this.receiveAddress = EMPTY_BYTE_ARRAY;
+      this.transferToAddress = ContractUtils.generateContractAddress(tx);
+      this.note = "create";
+      this.value = contract.getNewContract().getCallValue();
+      this.data = contract.getNewContract().getBytecode().toByteArray();
+      this.tokenInfo.put(String.valueOf(contract.getTokenId()), contract.getCallTokenValue());
+    } else if (trxType == TxType.TRX_CONTRACT_CALL_TYPE) {
+      SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
+      if (contract == null) {
+        throw new ContractValidateException("Invalid TriggerSmartContract Protocol");
+      }
+      this.sendAddress = contract.getOwnerAddress().toByteArray();
+      this.receiveAddress = contract.getContractAddress().toByteArray();
+      this.transferToAddress = this.receiveAddress.clone();
+      this.note = "call";
+      this.value = contract.getCallValue();
+      this.data = contract.getData().toByteArray();
+      this.tokenInfo.put(String.valueOf(contract.getTokenId()), contract.getCallTokenValue());
+    } else {
+      // do nothing, just for running byte code
+    }
+    this.hash = trxCap.getTransactionId().getBytes();
+  }
 
   /**
    * Construct a child InternalTransaction
@@ -113,7 +161,6 @@ public class InternalTransaction {
     if (!isEmpty(hash)) {
       return Arrays.copyOf(hash, hash.length);
     }
-
     byte[] plainMsg = this.getEncoded();
     byte[] nonceByte;
     nonceByte = Longs.toByteArray(nonce);
@@ -138,16 +185,11 @@ public class InternalTransaction {
       parentHashArray = EMPTY_BYTE_ARRAY;
     }
     byte[] valueByte = Longs.toByteArray(this.value);
-    byte[] raw = new byte[parentHashArray.length + this.receiveAddress.length + this.data.length
-        + valueByte.length];
+    byte[] raw = new byte[parentHashArray.length + this.receiveAddress.length + this.data.length + valueByte.length];
     System.arraycopy(parentHashArray, 0, raw, 0, parentHashArray.length);
-    System
-        .arraycopy(this.receiveAddress, 0, raw, parentHashArray.length, this.receiveAddress.length);
-    System.arraycopy(this.data, 0, raw, parentHashArray.length + this.receiveAddress.length,
-        this.data.length);
-    System.arraycopy(valueByte, 0, raw,
-        parentHashArray.length + this.receiveAddress.length + this.data.length,
-        valueByte.length);
+    System.arraycopy(this.receiveAddress, 0, raw, parentHashArray.length, this.receiveAddress.length);
+    System.arraycopy(this.data, 0, raw, parentHashArray.length + this.receiveAddress.length, this.data.length);
+    System.arraycopy(valueByte, 0, raw, parentHashArray.length + this.receiveAddress.length + this.data.length, valueByte.length);
     this.protoEncoded = raw;
     return protoEncoded.clone();
   }
@@ -157,6 +199,14 @@ public class InternalTransaction {
     TX_CONTRACT_CREATION_TYPE,
     TX_CONTRACT_CALL_TYPE,
     TX_UNKNOWN_TYPE,
+    TRX_CONTRACT_CALL_TYPE,
+  }
+
+  public enum ExecutorType {
+    ET_PRE_TYPE,
+    ET_NORMAL_TYPE,
+    ET_CONSTANT_TYPE,
+    ET_UNKNOWN_TYPE,
   }
 
 }

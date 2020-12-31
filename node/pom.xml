@@ -22,7 +22,7 @@
         </dependency>
         <dependency>
             <groupId>cn.ledgeryi</groupId>
-            <artifactId>actuator</artifactId>
+            <artifactId>contract</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.ledgeryi</groupId>

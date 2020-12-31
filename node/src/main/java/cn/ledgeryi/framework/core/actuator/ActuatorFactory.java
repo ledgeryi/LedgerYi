@@ -1,6 +1,6 @@
 package cn.ledgeryi.framework.core.actuator;
 
-import cn.ledgeryi.actuator.core.AbstractActuator;
+import cn.ledgeryi.contract.core.AbstractActuator;
 import cn.ledgeryi.chainbase.actuator.Actuator;
 import cn.ledgeryi.chainbase.actuator.TransactionFactory;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
@@ -11,7 +11,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import cn.ledgeryi.framework.core.db.Manager;
 
-@Slf4j(topic = "actuator")
+@Slf4j(topic = "contract")
 public class ActuatorFactory {
 
   public static final ActuatorFactory INSTANCE = new ActuatorFactory();
@@ -24,7 +24,7 @@ public class ActuatorFactory {
   }
 
   /**
-   * create actuator.
+   * create contract.
    */
   public static List<Actuator> createActuator(TransactionCapsule transactionCapsule,
                                               Manager manager) {

@@ -1,6 +1,6 @@
 package cn.ledgeryi.framework.core.actuator;
 
-import cn.ledgeryi.actuator.core.AbstractActuator;
+import cn.ledgeryi.contract.core.AbstractActuator;
 import cn.ledgeryi.chainbase.actuator.Actuator;
 import cn.ledgeryi.chainbase.actuator.TransactionFactory;
 import cn.ledgeryi.chainbase.common.utils.ForkUtils;
@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j(topic = "actuator")
+@Slf4j(topic = "contract")
 public class ActuatorCreator {
 
   private ForkUtils forkUtils = new ForkUtils();
@@ -42,7 +42,7 @@ public class ActuatorCreator {
   }
 
   /**
-   * create actuator.
+   * create contract.
    */
   public List<Actuator> createActuator(TransactionCapsule transactionCapsule) throws ContractValidateException {
     List<Actuator> actuatorList = Lists.newArrayList();

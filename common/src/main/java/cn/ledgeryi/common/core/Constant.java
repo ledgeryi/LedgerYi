@@ -10,6 +10,13 @@ public class Constant {
   public static final long MAXIMUM_TIME_UNTIL_EXPIRATION = 24 * 60 * 60 * 1_000L; //one day
   public static final long TRANSACTION_DEFAULT_EXPIRATION_TIME = 60 * 1_000L; //60 seconds
 
+  // config for smart contract
+  public static final long PB_DEFAULT_ENERGY_LIMIT = 0L;
+  public static final long CREATOR_DEFAULT_ENERGY_LIMIT = 1000 * 10_000L;
+
+  // Numbers
+  public static final int ONE_HUNDRED = 100;
+
   // Configuration items
   public static final String LOCAL_MASTER = "localMaster";
   public static final String LOCAL_MASTER_ACCOUNT_ADDRESS = "localMasterAccountAddress";
@@ -88,5 +95,5 @@ public class Constant {
   public static final String STORAGE_BACKUP_ENABLE = "storage.backup.enable";
   public static final String STORAGE_BACKUP_PROP_PATH = "storage.backup.propPath";
 
-  public static final String ACTUATOR_WHITELIST = "actuator.whitelist";
+  public static final String ACTUATOR_WHITELIST = "contract.whitelist";
 }

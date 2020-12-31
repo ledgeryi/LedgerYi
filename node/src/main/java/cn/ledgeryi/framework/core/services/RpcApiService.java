@@ -1,27 +1,39 @@
 package cn.ledgeryi.framework.core.services;
 
-import cn.ledgeryi.api.*;
+import cn.ledgeryi.api.DatabaseGrpc;
+import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.GrpcAPI.Return.response_code;
+import cn.ledgeryi.api.WalletGrpc;
+import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
-import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
-import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
+import cn.ledgeryi.chainbase.core.capsule.*;
+import cn.ledgeryi.chainbase.core.db.TransactionContext;
+import cn.ledgeryi.chainbase.core.store.ContractStore;
+import cn.ledgeryi.chainbase.core.store.StoreFactory;
+import cn.ledgeryi.common.core.exception.ContractExeException;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.core.exception.StoreException;
+import cn.ledgeryi.common.core.exception.VMIllegalException;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
+import cn.ledgeryi.contract.vm.VMActuator;
 import cn.ledgeryi.framework.common.application.Service;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
+import cn.ledgeryi.framework.common.storage.DepositImpl;
 import cn.ledgeryi.framework.core.Wallet;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
+import cn.ledgeryi.framework.core.exception.HeaderNotFound;
 import cn.ledgeryi.framework.core.services.ratelimiter.RateLimiterInterceptor;
 import cn.ledgeryi.protos.Protocol.*;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.contract.InnerContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -29,8 +41,11 @@ import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -378,5 +393,93 @@ public class RpcApiService implements Service {
       }
       responseObserver.onCompleted();
     }
+
+    @Override
+    public void deployContract(SmartContractOuterClass.CreateSmartContract request,
+                               io.grpc.stub.StreamObserver<TransactionExtention> responseObserver) {
+      createTransactionExtention(request, ContractType.CreateSmartContract, responseObserver);
+    }
+
+    private void createTransactionExtention(Message request, ContractType contractType,
+                                            StreamObserver<TransactionExtention> responseObserver) {
+      TransactionExtention.Builder trxExtBuilder = TransactionExtention.newBuilder();
+      Return.Builder retBuilder = Return.newBuilder();
+      try {
+        TransactionCapsule trx = createTransactionCapsule(request, contractType);
+        trxExtBuilder.setTransaction(trx.getInstance());
+        trxExtBuilder.setTxid(trx.getTransactionId().getByteString());
+        retBuilder.setResult(true).setCode(response_code.SUCCESS);
+      } catch (ContractValidateException e) {
+        retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
+                .setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
+        log.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      } catch (Exception e) {
+        retBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
+                .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
+        log.info("exception caught" + e.getMessage());
+      }
+      trxExtBuilder.setResult(retBuilder);
+      responseObserver.onNext(trxExtBuilder.build());
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void clearContractABI(SmartContractOuterClass.ClearABIContract request,
+                                 StreamObserver<TransactionExtention> responseObserver) {
+      createTransactionExtention(request, ContractType.ClearABIContract, responseObserver);
+    }
+
+    @Override
+    public void getContract(BytesMessage request, StreamObserver<SmartContractOuterClass.SmartContract> responseObserver) {
+      SmartContractOuterClass.SmartContract contract = wallet.getContract(request);
+      responseObserver.onNext(contract);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void triggerContract(SmartContractOuterClass.TriggerSmartContract request,
+                                StreamObserver<TransactionExtention> responseObserver) {
+      callContract(request, responseObserver, false);
+    }
+
+    private void callContract(SmartContractOuterClass.TriggerSmartContract request,
+                              StreamObserver<TransactionExtention> responseObserver, boolean isConstant) {
+      TransactionExtention.Builder trxExtBuilder = TransactionExtention.newBuilder();
+      Return.Builder retBuilder = Return.newBuilder();
+      try {
+        TransactionCapsule trxCap = createTransactionCapsule(request,
+                ContractType.TriggerSmartContract);
+        Transaction trx;
+        if (isConstant) {
+          trx = wallet.triggerConstantContract(request, trxCap, trxExtBuilder, retBuilder);
+        } else {
+          trx = wallet.triggerContract(request, trxCap, trxExtBuilder, retBuilder);
+        }
+        trxExtBuilder.setTransaction(trx);
+        trxExtBuilder.setTxid(trxCap.getTransactionId().getByteString());
+        retBuilder.setResult(true).setCode(response_code.SUCCESS);
+        trxExtBuilder.setResult(retBuilder);
+      } catch (ContractValidateException | VMIllegalException e) {
+        retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
+                .setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
+        trxExtBuilder.setResult(retBuilder);
+        log.warn(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      } catch (RuntimeException e) {
+        retBuilder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR)
+                .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
+        trxExtBuilder.setResult(retBuilder);
+        log.warn("When run constant call in VM, have RuntimeException: " + e.getMessage());
+      } catch (Exception e) {
+        retBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
+                .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
+        trxExtBuilder.setResult(retBuilder);
+        log.warn("unknown exception caught: " + e.getMessage(), e);
+      } finally {
+        responseObserver.onNext(trxExtBuilder.build());
+        responseObserver.onCompleted();
+      }
+    }
+
+
   }
 }
