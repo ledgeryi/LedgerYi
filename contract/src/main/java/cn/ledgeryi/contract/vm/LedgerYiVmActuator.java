@@ -1,6 +1,6 @@
 package cn.ledgeryi.contract.vm;
 
-import cn.ledgeryi.chainbase.actuator.Actuator;
+import cn.ledgeryi.chainbase.actuator.VmActuator;
 import cn.ledgeryi.chainbase.common.runtime.InternalTransaction;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.ContractUtils;
@@ -43,23 +43,22 @@ import static java.lang.Math.min;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 @Slf4j(topic = "VM")
-public class VMActuator implements Actuator {
-
-  private Protocol.Transaction tx;
-  private BlockCapsule blockCap;
-  private Repository repository;
-  private InternalTransaction rootInternalTransaction;
-  private ProgramInvokeFactory programInvokeFactory;
-
+public class LedgerYiVmActuator implements VmActuator {
 
   private VM vm;
   private Program program;
+  private BlockCapsule blockCap;
+  private Repository repository;
+  private Protocol.Transaction tx;
+  private LogInfoTriggerParser logInfoTriggerParser;
+  private ProgramInvokeFactory programInvokeFactory;
   private VmConfig vmConfig = VmConfig.getInstance();
+  private InternalTransaction rootInternalTransaction;
+  private InternalTransaction.ExecutorType executorType;
 
   @Getter
   @Setter
   private InternalTransaction.TxType txType;
-  private InternalTransaction.ExecutorType executorType;
 
   @Getter
   @Setter
@@ -68,9 +67,8 @@ public class VMActuator implements Actuator {
   @Setter
   private boolean enableEventLinstener;
 
-  private LogInfoTriggerParser logInfoTriggerParser;
 
-  public VMActuator(boolean isConstanCall) {
+  public LedgerYiVmActuator(boolean isConstanCall) {
     this.isConstanCall = isConstanCall;
     programInvokeFactory = new ProgramInvokeFactoryImpl();
   }
@@ -314,7 +312,7 @@ public class VMActuator implements Actuator {
       long vmStartInUs = System.nanoTime() / VMConstant.ONE_THOUSAND;
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE, executorType, tx,
-              tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs, 0);
+              tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs);
       this.vm = new VM();
       this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
@@ -404,7 +402,7 @@ public class VMActuator implements Actuator {
       long vmStartInUs = System.nanoTime() / VMConstant.ONE_THOUSAND;
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CALL_TYPE,
-              executorType, tx, tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs, energyLimit);
+              executorType, tx, tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs);
       if (isConstanCall) {
         programInvoke.setConstantCall();
       }

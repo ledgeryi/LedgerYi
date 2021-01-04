@@ -44,20 +44,12 @@ public class ContractUtils {
         return Hash.sha3omit12(combined);
     }
 
-    public static boolean isConstant(ABI abi, TriggerSmartContract triggerSmartContract) throws ContractValidateException {
-        try {
-            boolean constant = isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
-            if (constant) {
-                if (!DBConfig.isSupportConstant()) {
-                    throw new ContractValidateException("this node don't support constant");
-                }
-            }
-            return constant;
-        } catch (ContractValidateException e) {
-            throw e;
-        } catch (Exception e) {
+    public static boolean isConstant(ABI abi, TriggerSmartContract triggerSmartContract) {
+        boolean constant = isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
+        if (constant && !DBConfig.isSupportConstant()) {
             return false;
         }
+        return true;
     }
 
     public static boolean isConstant(ABI abi, byte[] selector) {

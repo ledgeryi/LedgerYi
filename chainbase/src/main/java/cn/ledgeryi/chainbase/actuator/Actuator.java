@@ -2,10 +2,14 @@ package cn.ledgeryi.chainbase.actuator;
 
 import cn.ledgeryi.common.core.exception.ContractExeException;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 public interface Actuator {
 
-  void execute(Object object) throws ContractExeException;
+  boolean execute(Object result) throws ContractExeException;
 
-  void validate(Object object) throws ContractValidateException;
+  boolean validate() throws ContractValidateException;
+
+  ByteString getOwnerAddress() throws InvalidProtocolBufferException;
 }

@@ -3,6 +3,7 @@ package cn.ledgeryi.framework.core;
 import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.GrpcAPI.Return.response_code;
+import cn.ledgeryi.chainbase.actuator.Actuator;
 import cn.ledgeryi.chainbase.common.message.Message;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.ContractUtils;
@@ -14,12 +15,13 @@ import cn.ledgeryi.chainbase.core.store.ContractStore;
 import cn.ledgeryi.chainbase.core.store.StoreFactory;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.contract.vm.VMActuator;
+import cn.ledgeryi.contract.vm.LedgerYiVmActuator;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.SignUtils;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
 import cn.ledgeryi.framework.common.utils.Utils;
+import cn.ledgeryi.framework.core.actuator.ActuatorFactory;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.*;
@@ -31,10 +33,9 @@ import cn.ledgeryi.protos.Protocol.Block;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -112,9 +113,24 @@ public class Wallet {
     return accountCapsule.getInstance();
   }
 
-  private TransactionCapsule createTransactionCapsuleWithoutValidate(com.google.protobuf.Message message,
-                                                                     ContractType contractType) {
+  public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType)
+          throws ContractValidateException {
     TransactionCapsule tx = new TransactionCapsule(message, contractType);
+    if (contractType != ContractType.CreateSmartContract && contractType != ContractType.TriggerSmartContract) {
+      // ContractType.ClearABIContract
+      List<Actuator> actList = ActuatorFactory.createActuator(tx, dbManager);
+      for (Actuator act : actList) {
+        act.validate();
+      }
+    }
+
+    if (contractType == ContractType.CreateSmartContract) {
+      CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx.getInstance());
+      long percent = contract.getNewContract().getConsumeUserResourcePercent();
+      if (percent < 0 || percent > 100) {
+        throw new ContractValidateException("percent must be >= 0 and <= 100");
+      }
+    }
     try {
       BlockCapsule.BlockId blockId = dbManager.getHeadBlockId();
       if ("solid".equals(Args.getInstance().getTxReferenceBlock())) {
@@ -128,19 +144,6 @@ public class Wallet {
       log.error("Create transaction capsule failed.", e);
     }
     return tx;
-  }
-
-  public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType)
-          throws ContractValidateException {
-    TransactionCapsule tx = new TransactionCapsule(message, contractType);
-    if (contractType == ContractType.CreateSmartContract) {
-      CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx.getInstance());
-      long percent = contract.getNewContract().getConsumeUserResourcePercent();
-      if (percent < 0 || percent > 100) {
-        throw new ContractValidateException("percent must be >= 0 and <= 100");
-      }
-    }
-    return createTransactionCapsuleWithoutValidate(message,contractType);
   }
 
   /**
@@ -349,9 +352,9 @@ public class Wallet {
     TransactionContext context = new TransactionContext(new BlockCapsule(headBlock),
             trxCap, StoreFactory.getInstance(), true,false);
 
-    VMActuator vmActuator = new VMActuator(true);
-    vmActuator.validate(context);
-    vmActuator.execute(context);
+    LedgerYiVmActuator ledgerYiVmActuator = new LedgerYiVmActuator(true);
+    ledgerYiVmActuator.validate(context);
+    ledgerYiVmActuator.execute(context);
 
     ProgramResult result = context.getProgramResult();
     if (result.getException() != null) {

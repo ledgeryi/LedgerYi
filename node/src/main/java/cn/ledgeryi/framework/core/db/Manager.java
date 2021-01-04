@@ -17,10 +17,12 @@ import cn.ledgeryi.common.utils.Pair;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.consenus.Consensus;
 import cn.ledgeryi.consenus.base.Param;
+import cn.ledgeryi.contract.utils.TransactionRegister;
 import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.common.runtime.RuntimeImpl;
 import cn.ledgeryi.framework.common.utils.ForkController;
 import cn.ledgeryi.framework.common.utils.SessionOptional;
+import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.capsule.utils.BlockUtil;
 import cn.ledgeryi.framework.core.config.args.Args;
@@ -269,8 +271,8 @@ public class Manager {
     //initStoreFactory
     prepareStoreFactory();
     //initActuatorCreator
-    //ActuatorCreator.init();
-    //TransactionRegister.registerActuator();
+    ActuatorCreator.init();
+    TransactionRegister.registerActuator();
   }
 
   public BlockCapsule.BlockId getGenesisBlockId() {
@@ -388,7 +390,6 @@ public class Manager {
     }
   }
 
-  // Dup:duplicate
   public void validateDup(TransactionCapsule transactionCapsule) throws DupTransactionException {
     if (containsTransaction(transactionCapsule)) {
       log.debug(ByteArray.toHexString(transactionCapsule.getTransactionId().getBytes()));
@@ -404,8 +405,8 @@ public class Manager {
    * push transaction into pending.
    */
   public boolean pushTransaction(final TransactionCapsule tx)
-      throws ValidateSignatureException, ContractValidateException, DupTransactionException, TaposException,
-          TooBigTransactionException, TransactionExpirationException, ReceiptCheckErrException, ContractExeException {
+          throws ValidateSignatureException, ContractValidateException, DupTransactionException, TaposException,
+          TooBigTransactionException, TransactionExpirationException, ReceiptCheckErrException, ContractExeException, VMIllegalException {
 
     synchronized (pushTransactionQueue) {
       pushTransactionQueue.add(tx);
@@ -453,7 +454,7 @@ public class Manager {
   private void applyBlock(BlockCapsule block) throws ContractValidateException,
           ContractExeException, ValidateSignatureException, TransactionExpirationException,
           TooBigTransactionException, DupTransactionException, TaposException, ValidateScheduleException,
-          ReceiptCheckErrException, BadBlockException {
+          ReceiptCheckErrException, BadBlockException, VMIllegalException {
 
     processBlock(block);
     this.blockStore.put(block.getBlockId().getBytes(), block);
@@ -513,10 +514,10 @@ public class Manager {
             | ReceiptCheckErrException
             | TooBigTransactionException
             | ValidateScheduleException
-            | BadBlockException e) {
+            | BadBlockException
+            | VMIllegalException e) {
           log.warn(e.getMessage(), e);
           exception = e;
-          throw e;
         } finally {
           if (exception != null) {
             log.warn("switch back because exception thrown while switching forks. " + exception.getMessage(), exception);
@@ -541,7 +542,8 @@ public class Manager {
                   | DupTransactionException
                   | TransactionExpirationException
                   | TooBigTransactionException
-                  | ValidateScheduleException e) {
+                  | ValidateScheduleException
+                  | VMIllegalException e) {
                 log.warn(e.getMessage(), e);
               }
             }
@@ -558,7 +560,7 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
           UnLinkedBlockException, ValidateScheduleException, TaposException, TooBigTransactionException,
           DupTransactionException, TransactionExpirationException, BadNumberBlockException,
-          BadBlockException, NonCommonBlockException, ReceiptCheckErrException {
+          BadBlockException, NonCommonBlockException, ReceiptCheckErrException, VMIllegalException {
     long start = System.currentTimeMillis();
     PendingManager pm = new PendingManager(this,block);
     try {
@@ -602,8 +604,11 @@ public class Manager {
       }
       log.info("save block: {}", newBlock);
     } catch (Throwable throwable){
-      pm.close();
+      log.error(throwable.getMessage(), throwable);
+      khaosDb.removeBlk(block.getBlockId());
       throw throwable;
+    } finally {
+      pm.close();
     }
     //clear ownerAddressSet
     synchronized (pushTransactionQueue) {
@@ -698,9 +703,9 @@ public class Manager {
    * Process transaction.
    */
   public Protocol.TransactionInfo processTransaction(final TransactionCapsule txCap, BlockCapsule blockCap)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      TransactionExpirationException, TooBigTransactionException, DupTransactionException,
-      TaposException, ReceiptCheckErrException {
+          throws ValidateSignatureException, ContractValidateException, ContractExeException,
+          TransactionExpirationException, TooBigTransactionException, DupTransactionException,
+          TaposException, ReceiptCheckErrException, VMIllegalException {
 
     if (txCap == null) {
       log.error("txCap is null");
@@ -717,8 +722,9 @@ public class Manager {
 
     TransactionTrace trace = new TransactionTrace(txCap, StoreFactory.getInstance(), new RuntimeImpl(this));
     txCap.setTxTrace(trace);
-
+    trace.checkIsConstant();
     trace.init(blockCap, eventPluginLoaded);
+
     trace.exec();
 
     if (Objects.nonNull(blockCap)) {
@@ -864,7 +870,7 @@ public class Manager {
    */
   public void processBlock(BlockCapsule block) throws ValidateSignatureException, ContractValidateException,
           ContractExeException, TaposException, TooBigTransactionException, DupTransactionException, BadBlockException,
-          TransactionExpirationException, ValidateScheduleException, ReceiptCheckErrException {
+          TransactionExpirationException, ValidateScheduleException, ReceiptCheckErrException, VMIllegalException {
     // checkMaster
     if (!consensus.validBlock(block)) {
       throw new ValidateScheduleException("validateMasterSchedule error");
@@ -1012,7 +1018,7 @@ public class Manager {
     }
     try {
       this.pushTransaction(tx);
-    } catch (ValidateSignatureException | ContractValidateException | ContractExeException e) {
+    } catch (ValidateSignatureException | ContractValidateException | ContractExeException | VMIllegalException e) {
       log.debug(e.getMessage(), e);
     } catch (DupTransactionException e) {
       log.debug("pending manager: dup trans", e);

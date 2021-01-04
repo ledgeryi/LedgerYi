@@ -8,7 +8,7 @@ import cn.ledgeryi.common.core.exception.ItemNotFoundException;
 import cn.ledgeryi.common.runtime.vm.DataWord;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.ByteUtil;
-import cn.ledgeryi.common.utils.StringUtil;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.contract.vm.config.VmConfig;
 import cn.ledgeryi.contract.vm.program.Storage;
 import cn.ledgeryi.contract.vm.repository.Key;
@@ -370,9 +370,7 @@ public class DepositImpl implements Deposit {
     }
 
     if (value < 0 && balance < -value) {
-      throw new RuntimeException(
-          StringUtil.createReadableString(accountCapsule.createDbKey())
-              + " insufficient balance");
+      throw new RuntimeException(DecodeUtil.createReadableString(accountCapsule.createDbKey()) + " insufficient balance");
     }
     accountCapsule.setBalance(Math.addExact(balance, value));
     Key key = Key.create(address);

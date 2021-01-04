@@ -1,12 +1,13 @@
 package cn.ledgeryi.framework.common.runtime;
 
 import cn.ledgeryi.chainbase.actuator.Actuator;
+import cn.ledgeryi.chainbase.actuator.VmActuator;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.runtime.Runtime;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.common.core.exception.ContractExeException;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
-import cn.ledgeryi.contract.vm.VMActuator;
+import cn.ledgeryi.contract.vm.LedgerYiVmActuator;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
@@ -22,9 +23,11 @@ public class RuntimeImpl implements Runtime {
 
   Manager dbManger;
 
-  Actuator actuator = null;
+  VmActuator vmActuator = null;
 
   TransactionContext context;
+
+  List<Actuator> actuatorList = null;
 
   public RuntimeImpl(Manager manager) {
     this.dbManger = manager;
@@ -34,17 +37,24 @@ public class RuntimeImpl implements Runtime {
   public void execute(TransactionContext context) throws ContractValidateException, ContractExeException {
     this.context = context;
     ContractType contractType = context.getTxCap().getInstance().getRawData().getContract().getType();
-    switch (contractType.getNumber()) {
-      case ContractType.TriggerSmartContract_VALUE:
-      case ContractType.CreateSmartContract_VALUE:
-        actuator = new VMActuator(context.isStatic());
+        switch (contractType.getNumber()) {
+          case ContractType.TriggerSmartContract_VALUE:
+          case ContractType.CreateSmartContract_VALUE:
+            vmActuator = new LedgerYiVmActuator(context.isStatic());
         break;
       default:
+        // ContractType.ClearABIContract
+        actuatorList = ActuatorCreator.getINSTANCE().createActuator(context.getTxCap());
         break;
     }
-    if (actuator != null) {
-      actuator.validate(context);
-      actuator.execute(context);
+    if (vmActuator != null) {
+      vmActuator.validate(context);
+      vmActuator.execute(context);
+    } else {
+      for (Actuator act : actuatorList) {
+        act.validate();
+        act.execute(context.getProgramResult().getRet());
+      }
     }
     setResultCode(context.getProgramResult());
   }

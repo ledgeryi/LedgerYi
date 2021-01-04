@@ -64,7 +64,7 @@ public class DBConfig {
   private static int validContractProtoThreadNum;
   @Getter
   @Setter
-  private static boolean supportConstant;
+  private static boolean supportConstant = true;
   @Getter
   @Setter
   private static int longRunningTime;

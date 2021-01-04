@@ -2,51 +2,49 @@ package cn.ledgeryi.chainbase.core.db;
 
 import cn.ledgeryi.chainbase.common.runtime.InternalTransaction;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
+import cn.ledgeryi.chainbase.common.runtime.Runtime;
+import cn.ledgeryi.chainbase.common.utils.ContractUtils;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.common.utils.ForkUtils;
-import cn.ledgeryi.chainbase.core.capsule.*;
+import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
+import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
+import cn.ledgeryi.chainbase.core.capsule.ReceiptCapsule;
+import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.chainbase.core.store.*;
-import cn.ledgeryi.common.core.exception.*;
+import cn.ledgeryi.common.core.exception.ContractExeException;
+import cn.ledgeryi.common.core.exception.ContractValidateException;
+import cn.ledgeryi.common.core.exception.ReceiptCheckErrException;
+import cn.ledgeryi.common.core.exception.VMIllegalException;
+import cn.ledgeryi.common.runtime.vm.DataWord;
+import cn.ledgeryi.common.utils.DecodeUtil;
+import cn.ledgeryi.common.utils.Sha256Hash;
+import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.util.StringUtils;
-import cn.ledgeryi.common.runtime.vm.DataWord;
-import cn.ledgeryi.common.utils.Sha256Hash;
-import cn.ledgeryi.protos.Protocol.Transaction;
-import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
-import cn.ledgeryi.chainbase.common.runtime.Runtime;
 
 import java.util.Objects;
 
-import static cn.ledgeryi.chainbase.common.runtime.InternalTransaction.TxType.TX_CONTRACT_CALL_TYPE;
-import static cn.ledgeryi.chainbase.common.runtime.InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE;
+import static cn.ledgeryi.chainbase.common.runtime.InternalTransaction.TxType.*;
 
 @Slf4j(topic = "TransactionTrace")
 public class TransactionTrace {
 
   private TransactionCapsule tx;
-
   private ReceiptCapsule receipt;
-
   private StoreFactory storeFactory;
-
   private DynamicPropertiesStore dynamicPropertiesStore;
-
   private AccountStore accountStore;
-
   private CodeStore codeStore;
-
-
+  private ContractStore contractStore;
   private InternalTransaction.TxType txType;
-
   private long txStartTimeInMs;
-
   private Runtime runtime;
-
   private ForkUtils forkUtils;
-
   @Getter
   private TransactionContext transactionContext;
   @Getter
@@ -55,12 +53,12 @@ public class TransactionTrace {
 
   public TransactionTrace(TransactionCapsule tx, StoreFactory storeFactory, Runtime runtime) {
     this.tx = tx;
-    txType = InternalTransaction.TxType.TX_PRECOMPILED_TYPE;
+    this.txType = InternalTransaction.TxType.TX_PRECOMPILED_TYPE;
     this.storeFactory = storeFactory;
     this.dynamicPropertiesStore = storeFactory.getChainBaseManager().getDynamicPropertiesStore();
+    this.contractStore = storeFactory.getChainBaseManager().getContractStore();
     this.codeStore = storeFactory.getChainBaseManager().getCodeStore();
     this.accountStore = storeFactory.getChainBaseManager().getAccountStore();
-
     this.receipt = new ReceiptCapsule(Sha256Hash.ZERO_HASH);
     this.runtime = runtime;
     this.forkUtils = new ForkUtils();
@@ -85,11 +83,31 @@ public class TransactionTrace {
     transactionContext = new TransactionContext(blockCap, tx, storeFactory, false, eventPluginLoaded);
   }
 
+  public void checkIsConstant() throws ContractValidateException, VMIllegalException {
+    TriggerSmartContract triggerContract = ContractCapsule.getTriggerContractFromTransaction(this.getTx().getInstance());
+    if (TRX_CONTRACT_CALL_TYPE == this.txType) {
+      ContractCapsule contract = contractStore.get(triggerContract.getContractAddress().toByteArray());
+      if (contract == null) {
+        log.info("contract: {} is not in contract store",
+                DecodeUtil.createReadableString(triggerContract.getContractAddress().toByteArray()));
+        throw new ContractValidateException("contract: " +
+                DecodeUtil.createReadableString(triggerContract.getContractAddress().toByteArray())
+                + " is not in contract store");
+      }
+      SmartContractOuterClass.SmartContract.ABI abi = contract.getInstance().getAbi();
+      if (!ContractUtils.isConstant(abi, triggerContract)) {
+        throw new VMIllegalException("cannot call constant method");
+      }
+    }
+  }
+
   public void exec() throws ContractExeException, ContractValidateException {
     //  VM execute
     runtime.execute(transactionContext);
     if (InternalTransaction.TxType.TX_PRECOMPILED_TYPE != txType) {
-      if (System.currentTimeMillis() - txStartTimeInMs > DBConfig.getLongRunningTime()) {
+      if (ContractResult.OUT_OF_TIME.equals(receipt.getResult())) {
+      setTimeResultType(TimeResultType.OUT_OF_TIME);
+    } else if (System.currentTimeMillis() - txStartTimeInMs > DBConfig.getLongRunningTime()) {
         setTimeResultType(TimeResultType.LONG_RUNNING);
       }
     }
@@ -117,6 +135,7 @@ public class TransactionTrace {
     if (Objects.isNull(tx.getContractRet())) {
       throw new ReceiptCheckErrException("null resultCode");
     }
+    //Verify that the local execution results are consistent with the received transaction results
     if (!tx.getContractRet().equals(receipt.getResult())) {
       log.info("this tx id: {}, the resultCode in received block: {}, the resultCode in self: {}",
           Hex.toHexString(tx.getTransactionId().getBytes()), tx.getContractRet(), receipt.getResult());
@@ -155,5 +174,6 @@ public class TransactionTrace {
   public enum TimeResultType {
     NORMAL,
     LONG_RUNNING,
+    OUT_OF_TIME
   }
 }

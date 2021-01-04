@@ -2,7 +2,10 @@ package cn.ledgeryi.contract.vm.repository;
 
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.ChainBaseManager;
-import cn.ledgeryi.chainbase.core.capsule.*;
+import cn.ledgeryi.chainbase.core.capsule.AccountCapsule;
+import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
+import cn.ledgeryi.chainbase.core.capsule.BytesCapsule;
+import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
 import cn.ledgeryi.chainbase.core.db.BlockIndexStore;
 import cn.ledgeryi.chainbase.core.db.BlockStore;
 import cn.ledgeryi.chainbase.core.db.KhaosDatabase;
@@ -12,13 +15,12 @@ import cn.ledgeryi.common.core.exception.ItemNotFoundException;
 import cn.ledgeryi.common.core.exception.StoreException;
 import cn.ledgeryi.common.runtime.vm.DataWord;
 import cn.ledgeryi.common.utils.ByteUtil;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.common.utils.Sha256Hash;
-import cn.ledgeryi.common.utils.StringUtil;
 import cn.ledgeryi.contract.vm.config.VmConfig;
 import cn.ledgeryi.contract.vm.program.Program;
 import cn.ledgeryi.contract.vm.program.Storage;
 import cn.ledgeryi.crypto.utils.Hash;
-import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.AccountType;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -304,7 +306,7 @@ public class RepositoryImpl implements Repository {
       return balance;
     }
     if (value < 0 && balance < -value) {
-      throw new RuntimeException(StringUtil.createReadableString(accountCapsule.createDbKey())  + " insufficient balance");
+      throw new RuntimeException(DecodeUtil.createReadableString(accountCapsule.createDbKey())  + " insufficient balance");
     }
     accountCapsule.setBalance(Math.addExact(balance, value));
     Key key = Key.create(address);
