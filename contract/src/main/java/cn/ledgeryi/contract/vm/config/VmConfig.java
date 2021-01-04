@@ -42,8 +42,4 @@ public class VmConfig {
     public static boolean getEnergyLimitHardFork() {
         return ENERGY_LIMIT_HARD_FORK;
     }
-
-    public static void initVmHardFork(boolean pass) {
-        ENERGY_LIMIT_HARD_FORK = pass;
-    }
 }

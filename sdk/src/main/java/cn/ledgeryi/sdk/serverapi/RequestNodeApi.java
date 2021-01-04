@@ -13,14 +13,12 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
 import cn.ledgeryi.sdk.common.utils.Utils;
-import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.execption.CipherException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 
@@ -30,32 +28,7 @@ import java.security.SignatureException;
 @Slf4j
 public class RequestNodeApi {
 
-    private static GrpcClient rpcCli = init();
-
-    private static GrpcClient init() {
-        Config config = Configuration.getConfig();
-        String ledgerYiNode = "";
-        if (config.hasPath("ledgernode.ip.list")) {
-            ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
-        }
-        return new GrpcClient(ledgerYiNode);
-    }
-
-    public static boolean createTransfer(byte[] ownerAddress, byte[] toAddress, long amount,  byte[] privateKeys){
-        BalanceContract.TransferContract transferContract = createTransferContract(ownerAddress, toAddress, amount);
-        GrpcAPI.TransactionExtention transaction = rpcCli.createTransaction(transferContract,
-                Protocol.Transaction.Contract.ContractType.TransferContract);
-        return processTransaction(transaction, privateKeys);
-    }
-
-    private static BalanceContract.TransferContract createTransferContract(byte[] ownerAddress,
-                                                                           byte[] toAddress, long amount){
-        BalanceContract.TransferContract.Builder builder = BalanceContract.TransferContract.newBuilder();
-        builder.setAmount(amount);
-        builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
-        builder.setToAddress(ByteString.copyFrom(toAddress));
-        return builder.build();
-    }
+    private static GrpcClient rpcCli = GrpcClient.initGrpcClient();
 
     public static Protocol.Account queryAccount(byte[] address){
         return rpcCli.queryAccount(address);
@@ -117,10 +90,10 @@ public class RequestNodeApi {
 
         Transaction transaction = transactionExtention.getTransaction();
         // for constant
-        if (transaction.getRetCount() != 0 && transactionExtention.getConstantResult(0) != null
+        if (isConstant && transaction.getRetCount() != 0 && transactionExtention.getConstantResult(0) != null
                 && transactionExtention.getResult() != null) {
             byte[] result = transactionExtention.getConstantResult(0).toByteArray();
-            log.info("message:" + transaction.getRet(0).getRet());
+            log.info("Message:" + transaction.getRet(0).getRet());
             log.info(":" + ByteArray.toStr(transactionExtention.getResult().getMessage().toByteArray()));
             log.info("Result:" + Hex.toHexString(result));
             return true;
@@ -212,7 +185,6 @@ public class RequestNodeApi {
             return false;
         }
         System.out.println(Utils.printTransactionExceptId(transactionExtention.getTransaction()));
-        //System.out.println("before sign transaction hex string is " + ByteArray.toHexString(transaction.toByteArray()));
         try {
             transaction = TransactionUtils.sign(transaction, privKeyBytes);
         } catch (SignatureException e) {
@@ -222,7 +194,7 @@ public class RequestNodeApi {
         }
         boolean validTransaction = TransactionUtils.validTransaction(transaction);
         if (!validTransaction) {
-            log.error("验证签名失败！");
+            log.error("Verification signature failed！");
             throw new RuntimeException();
         }
         return rpcCli.broadcastTransaction(transaction);

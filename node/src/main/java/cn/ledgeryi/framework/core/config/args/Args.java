@@ -84,11 +84,6 @@ public class Args {
   private int maxHttpConnectNumber = 50;
 
   @Getter
-  @Setter
-  @Parameter(names = {"--support-constant"})
-  private boolean supportConstant = true;
-
-  @Getter
   @Parameter(description = "--seed-nodes")
   private List<String> seedNodes = new ArrayList<>();
 

@@ -11,7 +11,9 @@ import cn.ledgeryi.framework.core.services.http.JsonFormat.ParseException;
 import cn.ledgeryi.protos.Protocol.Block;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
-import cn.ledgeryi.protos.contract.BalanceContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -63,18 +65,16 @@ public class Util {
     JSONObject jsonObject = JSONObject.parseObject(JsonFormat.printToString(block, selfType));
     jsonObject.put("blockID", blockID);
     if (!blockCapsule.getTransactions().isEmpty()) {
-      jsonObject.put("transactions", printTransactionListToJSON(blockCapsule.getTransactions(),
-          selfType));
+      jsonObject.put("transactions", printTransactionListToJSON(blockCapsule.getTransactions(), selfType));
     }
     return jsonObject;
   }
 
-  private static JSONArray printTransactionListToJSON(List<TransactionCapsule> list,
-      boolean selfType) {
+  private static JSONArray printTransactionListToJSON(List<TransactionCapsule> list, boolean selfType) {
     JSONArray transactions = new JSONArray();
-    list.stream().forEach(transactionCapsule -> {
-      transactions.add(printTransactionToJSON(transactionCapsule.getInstance(), selfType));
-    });
+    list.stream().forEach(transactionCapsule ->
+      transactions.add(printTransactionToJSON(transactionCapsule.getInstance(), selfType))
+    );
     return transactions;
   }
 
@@ -97,12 +97,21 @@ public class Util {
       JSONObject contractJson = null;
       Any contractParameter = contract.getParameter();
       switch (contract.getType()) {
-        case TransferContract:
-          BalanceContract.TransferContract transferContract = contractParameter.unpack(BalanceContract.TransferContract.class);
-          contractJson = JSONObject.parseObject(JsonFormat.printToString(transferContract, selfType));
+        case CreateSmartContract:
+          CreateSmartContract createSmartContract = contractParameter.unpack(CreateSmartContract.class);
+          contractJson = JSONObject.parseObject(JsonFormat.printToString(createSmartContract, selfType));
+          break;
+        case TriggerSmartContract:
+          TriggerSmartContract triggerSmartContract = contractParameter.unpack(TriggerSmartContract.class);
+          contractJson = JSONObject.parseObject(JsonFormat.printToString(triggerSmartContract, selfType));
+          break;
+        case ClearABIContract:
+          ClearABIContract clearABIContract = contractParameter.unpack(ClearABIContract.class);
+          contractJson = JSONObject.parseObject(JsonFormat.printToString(clearABIContract, selfType));
           break;
         // todo add other contract
         default:
+          break;
       }
       JSONObject parameter = new JSONObject();
       parameter.put(VALUE, contractJson);

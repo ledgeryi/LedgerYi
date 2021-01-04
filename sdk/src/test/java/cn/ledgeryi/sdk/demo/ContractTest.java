@@ -4,7 +4,9 @@ import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.ecdsa.ECKey;
 import cn.ledgeryi.crypto.sm2.SM2;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.utils.AbiUtil;
+import cn.ledgeryi.sdk.common.utils.Utils;
 import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.execption.CipherException;
 import cn.ledgeryi.sdk.serverapi.RequestNodeApi;
@@ -71,11 +73,17 @@ public class ContractTest {
     }
 
     //todo 合约地址
-    private static String contractAddres = "f51fa1d6bf8e93f0f8ccd4d7a607483e35fc09ae";
+    private static String contractAddres = "6c50ed0ed33ca6500c2ede1c417ef3dd403dcb87";
+
+    @Test
+    public void getContract(){
+        SmartContractOuterClass.SmartContract contract = RequestNodeApi.getContract(DecodeUtil.decode(contractAddres));
+        System.out.println(Utils.printSmartContract(contract));
+    }
 
     @Test
     public void storage() {
-        String args = "8";
+        String args = "9";
         String params = address + " " + contractAddres + " store(uint256) " + args + " false 0 0 0 #";
         String[] parameters = params.split(" ");
         /**
@@ -267,9 +275,4 @@ public class ContractTest {
     private byte[] getAddressBytes(final String address) {
         return DecodeUtil.decode(address);
     }
-
-
-
-
-
 }

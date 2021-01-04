@@ -36,6 +36,7 @@ public class ContractStore extends LedgerYiStoreWithRevoking<ContractCapsule> {
         return Streams.stream(revokingDB.iterator()).count();
     }
 
+    /* for test
     public void listContract(){
         Iterator<Map.Entry<byte[], byte[]>> iterator = revokingDB.iterator();
         while (iterator.hasNext()) {
@@ -43,7 +44,7 @@ public class ContractStore extends LedgerYiStoreWithRevoking<ContractCapsule> {
             System.out.println("=============key: " + Hex.toHexString(next.getKey()));
             System.out.println("=============value: " + Hex.toHexString(next.getValue()));
         }
-    }
+    }*/
 
 
     /**

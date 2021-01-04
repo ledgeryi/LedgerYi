@@ -43,45 +43,6 @@ public class TransactionUtil {
     return true;
   }
 
-  public static boolean validAssetName(byte[] assetName) {
-    if (ArrayUtils.isEmpty(assetName)) {
-      return false;
-    }
-    if (assetName.length > 32) {
-      return false;
-    }
-    // b must read able.
-    for (byte b : assetName) {
-      if (b < 0x21) {
-        return false; // 0x21 = '!'
-      }
-      if (b > 0x7E) {
-        return false; // 0x7E = '~'
-      }
-    }
-    return true;
-  }
-
-  public static boolean validTokenAbbrName(byte[] abbrName) {
-    if (ArrayUtils.isEmpty(abbrName)) {
-      return false;
-    }
-    if (abbrName.length > 5) {
-      return false;
-    }
-    // b must read able.
-    for (byte b : abbrName) {
-      if (b < 0x21) {
-        return false; // 0x21 = '!'
-      }
-      if (b > 0x7E) {
-        return false; // 0x7E = '~'
-      }
-    }
-    return true;
-  }
-
-
   public static boolean validAssetDescription(byte[] description) {
     if (ArrayUtils.isEmpty(description)) {
       return true;   //description can empty
@@ -125,10 +86,8 @@ public class TransactionUtil {
 
 
   public static long getCallValue(Protocol.Transaction.Contract contract) {
-    int energyForTrx;
     try {
       Any contractParameter = contract.getParameter();
-      long callValue;
       switch (contract.getType()) {
         case TriggerSmartContract:
           return contractParameter.unpack(SmartContractOuterClass.TriggerSmartContract.class).getCallValue();
@@ -146,10 +105,8 @@ public class TransactionUtil {
   }
 
   public static long getCallTokenValue(Protocol.Transaction.Contract contract) {
-    int energyForTrx;
     try {
       Any contractParameter = contract.getParameter();
-      long callValue;
       switch (contract.getType()) {
         case TriggerSmartContract:
           return contractParameter.unpack(SmartContractOuterClass.TriggerSmartContract.class).getCallTokenValue();

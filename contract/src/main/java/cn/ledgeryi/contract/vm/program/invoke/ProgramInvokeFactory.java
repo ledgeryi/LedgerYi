@@ -34,14 +34,13 @@ public interface ProgramInvokeFactory {
                                     InternalTransaction.ExecutorType executorType,
                                     Protocol.Transaction tx, long tokenValue, long tokenId, Protocol.Block block, Repository deposit,
                                     long vmStartInUs,
-                                    long vmShouldEndInUs,
-                                    long energyLimit) throws ContractValidateException;
+                                    long vmShouldEndInUs) throws ContractValidateException;
 
   ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
                                     DataWord inValue, DataWord tokenValue, DataWord tokenId,
                                     long balanceInt, byte[] dataIn, Repository deposit, boolean staticCall,
                                     boolean byTestingSuite,
-                                    long vmStartInUs, long vmShouldEndInUs, long energyLimit);
+                                    long vmStartInUs, long vmShouldEndInUs);
 
 
 }

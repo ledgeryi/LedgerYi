@@ -12,7 +12,7 @@ public class MUtil {
         if (0 == amount) {
             return;
         }
-        //VMUtils.validateForSmartContract(deposit, fromAddress, toAddress, amount);
+        VMUtils.validateForSmartContract(deposit, fromAddress, toAddress, amount);
         deposit.addBalance(toAddress, amount);
         deposit.addBalance(fromAddress, -amount);
     }

@@ -28,21 +28,20 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import java.security.SecureRandom;
-
-import static cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType.*;
-
 public class Utils {
     public static final String PERMISSION_ID = "Permission_id";
-    public static final String VISIBLE = "visible";
     public static final String TRANSACTION = "transaction";
     public static final String VALUE = "value";
 
-    private static SecureRandom random = new SecureRandom();
-
+    public static String printSmartContract(SmartContractOuterClass.SmartContract smartContract){
+        String smartStr = JsonFormat.printToString(smartContract, true);
+        JSONObject smartJsonObject = JSONObject.parseObject(smartStr);
+        JsonFormatUtil.formatJson(smartJsonObject.toJSONString());
+        return JsonFormatUtil.formatJson(smartJsonObject.toJSONString());
+    }
 
     public static String printTransactionExceptId(Protocol.Transaction transaction) {
-        JSONObject jsonObject = printTransactionToJSON(transaction, true, ClearABIContract);
+        JSONObject jsonObject = printTransactionToJSON(transaction, true);
         jsonObject.remove("txID");
         return JsonFormatUtil.formatJson(jsonObject.toJSONString());
     }
@@ -59,7 +58,7 @@ public class Utils {
         return Hash.sha3omit12(combined);
     }
 
-    public static JSONObject printTransactionToJSON(Protocol.Transaction transaction, boolean selfType, Object ClearABIContract) {
+    public static JSONObject printTransactionToJSON(Protocol.Transaction transaction, boolean selfType) {
         JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction, selfType));
         JSONArray contracts = new JSONArray();
         JSONObject contractJson = null;

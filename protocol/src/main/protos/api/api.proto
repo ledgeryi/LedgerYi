@@ -2,7 +2,6 @@ syntax = "proto3";
 package protocol;
 
 import "core/ledger_yi.proto";
-import "core/contract/inner_contract.proto";
 import "core/contract/smart_contract.proto";
 
 import "google/api/annotations.proto";
@@ -20,9 +19,6 @@ service Wallet {
         get: "/v1/getaccount"
       }
     };
-  };
-
-  rpc CreateTransaction (SystemContract) returns (TransactionExtention) {
   };
 
   rpc BroadcastTransaction (Transaction) returns (Return) {

@@ -17,7 +17,6 @@ import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
 import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import cn.ledgeryi.protos.Protocol.Transaction.raw;
-import cn.ledgeryi.protos.contract.BalanceContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import com.google.protobuf.*;
 import lombok.Getter;
@@ -94,37 +93,19 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   }
 
   public static byte[] getOwner(Transaction.Contract contract) {
-    /*try {
-      Any contractParameter = contract.getParameter();
-      Class<? extends GeneratedMessageV3> clazz = TransactionFactory.getContract(contract.getType());
-      if (clazz == null) {
-        log.error("not exist {}", contract.getType());
-        return null;
-      }
-      GeneratedMessageV3 generatedMessageV3 = contractParameter.unpack(clazz);
-      ByteString owner = ReflectUtils.getFieldValue(generatedMessageV3, OWNER_ADDRESS);
-      if (owner == null) {
-        log.error("not exist [{}] field,{}", OWNER_ADDRESS, clazz);
-        return null;
-      }
-      return owner.toByteArray();
-    } catch (Exception ex) {
-      log.error(ex.getMessage());
-      return null;
-    }*/
     ByteString owner;
     try {
       switch (contract.getType()) {
-        case TransferContract:
-          owner = contract.getParameter().unpack(BalanceContract.TransferContract.class).getOwnerAddress();
-          break;
         case CreateSmartContract:
           owner = contract.getParameter().unpack(SmartContractOuterClass.CreateSmartContract.class).getOwnerAddress();
           break;
         case TriggerSmartContract:
           owner = contract.getParameter().unpack(SmartContractOuterClass.TriggerSmartContract.class).getOwnerAddress();
           break;
-        default:
+        case ClearABIContract:
+          owner = contract.getParameter().unpack(SmartContractOuterClass.ClearABIContract.class).getOwnerAddress();
+          break;
+        default :
           return null;
       }
       return owner.toByteArray();

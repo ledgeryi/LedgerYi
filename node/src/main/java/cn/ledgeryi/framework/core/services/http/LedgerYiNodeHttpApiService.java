@@ -21,8 +21,6 @@ public class LedgerYiNodeHttpApiService implements Service {
   @Autowired
   private GetAccountServlet getAccountServlet;
   @Autowired
-  private TransferServlet transferServlet;
-  @Autowired
   private BroadcastServlet broadcastServlet;
   @Autowired
   private ListNodesServlet listNodesServlet;
@@ -75,7 +73,6 @@ public class LedgerYiNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getBlockByLimitNextServlet), "/getblockbylimitnext");
 
       //transaction
-      context.addServlet(new ServletHolder(transferServlet), "/createtransfertransaction");
       context.addServlet(new ServletHolder(createTransactionServlet),"/createtransaction");
       context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(getTransactionByIdServlet), "/gettransactionbyid");

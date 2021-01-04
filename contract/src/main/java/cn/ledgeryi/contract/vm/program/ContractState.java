@@ -63,12 +63,10 @@ public class ContractState implements Repository, ProgramListenerAware {
     return repository.createAccount(address, accountName, type);
   }
 
-
   @Override
   public AccountCapsule getAccount(byte[] addr) {
     return repository.getAccount(addr);
   }
-
 
   public BytesCapsule getDynamic(byte[] bytesKey) {
     return repository.getDynamic(bytesKey);
@@ -171,7 +169,6 @@ public class ContractState implements Repository, ProgramListenerAware {
   public void putStorage(Key key, Storage cache) {
     repository.putStorage(key, cache);
   }
-
 
   @Override
   public Storage getStorage(byte[] address) {

@@ -5,33 +5,27 @@ import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.GrpcAPI.Return.response_code;
 import cn.ledgeryi.api.WalletGrpc;
-import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
-import cn.ledgeryi.chainbase.core.capsule.*;
-import cn.ledgeryi.chainbase.core.db.TransactionContext;
-import cn.ledgeryi.chainbase.core.store.ContractStore;
-import cn.ledgeryi.chainbase.core.store.StoreFactory;
-import cn.ledgeryi.common.core.exception.ContractExeException;
+import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
+import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.core.exception.StoreException;
 import cn.ledgeryi.common.core.exception.VMIllegalException;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
-import cn.ledgeryi.contract.vm.VMActuator;
 import cn.ledgeryi.framework.common.application.Service;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
-import cn.ledgeryi.framework.common.storage.DepositImpl;
 import cn.ledgeryi.framework.core.Wallet;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
-import cn.ledgeryi.framework.core.exception.HeaderNotFound;
 import cn.ledgeryi.framework.core.services.ratelimiter.RateLimiterInterceptor;
 import cn.ledgeryi.protos.Protocol.*;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
-import cn.ledgeryi.protos.contract.InnerContract;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass;
-import com.google.protobuf.Any;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.grpc.Server;
@@ -41,11 +35,8 @@ import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -80,7 +71,6 @@ public class RpcApiService implements Service {
 
   @Override
   public void init() {
-
   }
 
   @Override
@@ -128,11 +118,11 @@ public class RpcApiService implements Service {
     }));
   }
 
-  private TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType) throws ContractValidateException {
+  private TransactionCapsule createTransactionCapsule(Message message, ContractType contractType) throws ContractValidateException {
     return wallet.createTransactionCapsule(message, contractType);
   }
 
-  private TransactionExtention transaction2Extention(Transaction transaction) {
+  private TransactionExtention transactionExtention(Transaction transaction) {
     if (transaction == null) {
       return null;
     }
@@ -146,7 +136,7 @@ public class RpcApiService implements Service {
     return txExtBuilder.build();
   }
 
-  private BlockExtention block2Extention(Block block) {
+  private BlockExtention blockExtention(Block block) {
     if (block == null) {
       return null;
     }
@@ -156,7 +146,7 @@ public class RpcApiService implements Service {
     builder.setBlockid(ByteString.copyFrom(blockCapsule.getBlockId().getBytes()));
     for (int i = 0; i < block.getTransactionsCount(); i++) {
       Transaction transaction = block.getTransactions(i);
-      builder.addTransactions(transaction2Extention(transaction));
+      builder.addTransactions(transactionExtention(transaction));
     }
     return builder.build();
   }
@@ -237,42 +227,15 @@ public class RpcApiService implements Service {
 
   public class WalletApi extends WalletGrpc.WalletImplBase {
 
-    private BlockListExtention blocklist2Extention(BlockList blockList) {
+    private BlockListExtention blocklistExtention(BlockList blockList) {
       if (blockList == null) {
         return null;
       }
       BlockListExtention.Builder builder = BlockListExtention.newBuilder();
       for (Block block : blockList.getBlockList()) {
-        builder.addBlock(block2Extention(block));
+        builder.addBlock(blockExtention(block));
       }
       return builder.build();
-    }
-
-    @Override
-    public void createTransaction(InnerContract.SystemContract systemContract, StreamObserver<TransactionExtention> responseObserver) {
-      ContractType contractType = systemContract.getType();
-      Any contractAny = systemContract.getContract();
-      TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
-      Return.Builder retBuilder = Return.newBuilder();
-      try {
-        TransactionCapsule tx = createTransactionCapsule(contractAny, contractType);
-        txExtBuilder.setTransaction(tx.getInstance());
-        txExtBuilder.setTxid(tx.getTransactionId().getByteString());
-        retBuilder.setResult(true).setCode(response_code.SUCCESS);
-      } catch (ContractValidateException e) {
-        retBuilder.setResult(false)
-                .setCode(response_code.CONTRACT_VALIDATE_ERROR)
-                .setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
-        log.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
-      } catch (Exception e) {
-        retBuilder.setResult(false)
-                .setCode(response_code.OTHER_ERROR)
-                .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
-        log.info("exception caught" + e.getMessage());
-      }
-      txExtBuilder.setResult(retBuilder);
-      responseObserver.onNext(txExtBuilder.build());
-      responseObserver.onCompleted();
     }
 
     @Override
@@ -295,14 +258,14 @@ public class RpcApiService implements Service {
 
     @Override
     public void getNowBlock(EmptyMessage request, StreamObserver<BlockExtention> responseObserver) {
-      responseObserver.onNext(block2Extention(wallet.getNowBlock()));
+      responseObserver.onNext(blockExtention(wallet.getNowBlock()));
       responseObserver.onCompleted();
     }
 
     @Override
     public void getBlockByNum(NumberMessage request, StreamObserver<BlockExtention> responseObserver) {
       Block block = wallet.getBlockByNum(request.getNum());
-      responseObserver.onNext(block2Extention(block));
+      responseObserver.onNext(blockExtention(block));
       responseObserver.onCompleted();
     }
 
@@ -323,22 +286,17 @@ public class RpcApiService implements Service {
     @Override
     public void getNodes(EmptyMessage request, StreamObserver<NodeList> responseObserver) {
       List<NodeHandler> handlerList = nodeManager.dumpActiveNodes();
-
       Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
       for (NodeHandler handler : handlerList) {
         String key = handler.getNode().getHexId() + handler.getNode().getHost();
         nodeHandlerMap.put(key, handler);
       }
-
       NodeList.Builder nodeListBuilder = NodeList.newBuilder();
-
       nodeHandlerMap.entrySet().stream().forEach(v -> {
             cn.ledgeryi.framework.common.overlay.discover.node.Node node = v.getValue().getNode();
             nodeListBuilder.addNodes(Node.newBuilder().setAddress(
-                Address.newBuilder().setHost(ByteString.copyFrom(ByteArray.fromString(node.getHost())))
-                    .setPort(node.getPort())));
+                Address.newBuilder().setHost(ByteString.copyFrom(ByteArray.fromString(node.getHost()))).setPort(node.getPort())));
           });
-
       responseObserver.onNext(nodeListBuilder.build());
       responseObserver.onCompleted();
     }
@@ -358,9 +316,8 @@ public class RpcApiService implements Service {
     public void getBlockByLimitNext(BlockLimit request, StreamObserver<BlockListExtention> responseObserver) {
       long startNum = request.getStartNum();
       long endNum = request.getEndNum();
-
       if (endNum > 0 && endNum > startNum && endNum - startNum <= BLOCK_LIMIT_NUM) {
-        responseObserver.onNext(blocklist2Extention(wallet.getBlocksByLimitNext(startNum, endNum - startNum)));
+        responseObserver.onNext(blocklistExtention(wallet.getBlocksByLimitNext(startNum, endNum - startNum)));
       } else {
         responseObserver.onNext(null);
       }
@@ -395,13 +352,11 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void deployContract(SmartContractOuterClass.CreateSmartContract request,
-                               io.grpc.stub.StreamObserver<TransactionExtention> responseObserver) {
-      createTransactionExtention(request, ContractType.CreateSmartContract, responseObserver);
+    public void deployContract(CreateSmartContract request, io.grpc.stub.StreamObserver<TransactionExtention> responseObserver) {
+      createTransaction(request, ContractType.CreateSmartContract, responseObserver);
     }
 
-    private void createTransactionExtention(Message request, ContractType contractType,
-                                            StreamObserver<TransactionExtention> responseObserver) {
+    private void createTransaction(Message request, ContractType contractType, StreamObserver<TransactionExtention> responseObserver) {
       TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
       Return.Builder retBuilder = Return.newBuilder();
       try {
@@ -424,33 +379,28 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void clearContractABI(SmartContractOuterClass.ClearABIContract request,
-                                 StreamObserver<TransactionExtention> responseObserver) {
-      createTransactionExtention(request, ContractType.ClearABIContract, responseObserver);
+    public void clearContractABI(ClearABIContract request, StreamObserver<TransactionExtention> responseObserver) {
+      createTransaction(request, ContractType.ClearABIContract, responseObserver);
     }
 
     @Override
-    public void getContract(BytesMessage request, StreamObserver<SmartContractOuterClass.SmartContract> responseObserver) {
-      SmartContractOuterClass.SmartContract contract = wallet.getContract(request);
+    public void getContract(BytesMessage request, StreamObserver<SmartContract> responseObserver) {
+      SmartContract contract = wallet.getContract(request);
       responseObserver.onNext(contract);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void triggerContract(SmartContractOuterClass.TriggerSmartContract request,
-                                StreamObserver<TransactionExtention> responseObserver) {
+    public void triggerContract(TriggerSmartContract request, StreamObserver<TransactionExtention> responseObserver) {
       callContract(request, responseObserver, false);
     }
 
     @Override
-    public void triggerConstantContract(SmartContractOuterClass.TriggerSmartContract request,
-                                        StreamObserver<TransactionExtention> responseObserver) {
+    public void triggerConstantContract(TriggerSmartContract request, StreamObserver<TransactionExtention> responseObserver) {
       callContract(request, responseObserver, true);
     }
 
-
-    private void callContract(SmartContractOuterClass.TriggerSmartContract request,
-                              StreamObserver<TransactionExtention> responseObserver, boolean isConstant) {
+    private void callContract(TriggerSmartContract request, StreamObserver<TransactionExtention> responseObserver, boolean isConstant) {
       TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
       Return.Builder retBuilder = Return.newBuilder();
       try {
@@ -485,7 +435,5 @@ public class RpcApiService implements Service {
         responseObserver.onCompleted();
       }
     }
-
-
   }
 }

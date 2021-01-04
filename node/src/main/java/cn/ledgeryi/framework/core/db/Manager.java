@@ -1,6 +1,5 @@
 package cn.ledgeryi.framework.core.db;
 
-import cn.ledgeryi.contract.utils.TransactionRegister;
 import cn.ledgeryi.chainbase.common.message.Message;
 import cn.ledgeryi.chainbase.core.ChainBaseManager;
 import cn.ledgeryi.chainbase.core.capsule.*;
@@ -22,7 +21,6 @@ import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.common.runtime.RuntimeImpl;
 import cn.ledgeryi.framework.common.utils.ForkController;
 import cn.ledgeryi.framework.common.utils.SessionOptional;
-import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.capsule.utils.BlockUtil;
 import cn.ledgeryi.framework.core.config.args.Args;
@@ -39,7 +37,7 @@ import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache .commons.collections4.CollectionUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -271,8 +269,8 @@ public class Manager {
     //initStoreFactory
     prepareStoreFactory();
     //initActuatorCreator
-    ActuatorCreator.init();
-    TransactionRegister.registerActuator();
+    //ActuatorCreator.init();
+    //TransactionRegister.registerActuator();
   }
 
   public BlockCapsule.BlockId getGenesisBlockId() {

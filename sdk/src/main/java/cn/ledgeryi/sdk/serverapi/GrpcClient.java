@@ -4,10 +4,11 @@ import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.WalletGrpc;
 import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.protos.contract.InnerContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.sdk.config.Configuration;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.typesafe.config.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -19,25 +20,31 @@ public class GrpcClient {
     private ManagedChannel channelFull = null;
     private WalletGrpc.WalletBlockingStub blockingStubFull = null;
 
-    public GrpcClient(String ledgerYiNode) {
+    private static GrpcClient instance;
+
+    private GrpcClient(String ledgerYiNode) {
         if (!StringUtils.isEmpty(ledgerYiNode)) {
             channelFull = ManagedChannelBuilder.forTarget(ledgerYiNode).usePlaintext(true).build();
             blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
         }
     }
 
+    public static GrpcClient initGrpcClient() {
+        if (instance == null) {
+            Config config = Configuration.getConfig();
+            String ledgerYiNode = "";
+            if (config.hasPath("ledgernode.ip.list")) {
+                ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
+            }
+            return new GrpcClient(ledgerYiNode);
+        }
+        return instance;
+    }
+
     public Account queryAccount(byte[] address) {
         ByteString addressBS = ByteString.copyFrom(address);
         Account request = Account.newBuilder().setAddress(addressBS).build();
         return blockingStubFull.getAccount(request);
-    }
-
-    public TransactionExtention createTransaction(com.google.protobuf.Message message,
-                                                    Transaction.Contract.ContractType contractType) {
-        InnerContract.SystemContract.Builder builder = InnerContract.SystemContract.newBuilder();
-        builder.setContract(message instanceof Any ? (Any) message : Any.pack(message));
-        builder.setType(contractType);
-        return blockingStubFull.createTransaction(builder.build());
     }
 
     public boolean broadcastTransaction(Transaction signaturedTransaction) {

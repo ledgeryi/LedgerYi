@@ -115,8 +115,6 @@ public class VMUtils {
         if (deposit == null) {
             throw new ContractValidateException("No deposit!");
         }
-        //byte[] tokenIdWithoutLeadingZero = ByteUtil.stripLeadingZeroes(tokenId);
-
         if (!DecodeUtil.addressValid(ownerAddress)) {
             throw new ContractValidateException("Invalid ownerAddress");
         }

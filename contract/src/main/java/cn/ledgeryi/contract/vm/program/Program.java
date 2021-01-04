@@ -471,24 +471,13 @@ public class Program {
             log.debug("Transfer to: [{}] heritage: [{}]", Hex.toHexString(obtainer), balance);
         }
         increaseNonce();
-        /*addInternalTx(null, owner, obtainer, balance, null, "suicide", nonce,
-                getContractState().getAccount(owner).getAssetMapV2());*/
-
         if (FastByteComparisons.compareTo(owner, 0, 20, obtainer, 0, 20) == 0) {
             // if owner == obtainer just zeroing account according to Yellow Paper
             getContractState().addBalance(owner, -balance);
-            byte[] blackHoleAddress = getContractState().getBlackHoleAddress();
-            /*if (VmConfig.allowTvmTransferTrc10()) {
-                getContractState().addBalance(blackHoleAddress, balance);
-                MUtil.transferAllToken(getContractState(), owner, blackHoleAddress);
-            }*/
         } else {
             createAccountIfNotExist(getContractState(), obtainer);
             try {
                 MUtil.transfer(getContractState(), owner, obtainer, balance);
-                /*if (VmConfig.allowTvmTransferTrc10()) {
-                    MUtil.transferAllToken(getContractState(), owner, obtainer);
-                }*/
             } catch (ContractValidateException e) {
                 if (VmConfig.allowTvmConstantinople()) {
                     throw new TransferException("transfer all token or transfer all trx failed in suicide: %s", e.getMessage());
@@ -595,18 +584,16 @@ public class Program {
         long vmStartInUs = System.nanoTime() / 1000;
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(newAddress), getContractAddress(), value, new DataWord(0),
-                new DataWord(0),
-                newBalance, null, deposit, false, byTestingSuite(), vmStartInUs,
-                getVmShouldEndInUs(), energyLimit.longValueSafe());
+                new DataWord(0), newBalance, null, deposit, false, byTestingSuite(),
+                vmStartInUs, getVmShouldEndInUs());
         if (isConstantCall()) {
             programInvoke.setConstantCall();
         }
         ProgramResult createResult = ProgramResult.createEmpty();
-
         if (contractAlreadyExists) {
             createResult.setException(new BytecodeExecutionException(
-                    "Trying to create a contract with existing contract address: 0x" + Hex
-                            .toHexString(newAddress)));
+                    "Trying to create a contract with existing contract address: 0x" +
+                            Hex.toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = new Program(programCode, programInvoke, internalTx, config);
@@ -640,14 +627,10 @@ public class Program {
 
         if (createResult.getException() != null || createResult.isRevert()) {
             log.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                    Hex.toHexString(newAddress),
-                    createResult.getException());
-
+                    Hex.toHexString(newAddress), createResult.getException());
             internalTx.reject();
             createResult.rejectInternalTransactions();
-
             stackPushZero();
-
             if (createResult.getException() != null) {
                 return;
             } else {
@@ -657,7 +640,6 @@ public class Program {
             if (!byTestingSuite()) {
                 deposit.commit();
             }
-
             // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
             stackPush(new DataWord(newAddress));
         }
@@ -797,7 +779,7 @@ public class Program {
                     !isTokenTransfer ? new DataWord(0) : callValue,
                     !isTokenTransfer ? new DataWord(0) : msg.getTokenId(),
                     contextBalance, data, deposit, msg.getType().callIsStatic() || isStaticCall(),
-                    byTestingSuite(), vmStartInUs, getVmShouldEndInUs(), msg.getEnergy().longValueSafe());
+                    byTestingSuite(), vmStartInUs, getVmShouldEndInUs());
             if (isConstantCall()) {
                 programInvoke.setConstantCall();
             }
@@ -1260,28 +1242,6 @@ public class Program {
         }
         byte[] data = this.memoryChunk(msg.getInDataOffs().intValue(),
                 msg.getInDataSize().intValue());
-
-        // Charge for endowment - is not reversible by rollback
-        if (!ArrayUtils.isEmpty(senderAddress) && !ArrayUtils.isEmpty(contextAddress)
-                && senderAddress != contextAddress && msg.getEndowment().value().longValueExact() > 0) {
-            /*if (!isTokenTransfer) {
-                try {
-                    MUtil.transfer(deposit, senderAddress, contextAddress, msg.getEndowment().value().longValueExact());
-                } catch (ContractValidateException e) {
-                    throw new BytecodeExecutionException("transfer failure");
-                }
-            } else {
-                try {
-                    VMUtils
-                            .validateForSmartContract(deposit, senderAddress, contextAddress, tokenId, endowment);
-                } catch (ContractValidateException e) {
-                    throw new BytecodeExecutionException(VALIDATE_FOR_SMART_CONTRACT_FAILURE, e.getMessage());
-                }
-                deposit.addTokenBalance(senderAddress, tokenId, -endowment);
-                deposit.addTokenBalance(contextAddress, tokenId, endowment);
-            }*/
-        }
-
         long requiredEnergy = contract.getEnergyForData(data);
         if (requiredEnergy > msg.getEnergy().longValue()) {
             // Not need to throw an exception, method caller needn't know that

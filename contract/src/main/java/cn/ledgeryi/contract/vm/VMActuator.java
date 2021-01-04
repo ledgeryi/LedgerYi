@@ -305,21 +305,6 @@ public class VMActuator implements Actuator {
       //查询创建合约的地址对应的账户
       AccountCapsule creator = this.repository.getAccount(newSmartContract.getOriginAddress().toByteArray());
       long energyLimit;
-      // according to version
-      if (VmConfig.getEnergyLimitHardFork()) {
-        if (callValue < 0) {
-          throw new ContractValidateException("callValue must be >= 0");
-        }
-        if (tokenValue < 0) {
-          throw new ContractValidateException("tokenValue must be >= 0");
-        }
-        if (newSmartContract.getOriginEnergyLimit() <= 0) {
-          throw new ContractValidateException("The originEnergyLimit must be > 0");
-        }
-        energyLimit = getAccountEnergyLimitWithFixRatio(creator, feeLimit, callValue);
-      } else {
-        energyLimit = 0;//getAccountEnergyLimitWithFloatRatio(creator, feeLimit, callValue);
-      }
       checkTokenValueAndId(tokenValue, tokenId);
       //获取合约的操作字节码
       byte[] ops = newSmartContract.getBytecode().toByteArray();
@@ -329,7 +314,7 @@ public class VMActuator implements Actuator {
       long vmStartInUs = System.nanoTime() / VMConstant.ONE_THOUSAND;
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE, executorType, tx,
-              tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs, energyLimit);
+              tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs, 0);
       this.vm = new VM();
       this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();

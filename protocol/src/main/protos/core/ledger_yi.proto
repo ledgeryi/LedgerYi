@@ -132,10 +132,10 @@ message ResourceReceipt {
 message Transaction {
   message Contract {
     enum ContractType {
-      TransferContract = 0;
-      TriggerSmartContract = 2;
-      CreateSmartContract = 3;
-      ClearABIContract = 4;
+      TriggerSmartContract = 0;
+      CreateSmartContract = 1;
+      ClearABIContract = 2;
+      TransferContract = 3;
     }
     ContractType type = 1;
     string version = 2;
