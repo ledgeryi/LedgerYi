@@ -202,7 +202,8 @@ public class LedgerYiNetDelegate {
           | BadNumberBlockException
           | BadBlockException
           | NonCommonBlockException
-          | ReceiptCheckErrException e) {
+          | ReceiptCheckErrException
+           | VMIllegalException e) {
         log.error("Process block failed, {}, reason: {}.", blockId.getString(), e.getMessage());
         throw new P2pException(TypeEnum.BAD_BLOCK, e);
       }
@@ -222,7 +223,8 @@ public class LedgerYiNetDelegate {
         | TaposException
         | TooBigTransactionException
         | TransactionExpirationException
-        | ReceiptCheckErrException e) {
+        | ReceiptCheckErrException
+            | VMIllegalException e) {
       throw new P2pException(TypeEnum.TX_EXE_FAILED, e);
     }
   }

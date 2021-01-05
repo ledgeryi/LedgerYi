@@ -10,7 +10,6 @@ import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.core.exception.StoreException;
-import cn.ledgeryi.common.core.exception.VMIllegalException;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.framework.common.application.Service;
@@ -22,10 +21,10 @@ import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.services.ratelimiter.RateLimiterInterceptor;
 import cn.ledgeryi.protos.Protocol.*;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.grpc.Server;
@@ -415,7 +414,7 @@ public class RpcApiService implements Service {
         txExtBuilder.setTxid(txCap.getTransactionId().getByteString());
         retBuilder.setResult(true).setCode(response_code.SUCCESS);
         txExtBuilder.setResult(retBuilder);
-      } catch (ContractValidateException | VMIllegalException e) {
+      } catch (ContractValidateException e) {
         retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
                 .setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
         txExtBuilder.setResult(retBuilder);

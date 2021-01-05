@@ -24,7 +24,7 @@ import cn.ledgeryi.contract.vm.program.invoke.ProgramInvokeFactoryImpl;
 import cn.ledgeryi.contract.vm.repository.Repository;
 import cn.ledgeryi.contract.vm.repository.RepositoryImpl;
 import cn.ledgeryi.protos.Protocol;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.*;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
@@ -62,14 +62,14 @@ public class LedgerYiVmActuator implements VmActuator {
 
   @Getter
   @Setter
-  private boolean isConstanCall = false;
+  private boolean isConstantCall;
 
   @Setter
-  private boolean enableEventLinstener;
+  private boolean enableEventListener;
 
 
-  public LedgerYiVmActuator(boolean isConstanCall) {
-    this.isConstanCall = isConstanCall;
+  public LedgerYiVmActuator(boolean isConstantCall) {
+    this.isConstantCall = isConstantCall;
     programInvokeFactory = new ProgramInvokeFactoryImpl();
   }
 
@@ -96,7 +96,7 @@ public class LedgerYiVmActuator implements VmActuator {
     Protocol.Transaction.Contract.ContractType contractType = this.tx.getRawData().getContract().getType();
     //Prepare Repository
     repository = RepositoryImpl.createRoot(context.getStoreFactory());
-    enableEventLinstener = context.isEventPluginLoaded();
+    enableEventListener = context.isEventPluginLoaded();
     if (Objects.nonNull(blockCap)) {
       this.executorType = InternalTransaction.ExecutorType.ET_NORMAL_TYPE;
     } else {
@@ -105,7 +105,7 @@ public class LedgerYiVmActuator implements VmActuator {
       this.executorType = InternalTransaction.ExecutorType.ET_PRE_TYPE;
     }
     //打包交易和处理区块时，为false
-    if (isConstanCall) {
+    if (isConstantCall) {
       this.executorType = InternalTransaction.ExecutorType.ET_PRE_TYPE;
     }
 
@@ -148,7 +148,7 @@ public class LedgerYiVmActuator implements VmActuator {
         result = program.getResult();
 
         //打包交易和处理区块时为false
-        if (isConstanCall) {
+        if (isConstantCall) {
           long callValue = TransactionUtil.getCallValue(tx.getRawData().getContract());
           long callTokenValue = TransactionUtil.getCallTokenValue(tx.getRawData().getContract());
           if (callValue > 0 || callTokenValue > 0) {
@@ -257,12 +257,12 @@ public class LedgerYiVmActuator implements VmActuator {
     if (!repository.getDynamicPropertiesStore().supportVM()) {
       throw new ContractValidateException("vm work is off, need to be opened by the committee");
     }
-    SmartContractOuterClass.CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);
+    CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);
     if (contract == null) {
       throw new ContractValidateException("Cannot get CreateSmartContract from transaction");
     }
     //获取合约参数信息：contractName、originAddress、abi、consumeUserResourcePercent、originEnergyLimit、value
-    SmartContractOuterClass.SmartContract newSmartContract = contract.getNewContract();
+    SmartContract newSmartContract = contract.getNewContract();
     if (!contract.getOwnerAddress().equals(newSmartContract.getOriginAddress())) {
       log.info("OwnerAddress not equals OriginAddress");
       throw new ContractValidateException("OwnerAddress is not equals OriginAddress");
@@ -317,7 +317,7 @@ public class LedgerYiVmActuator implements VmActuator {
       this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
       this.program.setRootTransactionId(txId);
-      if (enableEventLinstener && isCheckTransaction()) {
+      if (enableEventListener && isCheckTransaction()) {
         logInfoTriggerParser = new LogInfoTriggerParser(blockCap.getNum(), blockCap.getTimeStamp(), txId, callerAddress);
       }
     } catch (Exception e) {
@@ -346,11 +346,7 @@ public class LedgerYiVmActuator implements VmActuator {
   }
 
   private void call() throws ContractValidateException {
-    /*if (!repository.getDynamicPropertiesStore().supportVM()) {
-      log.info("vm work is off, need to be opened by the committee");
-      throw new ContractValidateException("VM work is off, need to be opened by the committee");
-    }*/
-    SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
+    TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
     if (contract == null) {
       return;
     }
@@ -367,19 +363,7 @@ public class LedgerYiVmActuator implements VmActuator {
     long callValue = contract.getCallValue();
     long tokenValue = 0;
     long tokenId = 0;
-    /*if (VmConfig.allowTvmTransferTrc10()) {
-      tokenValue = contract.getCallTokenValue();
-      tokenId = contract.getTokenId();
-    }*/
 
-    /*if (VmConfig.getEnergyLimitHardFork()) {
-      if (callValue < 0) {
-        throw new ContractValidateException("callValue must be >= 0");
-      }
-      if (tokenValue < 0) {
-        throw new ContractValidateException("tokenValue must be >= 0");
-      }
-    }*/
     byte[] callerAddress = contract.getOwnerAddress().toByteArray();
     checkTokenValueAndId(tokenValue, tokenId);
     byte[] code = repository.getCode(contractAddress);
@@ -391,7 +375,7 @@ public class LedgerYiVmActuator implements VmActuator {
       }
       AccountCapsule caller = repository.getAccount(callerAddress);
       long energyLimit;
-      if (isConstanCall) {
+      if (isConstantCall) {
         energyLimit = VMConstant.ENERGY_LIMIT_IN_CONSTANT_TX;
       } else {
         AccountCapsule creator = repository.getAccount(deployedContract.getInstance().getOriginAddress().toByteArray());
@@ -403,7 +387,7 @@ public class LedgerYiVmActuator implements VmActuator {
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CALL_TYPE,
               executorType, tx, tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs);
-      if (isConstanCall) {
+      if (isConstantCall) {
         programInvoke.setConstantCall();
       }
       this.vm = new VM();
@@ -411,7 +395,7 @@ public class LedgerYiVmActuator implements VmActuator {
       this.program = new Program(code, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
       this.program.setRootTransactionId(txId);
-      if (enableEventLinstener && isCheckTransaction()) {
+      if (enableEventListener && isCheckTransaction()) {
         logInfoTriggerParser = new LogInfoTriggerParser(blockCap.getNum(), blockCap.getTimeStamp(), txId, callerAddress);
       }
     }
@@ -471,7 +455,7 @@ public class LedgerYiVmActuator implements VmActuator {
   }
 
   public long getTotalEnergyLimit(AccountCapsule creator, AccountCapsule caller,
-                                  SmartContractOuterClass.TriggerSmartContract contract, long feeLimit, long callValue)
+                                  TriggerSmartContract contract, long feeLimit, long callValue)
       throws ContractValidateException {
     if (Objects.isNull(creator) && VmConfig.allowTvmConstantinople()) {
       return getAccountEnergyLimitWithFixRatio(caller, feeLimit, callValue);
@@ -525,7 +509,7 @@ public class LedgerYiVmActuator implements VmActuator {
   }
 
   public long getTotalEnergyLimitWithFixRatio(AccountCapsule creator, AccountCapsule caller,
-                                              SmartContractOuterClass.TriggerSmartContract contract, long feeLimit, long callValue)
+                                              TriggerSmartContract contract, long feeLimit, long callValue)
       throws ContractValidateException {
     long callerEnergyLimit = getAccountEnergyLimitWithFixRatio(caller, feeLimit, callValue);
     if (Arrays.equals(creator.getAddress().toByteArray(), caller.getAddress().toByteArray())) {
@@ -559,7 +543,7 @@ public class LedgerYiVmActuator implements VmActuator {
   }
 
   private long getTotalEnergyLimitWithFloatRatio(AccountCapsule creator, AccountCapsule caller,
-                                                 SmartContractOuterClass.TriggerSmartContract contract, long feeLimit, long callValue) {
+                                                 TriggerSmartContract contract, long feeLimit, long callValue) {
     long callerEnergyLimit = getAccountEnergyLimitWithFloatRatio(caller, feeLimit, callValue);
     if (Arrays.equals(creator.getAddress().toByteArray(), caller.getAddress().toByteArray())) {
       return callerEnergyLimit;
