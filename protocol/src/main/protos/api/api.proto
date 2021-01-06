@@ -73,6 +73,16 @@ service Wallet {
     };
   }
 
+  rpc GetTransactionInfoById (BytesMessage) returns (TransactionInfo) {
+    option (google.api.http) = {
+      post: "/v1/gettransactioninfobyid"
+      body: "*"
+      additional_bindings {
+        get: "/v1/gettransactioninfobyid"
+      }
+    };
+  }
+
   rpc GetMasters (EmptyMessage) returns (MastersList) {
     option (google.api.http) = {
       post: "/v1/getmasters"

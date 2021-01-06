@@ -335,6 +335,18 @@ public class RpcApiService implements Service {
     }
 
     @Override
+    public void getTransactionInfoById(BytesMessage request, StreamObserver<TransactionInfo> responseObserver) {
+      ByteString id = request.getValue();
+      if (null != id) {
+        TransactionInfo reply = wallet.getTransactionInfoById(id);
+        responseObserver.onNext(reply);
+      } else {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
     public void getMasters(EmptyMessage request, StreamObserver<MastersList> responseObserver) {
       responseObserver.onNext(wallet.getMastersList());
       responseObserver.onCompleted();

@@ -24,6 +24,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.security.SignatureException;
+import java.util.Optional;
 
 @Slf4j
 public class RequestNodeApi {
@@ -48,6 +49,10 @@ public class RequestNodeApi {
 
     public static Protocol.Transaction getTransactionById(String hash){
         return rpcCli.getTransactionById(hash);
+    }
+
+    public static Protocol.TransactionInfo getTransactionInfoById(String hash) {
+        return rpcCli.getTransactionInfoById(hash);
     }
 
     public static GrpcAPI.NumberMessage getTransactionCountByBlockNum(long blockNum){

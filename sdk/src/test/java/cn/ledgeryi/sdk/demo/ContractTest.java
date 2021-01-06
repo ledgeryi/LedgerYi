@@ -31,14 +31,14 @@ public class ContractTest {
     @Before
     public void createOwner(){
         SignInterface signEngine = createSignEngine();
-        /*if (StringUtils.isEmpty(privateKey)){
+        if (StringUtils.isEmpty(privateKey)){
             privateKey = DecodeUtil.createReadableString(signEngine.getPrivateKey());
             System.out.println("privateKey: " + privateKey);
         }
         if (StringUtils.isEmpty(address)){
             address = DecodeUtil.createReadableString(signEngine.getAddress());
             System.out.println("address: " + address);
-        }*/
+        }
     }
 
     @Test
@@ -73,7 +73,7 @@ public class ContractTest {
     }
 
     //todo 合约地址
-    private static String contractAddres = "6c50ed0ed33ca6500c2ede1c417ef3dd403dcb87";
+    private static String contractAddres = "76fd06c2caa97e1d17a374cc62aa796a8107f4f8";
 
     @Test
     public void getContract(){

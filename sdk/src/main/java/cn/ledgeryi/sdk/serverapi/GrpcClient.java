@@ -4,16 +4,18 @@ import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.WalletGrpc;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.protos.Protocol.Account;
+import cn.ledgeryi.protos.Protocol.Transaction;
+import cn.ledgeryi.protos.Protocol.TransactionInfo;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.config.Configuration;
-import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.apache.commons.lang3.StringUtils;
-import cn.ledgeryi.protos.Protocol.Account;
-import cn.ledgeryi.protos.Protocol.Transaction;
+
+import java.util.Optional;
 
 public class GrpcClient {
 
@@ -92,6 +94,12 @@ public class GrpcClient {
         GrpcAPI.BytesMessage.Builder builder = GrpcAPI.BytesMessage.newBuilder();
         builder.setValue(ByteString.copyFrom(ByteArray.fromHexString(hash)));
         return blockingStubFull.getTransactionById(builder.build());
+    }
+
+    public TransactionInfo getTransactionInfoById(String txId) {
+        ByteString bsTxid = ByteString.copyFrom(ByteArray.fromHexString(txId));
+        BytesMessage request = BytesMessage.newBuilder().setValue(bsTxid).build();
+        return blockingStubFull.getTransactionInfoById(request);
     }
 
     public NumberMessage getTransactionCountByBlockNum(long blockNum){
