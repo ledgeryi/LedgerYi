@@ -52,6 +52,10 @@ public class RepositoryImpl implements Repository {
   private KhaosDatabase khaosDb;
   @Getter
   private BlockIndexStore blockIndexStore;
+  @Getter
+  private CpuTimeConsumeStore cpuTimeConsumeStore;
+  @Getter
+  private StorageConsumeStore storageConsumeStore;
 
   private Repository parent = null;
 
@@ -60,6 +64,8 @@ public class RepositoryImpl implements Repository {
   private HashMap<Key, Value> contractCache = new HashMap<>();
   private HashMap<Key, Value> dynamicPropertiesCache = new HashMap<>();
   private HashMap<Key, Storage> storageCache = new HashMap<>();
+  private HashMap<Key, Value> cpuTimeConsumeCache = new HashMap<>();
+  private HashMap<Key, Value> storageConsumeCache = new HashMap<>();
 
   public RepositoryImpl(StoreFactory storeFactory, RepositoryImpl repository) {
     init(storeFactory, repository);
@@ -81,6 +87,8 @@ public class RepositoryImpl implements Repository {
       blockStore = manager.getBlockStore();
       khaosDb = manager.getKhaosDb();
       blockIndexStore = manager.getBlockIndexStore();
+      cpuTimeConsumeStore = manager.getCpuTimeConsumeStore();
+      storageConsumeStore = manager.getStorageConsumeStore();
     }
     this.parent = parent;
   }
@@ -88,13 +96,6 @@ public class RepositoryImpl implements Repository {
   @Override
   public Repository newRepositoryChild() {
     return new RepositoryImpl(storeFactory, this);
-  }
-
-  @Override
-  @Deprecated
-  public long getAccountLeftEnergyFromFreeze(AccountCapsule accountCapsule) {
-    long now = getHeadSlot();
-    return max(now - now, 0); // us
   }
 
   @Override
@@ -208,12 +209,10 @@ public class RepositoryImpl implements Repository {
     Key key = Key.create(address);
     Value value = Value.create(code, Type.VALUE_TYPE_CREATE);
     codeCache.put(key, value);
-    if (VmConfig.allowTvmConstantinople()) {
-      ContractCapsule contract = getContract(address);
-      byte[] codeHash = Hash.sha3(code);
-      contract.setCodeHash(codeHash);
-      updateContract(address, contract);
-    }
+    ContractCapsule contract = getContract(address);
+    byte[] codeHash = Hash.sha3(code);
+    contract.setCodeHash(codeHash);
+    updateContract(address, contract);
   }
 
   @Override
@@ -330,6 +329,8 @@ public class RepositoryImpl implements Repository {
     commitCodeCache(repository);
     commitContractCache(repository);
     commitStorageCache(repository);
+    commitStorageConsumeCache(repository);
+    cpuTimeConsumeCache(repository);
   }
 
   @Override
@@ -379,8 +380,7 @@ public class RepositoryImpl implements Repository {
 
   public long getHeadSlot() {
     return (getDynamicPropertiesStore().getLatestBlockHeaderTimestamp() -
-        Long.parseLong(DBConfig.getGenesisBlock().getTimestamp()))
-        / BLOCK_PRODUCED_INTERVAL;
+        Long.parseLong(DBConfig.getGenesisBlock().getTimestamp())) / BLOCK_PRODUCED_INTERVAL;
   }
 
   private void commitAccountCache(Repository deposit) {
@@ -429,12 +429,32 @@ public class RepositoryImpl implements Repository {
         storage.commit();
       }
     });
-
   }
 
-  /**
-   * Get the block id from the number.
-   */
+  private void commitStorageConsumeCache(Repository deposit) {
+    storageConsumeCache.forEach((key, value) -> {
+      if (value.getType().isNormal()) {
+        if (deposit != null) {
+          deposit.putContract(key, value);
+        } else {
+          getStorageConsumeStore().put(key.getData(), value.getBytes());
+        }
+      }
+    });
+  }
+
+  private void cpuTimeConsumeCache(Repository deposit) {
+    storageConsumeCache.forEach((key, value) -> {
+      if (value.getType().isNormal()) {
+        if (deposit != null) {
+          deposit.putContract(key, value);
+        } else {
+          getCpuTimeConsumeStore().put(key.getData(), value.getBytes());
+        }
+      }
+    });
+  }
+
   private BlockCapsule.BlockId getBlockIdByNum(final long num) throws ItemNotFoundException {
     return this.blockIndexStore.get(num);
   }
@@ -446,24 +466,21 @@ public class RepositoryImpl implements Repository {
     AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), AccountType.Normal,
             getDynamicPropertiesStore().getLatestBlockHeaderTimestamp(), withDefaultPermission,
             getDynamicPropertiesStore());
-
     accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
     return account;
   }
 
-  public long calculateGlobalEnergyLimit(AccountCapsule accountCapsule) {
-    long frozeBalance = accountCapsule.getAllFrozenBalanceForEnergy();
-    if (frozeBalance < 1_000_000L) {
-      return 0;
-    }
-
-    long energyWeight = frozeBalance / 1_000_000L;
-    long totalEnergyLimit = getDynamicPropertiesStore().getTotalEnergyCurrentLimit();
-    long totalEnergyWeight = getDynamicPropertiesStore().getTotalEnergyWeight();
-
-    assert totalEnergyWeight > 0;
-
-    return (long) (energyWeight * ((double) totalEnergyLimit / totalEnergyWeight));
+  @Override
+  public void putStorageConsumeValue(byte[] address, long value) {
+    Key key = new Key(address);
+    DataWord cpuTimeConsume = new DataWord(value);
+    storageConsumeCache.put(key, Value.create(cpuTimeConsume.getData()));
   }
 
+  @Override
+  public void putCpuTimeConsumeValue(byte[] address, long value) {
+    Key key = new Key(address);
+    DataWord cpuTimeConsume = new DataWord(value);
+    cpuTimeConsumeCache.put(key, Value.create(cpuTimeConsume.getData()));
+  }
 }

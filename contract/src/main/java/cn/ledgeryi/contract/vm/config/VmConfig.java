@@ -38,8 +38,4 @@ public class VmConfig {
     public static boolean allowTvmConstantinople() {
         return ALLOW_TVM_CONSTANTINOPLE;
     }
-
-    public static boolean getEnergyLimitHardFork() {
-        return ENERGY_LIMIT_HARD_FORK;
-    }
 }

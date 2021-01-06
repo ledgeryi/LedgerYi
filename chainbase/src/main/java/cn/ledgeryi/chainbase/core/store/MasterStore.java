@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class MasterStore extends LedgerYiStoreWithRevoking<MasterCapsule> {
 
   @Autowired
-  protected MasterStore(@Value("Master") String dbName) {
+  protected MasterStore(@Value("master") String dbName) {
     super(dbName);
   }
 

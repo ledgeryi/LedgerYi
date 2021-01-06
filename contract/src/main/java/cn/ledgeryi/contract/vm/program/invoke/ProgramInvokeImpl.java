@@ -91,15 +91,13 @@ public class ProgramInvokeImpl implements ProgramInvoke {
       byte[] lastHash, byte[] coinbase, long timestamp, long number, Repository deposit,
       long vmStartInUs, long vmShouldEndInUs, boolean byTestingSuite) {
     this(address, origin, caller, balance, callValue, tokenValue, tokenId, msgData, lastHash,
-        coinbase,
-        timestamp, number, deposit, vmStartInUs, vmShouldEndInUs);
+        coinbase, timestamp, number, deposit, vmStartInUs, vmShouldEndInUs);
     this.byTestingSuite = byTestingSuite;
   }
 
   public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, long balance,
       long callValue, long tokenValue, long tokenId, byte[] msgData, byte[] lastHash,
-      byte[] coinbase, long timestamp,
-      long number, Repository deposit, long vmStartInUs, long vmShouldEndInUs) {
+      byte[] coinbase, long timestamp, long number, Repository deposit, long vmStartInUs, long vmShouldEndInUs) {
 
     // Transaction env
     this.address = new DataWord(address);

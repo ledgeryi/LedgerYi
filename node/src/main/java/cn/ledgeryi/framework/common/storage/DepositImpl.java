@@ -27,13 +27,6 @@ import java.util.HashMap;
 
 @Slf4j(topic = "deposit")
 public class DepositImpl implements Deposit {
-
-  private static final byte[] LATEST_PROPOSAL_NUM = "LATEST_PROPOSAL_NUM".getBytes();
-  private static final byte[] WITNESS_ALLOWANCE_FROZEN_TIME = "WITNESS_ALLOWANCE_FROZEN_TIME"
-      .getBytes();
-  private static final byte[] MAINTENANCE_TIME_INTERVAL = "MAINTENANCE_TIME_INTERVAL".getBytes();
-  private static final byte[] NEXT_MAINTENANCE_TIME = "NEXT_MAINTENANCE_TIME".getBytes();
-
   private Manager dbManager;
   private Deposit parent = null;
 
@@ -43,12 +36,7 @@ public class DepositImpl implements Deposit {
   private HashMap<Key, Value> witnessCache = new HashMap<>();
   private HashMap<Key, Value> codeCache = new HashMap<>();
   private HashMap<Key, Value> contractCache = new HashMap<>();
-
-  private HashMap<Key, Value> votesCache = new HashMap<>();
-  private HashMap<Key, Value> proposalCache = new HashMap<>();
-  private HashMap<Key, Value> dynamicPropertiesCache = new HashMap<>();
   private HashMap<Key, Storage> storageCache = new HashMap<>();
-  private HashMap<Key, Value> assetIssueCache = new HashMap<>();
 
   private DepositImpl(Manager dbManager, DepositImpl parent) {
     init(dbManager, parent);
@@ -141,13 +129,6 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public byte[] getBlackHoleAddress() {
-    // using dbManager directly, black hole address should not be changed
-    // when executing smart contract.
-    return getAccountStore().getBlackhole().getAddress().toByteArray();
-  }
-
-  @Override
   public MasterCapsule getWitness(byte[] address) {
     Key key = new Key(address);
     if (witnessCache.containsKey(key)) {
@@ -164,24 +145,6 @@ public class DepositImpl implements Deposit {
       witnessCache.put(key, Value.create(witnessCapsule.getData()));
     }
     return witnessCapsule;
-  }
-
-  @Override
-  public synchronized VotesCapsule getVotesCapsule(byte[] address) {
-    Key key = new Key(address);
-    if (votesCache.containsKey(key)) {
-      return votesCache.get(key).getVotes();
-    }
-    VotesCapsule votesCapsule;
-    if (parent != null) {
-      votesCapsule = parent.getVotesCapsule(address);
-    } else {
-      votesCapsule = getVotesStore().get(address);
-    }
-    if (votesCapsule != null) {
-      votesCache.put(key, Value.create(votesCapsule.getData()));
-    }
-    return votesCapsule;
   }
 
   // just for depositRoot
@@ -324,40 +287,6 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized long addTokenBalance(byte[] address, byte[] tokenId, long value) {
-    /*byte[] tokenIdWithoutLeadingZero = ByteUtil.stripLeadingZeroes(tokenId);
-    AccountCapsule accountCapsule = getAccount(address);
-    if (accountCapsule == null) {
-      accountCapsule = createAccount(address, Protocol.AccountType.Normal);
-    }
-    long balance = accountCapsule.getAssetMapV2()
-        .getOrDefault(new String(tokenIdWithoutLeadingZero), new Long(0));
-    if (value == 0) {
-      return balance;
-    }
-
-    if (value < 0 && balance < -value) {
-      throw new RuntimeException(
-          StringUtil.createReadableString(accountCapsule.createDbKey()) + " insufficient balance");
-    }
-    if (value >= 0) {
-      accountCapsule.addAssetAmountV2(tokenIdWithoutLeadingZero, value,
-          this.dbManager.getDynamicPropertiesStore(), this.dbManager.getAssetIssueStore());
-    } else {
-      accountCapsule.reduceAssetAmountV2(tokenIdWithoutLeadingZero, -value,
-          this.dbManager.getDynamicPropertiesStore(), this.dbManager.getAssetIssueStore());
-    }
-//    accountCapsule.getAssetMap().put(new String(tokenIdWithoutLeadingZero), Math.addExact(balance, value));
-    Key key = Key.create(address);
-    Value V = Value.create(accountCapsule.getData(),
-        Type.VALUE_TYPE_DIRTY | accountCache.get(key).getType().getType());
-    accountCache.put(key, V);
-//    accountCapsule.addAssetAmount(tokenIdWithoutLeadingZero, value);
-    return accountCapsule.getAssetMapV2().get(new String(tokenIdWithoutLeadingZero));*/
-    return 0;
-  }
-
-  @Override
   public synchronized long addBalance(byte[] address, long value) {
     AccountCapsule accountCapsule = getAccount(address);
     if (accountCapsule == null) {
@@ -378,23 +307,6 @@ public class DepositImpl implements Deposit {
         Type.VALUE_TYPE_DIRTY | accountCache.get(key).getType().getType());
     accountCache.put(key, val);
     return accountCapsule.getBalance();
-  }
-
-  /**
-   * @param address address
-   * @param tokenId tokenIdstr in assetV2map is a string like "1000001". So before using this
-   * function, we need to do some conversion. usually we will use a DataWord as input. so the byte
-   * tokenId should be like DataWord.shortHexWithoutZeroX().getbytes().
-   */
-  @Override
-  public synchronized long getTokenBalance(byte[] address, byte[] tokenId) {
-    /*AccountCapsule accountCapsule = getAccount(address);
-    if (accountCapsule == null) {
-      return 0;
-    }
-    String tokenStr = new String(ByteUtil.stripLeadingZeroes(tokenId));
-    return accountCapsule.getAssetMapV2().getOrDefault(tokenStr, 0L);*/
-    return 0;
   }
 
   @Override
@@ -475,69 +387,6 @@ public class DepositImpl implements Deposit {
   @Override
   public void putStorage(Key key, Storage cache) {
     storageCache.put(key, cache);
-  }
-
-  @Override
-  public void putVotes(Key key, Value value) {
-    votesCache.put(key, value);
-  }
-
-  @Override
-  public void putProposal(Key key, Value value) {
-    proposalCache.put(key, value);
-  }
-
-  @Override
-  public void putDynamicProperties(Key key, Value value) {
-    dynamicPropertiesCache.put(key, value);
-  }
-
-  @Override
-  public long getLatestProposalNum() {
-    return Longs.fromByteArray(getDynamic(LATEST_PROPOSAL_NUM).getData());
-  }
-
-  @Override
-  public long getWitnessAllowanceFrozenTime() {
-    byte[] frozenTime = getDynamic(WITNESS_ALLOWANCE_FROZEN_TIME).getData();
-    if (frozenTime.length >= 8) {
-      return Longs.fromByteArray(getDynamic(WITNESS_ALLOWANCE_FROZEN_TIME).getData());
-    }
-    byte[] result = new byte[8];
-    System.arraycopy(frozenTime, 0, result, 8 - frozenTime.length, frozenTime.length);
-    return Longs.fromByteArray(result);
-  }
-
-  @Override
-  public long getMaintenanceTimeInterval() {
-    return Longs.fromByteArray(getDynamic(MAINTENANCE_TIME_INTERVAL).getData());
-  }
-
-  @Override
-  public long getNextMaintenanceTime() {
-    return Longs.fromByteArray(getDynamic(NEXT_MAINTENANCE_TIME).getData());
-  }
-
-  public BytesCapsule getDynamic(byte[] word) {
-    Key key = Key.create(word);
-    if (dynamicPropertiesCache.containsKey(key)) {
-      return dynamicPropertiesCache.get(key).getDynamicProperties();
-    }
-    BytesCapsule bytesCapsule;
-    if (parent != null) {
-      bytesCapsule = parent.getDynamic(word);
-    } else {
-      try {
-        bytesCapsule = getDynamicPropertiesStore().get(word);
-      } catch (BadItemException | ItemNotFoundException e) {
-        log.warn("Not found dynamic property:" + Strings.fromUTF8ByteArray(word));
-        bytesCapsule = null;
-      }
-    }
-    if (bytesCapsule != null) {
-      dynamicPropertiesCache.put(key, Value.create(bytesCapsule.getData()));
-    }
-    return bytesCapsule;
   }
 
   private void commitAccountCache(Deposit deposit) {
@@ -624,56 +473,12 @@ public class DepositImpl implements Deposit {
     });
   }
 
-  private void commitVoteCache(Deposit deposit) {
-    votesCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putVotes(key, value);
-        } else {
-          getVotesStore().put(key.getData(), value.getVotes());
-        }
-      }
-    }));
-  }
-
-  private void commitDynamicPropertiesCache(Deposit deposit) {
-    dynamicPropertiesCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putDynamicProperties(key, value);
-        } else {
-          getDynamicPropertiesStore().put(key.getData(), value.getDynamicProperties());
-        }
-      }
-    }));
-  }
-
-  @Override
-  public void putAccountValue(byte[] address, AccountCapsule accountCapsule) {
-    Key key = new Key(address);
-    accountCache.put(key, new Value(accountCapsule.getData(), Type.VALUE_TYPE_CREATE));
-  }
-
-  @Override
-  public void putVoteValue(byte[] address, VotesCapsule votesCapsule) {
-    Key key = new Key(address);
-    votesCache.put(key, new Value(votesCapsule.getData(), Type.VALUE_TYPE_CREATE));
-  }
-
-  @Override
-  public void putDynamicPropertiesWithLatestProposalNum(long num) {
-    Key key = new Key(LATEST_PROPOSAL_NUM);
-    dynamicPropertiesCache.put(key,
-        new Value(new BytesCapsule(ByteArray.fromLong(num)).getData(), Type.VALUE_TYPE_CREATE));
-  }
-
   @Override
   public synchronized void commit() {
     Deposit deposit = null;
     if (parent != null) {
       deposit = parent;
     }
-
     commitAccountCache(deposit);
     commitTransactionCache(deposit);
     commitBlockCache(deposit);
@@ -681,26 +486,11 @@ public class DepositImpl implements Deposit {
     commitCodeCache(deposit);
     commitContractCache(deposit);
     commitStorageCache(deposit);
-    commitVoteCache(deposit);
-    commitDynamicPropertiesCache(deposit);
   }
 
   @Override
   public void setParent(Deposit deposit) {
     parent = deposit;
   }
-
-  @Override
-  public AccountCapsule createNormalAccount(byte[] address) {
-    boolean withDefaultPermission = false;
-    Key key = new Key(address);
-    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), Protocol.AccountType.Normal,
-        getDynamicPropertiesStore().getLatestBlockHeaderTimestamp(), withDefaultPermission,
-        getDynamicPropertiesStore());
-
-    accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
-    return account;
-  }
-
 }
 

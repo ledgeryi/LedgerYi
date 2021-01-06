@@ -20,10 +20,6 @@ public interface Deposit {
 
   MasterCapsule getWitness(byte[] address);
 
-  VotesCapsule getVotesCapsule(byte[] address);
-
-  BytesCapsule getDynamic(byte[] bytesKey);
-
   void deleteContract(byte[] address);
 
   void createContract(byte[] address, ContractCapsule contractCapsule);
@@ -68,38 +64,9 @@ public interface Deposit {
 
   void putStorage(Key key, Storage cache);
 
-  void putVotes(Key key, Value value);
-
-  void putProposal(Key key, Value value);
-
-  void putDynamicProperties(Key key, Value value);
-
-  void putAccountValue(byte[] address, AccountCapsule accountCapsule);
-
-  void putVoteValue(byte[] address, VotesCapsule votesCapsule);
-
-  void putDynamicPropertiesWithLatestProposalNum(long num);
-
-  long getLatestProposalNum();
-
-  long getWitnessAllowanceFrozenTime();
-
-  long getMaintenanceTimeInterval();
-
-  long getNextMaintenanceTime();
-
-  long addTokenBalance(byte[] address, byte[] tokenId, long value);
-
-  long getTokenBalance(byte[] address, byte[] tokenId);
-
   TransactionCapsule getTransaction(byte[] trxHash);
 
   BlockCapsule getBlock(byte[] blockHash);
-
-  byte[] getBlackHoleAddress();
-
-  public AccountCapsule createNormalAccount(byte[] address);
-
 
 }
 

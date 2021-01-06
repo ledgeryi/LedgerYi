@@ -181,11 +181,6 @@ public class ContractState implements Repository, ProgramListenerAware {
   }
 
   @Override
-  public long getAccountLeftEnergyFromFreeze(AccountCapsule accountCapsule) {
-    return repository.getAccountLeftEnergyFromFreeze(accountCapsule);
-  }
-
-  @Override
   public byte[] getBlackHoleAddress() {
     return repository.getBlackHoleAddress();
   }
@@ -201,8 +196,12 @@ public class ContractState implements Repository, ProgramListenerAware {
   }
 
   @Override
-  public long calculateGlobalEnergyLimit(AccountCapsule accountCapsule) {
-    return repository.calculateGlobalEnergyLimit(accountCapsule);
+  public void putStorageConsumeValue(byte[] address, long value) {
+
   }
 
+  @Override
+  public void putCpuTimeConsumeValue(byte[] address, long value) {
+
+  }
 }

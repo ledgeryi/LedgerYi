@@ -91,8 +91,6 @@ public class Manager {
   @Autowired
   @Getter
   private StorageRowStore storageRowStore;
-  @Autowired
-  private NullifierStore nullifierStore;
   @Getter
   @Setter
   public boolean eventPluginLoaded = false;
@@ -967,7 +965,6 @@ public class Manager {
     closeOneStore(recentBlockStore);
     closeOneStore(transactionHistoryStore);
     closeOneStore(votesStore);
-    closeOneStore(nullifierStore);
     closeOneStore(transactionRetStore);
     log.info("******** end to close db ********");
   }

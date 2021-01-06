@@ -22,6 +22,7 @@ import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
 import cn.ledgeryi.framework.common.utils.Utils;
 import cn.ledgeryi.framework.core.actuator.ActuatorFactory;
+import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.*;
@@ -33,7 +34,7 @@ import cn.ledgeryi.protos.Protocol.Block;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import cn.ledgeryi.protos.Protocol.TransactionInfo;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.google.protobuf.ByteString;
@@ -117,20 +118,19 @@ public class Wallet {
           throws ContractValidateException {
     TransactionCapsule tx = new TransactionCapsule(message, contractType);
     if (contractType != ContractType.CreateSmartContract && contractType != ContractType.TriggerSmartContract) {
-      // ContractType.ClearABIContract
+      // for ContractType.ClearABIContract
       List<Actuator> actList = ActuatorFactory.createActuator(tx, dbManager);
       for (Actuator act : actList) {
         act.validate();
       }
     }
-
-    if (contractType == ContractType.CreateSmartContract) {
+    /*if (contractType == ContractType.CreateSmartContract) {
       CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx.getInstance());
       long percent = contract.getNewContract().getConsumeUserResourcePercent();
       if (percent < 0 || percent > 100) {
         throw new ContractValidateException("percent must be >= 0 and <= 100");
       }
-    }
+    }*/
     try {
       BlockCapsule.BlockId blockId = dbManager.getHeadBlockId();
       if ("solid".equals(Args.getInstance().getTxReferenceBlock())) {
@@ -308,6 +308,27 @@ public class Wallet {
       return transactionCapsule.getInstance();
     }
     return null;
+  }
+
+  public TransactionInfo getTransactionInfoById(ByteString transactionId) {
+    if (Objects.isNull(transactionId)) {
+      return null;
+    }
+    TransactionInfoCapsule transactionInfoCapsule;
+    try {
+      transactionInfoCapsule = dbManager.getTransactionHistoryStore().get(transactionId.toByteArray());
+    } catch (StoreException e) {
+      return null;
+    }
+    if (transactionInfoCapsule != null) {
+      return transactionInfoCapsule.getInstance();
+    }
+    try {
+      transactionInfoCapsule = dbManager.getTransactionRetStore().getTransactionInfo(transactionId.toByteArray());
+    } catch (BadItemException e) {
+      return null;
+    }
+    return transactionInfoCapsule == null ? null : transactionInfoCapsule.getInstance();
   }
 
   public NodeList listNodes() {

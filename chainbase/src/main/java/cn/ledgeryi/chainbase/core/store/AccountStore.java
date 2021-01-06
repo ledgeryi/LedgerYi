@@ -1,6 +1,5 @@
 package cn.ledgeryi.chainbase.core.store;
 
-import cn.ledgeryi.chainbase.common.utils.AdjustBalanceUtil;
 import cn.ledgeryi.chainbase.core.db.LedgerYiStoreWithRevoking;
 import cn.ledgeryi.chainbase.core.db.accountstate.AccountStateCallBackUtils;
 import cn.ledgeryi.common.utils.DecodeUtil;

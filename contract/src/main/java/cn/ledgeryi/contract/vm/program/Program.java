@@ -21,10 +21,11 @@ package cn.ledgeryi.contract.vm.program;
 import cn.ledgeryi.chainbase.common.runtime.InternalTransaction;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.ContractUtils;
-import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.capsule.AccountCapsule;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
+import cn.ledgeryi.chainbase.core.store.CpuTimeConsumeStore;
+import cn.ledgeryi.chainbase.core.store.StorageConsumeStore;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.core.exception.LedgerYiException;
 import cn.ledgeryi.common.runtime.vm.DataWord;
@@ -45,6 +46,7 @@ import cn.ledgeryi.contract.vm.program.listener.ProgramTraceListener;
 import cn.ledgeryi.contract.vm.repository.Repository;
 import cn.ledgeryi.contract.vm.trace.ProgramTrace;
 import cn.ledgeryi.crypto.utils.Hash;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -72,6 +74,7 @@ public class Program {
     private Stack stack;
     private Memory memory;
     private boolean stopped;
+    private long cpuTimeCost;
     private ProgramTrace trace;
     private ProgramInvoke invoke;
     private final VmConfig config;
@@ -105,7 +108,7 @@ public class Program {
         this.invoke = programInvoke;
         this.internalTransaction = internalTransaction;
         this.ops = ArrayUtils.nullToEmpty(ops);
-        traceListener = new ProgramTraceListener(config.vmTrace());
+        this.traceListener = new ProgramTraceListener(config.vmTrace());
         this.memory = setupProgramListener(new Memory());
         this.stack = setupProgramListener(new Stack());
         this.contractState = setupProgramListener(new ContractState(programInvoke));
@@ -404,8 +407,7 @@ public class Program {
 
     public void verifyStackOverflow(int argsReqs, int returnReqs) {
         if ((stack.size() - argsReqs + returnReqs) > MAX_STACK_SIZE) {
-            throw new StackTooLargeException(
-                    "Expected: overflow " + MAX_STACK_SIZE + " elements stack limit");
+            throw new StackTooLargeException("Expected: overflow " + MAX_STACK_SIZE + " elements stack limit");
         }
     }
 
@@ -475,7 +477,6 @@ public class Program {
             // if owner == obtainer just zeroing account according to Yellow Paper
             getContractState().addBalance(owner, -balance);
         } else {
-            createAccountIfNotExist(getContractState(), obtainer);
             try {
                 MUtil.transfer(getContractState(), owner, obtainer, balance);
             } catch (ContractValidateException e) {
@@ -575,7 +576,6 @@ public class Program {
 
         // actual energy subtract
         DataWord energyLimit = this.getCreateEnergy(getEnergyLimitLeft());
-        spendEnergy(energyLimit.longValue(), "internal call");
 
         increaseNonce();
         // [5] COOK THE INVOKE AND EXECUTE
@@ -592,8 +592,7 @@ public class Program {
         ProgramResult createResult = ProgramResult.createEmpty();
         if (contractAlreadyExists) {
             createResult.setException(new BytecodeExecutionException(
-                    "Trying to create a contract with existing contract address: 0x" +
-                            Hex.toHexString(newAddress)));
+                    "Trying to create a contract with existing contract address: 0x" + Hex.toHexString(newAddress)));
         } else if (isNotEmpty(programCode)) {
             VM vm = new VM(config);
             Program program = new Program(programCode, programInvoke, internalTx, config);
@@ -608,20 +607,9 @@ public class Program {
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code = createResult.getHReturn();
-
-        long saveCodeEnergy = (long) ArrayUtils.getLength(code) * EnergyCost.getInstance().getCREATE_DATA();
-
-        /*long afterSpend = programInvoke.getEnergyLimit() - createResult.getEnergyUsed() - saveCodeEnergy;
         if (!createResult.isRevert()) {
-            if (afterSpend < 0) {
-                createResult.setException(
-                        Exception.notEnoughSpendEnergy("No energy to save just created contract code",
-                                saveCodeEnergy, programInvoke.getEnergyLimit() - createResult.getEnergyUsed()));
-            } else {
-                createResult.spendEnergy(saveCodeEnergy);
-                deposit.saveCode(newAddress, code);
-            }
-        }*/
+            deposit.saveCode(newAddress, code);
+        }
 
         getResult().merge(createResult);
 
@@ -644,19 +632,6 @@ public class Program {
             stackPush(new DataWord(newAddress));
         }
 
-        // 5. REFUND THE REMAIN Energy
-        refundEnergyAfterVM(energyLimit, createResult);
-    }
-
-    public void refundEnergyAfterVM(DataWord energyLimit, ProgramResult result) {
-        long refundEnergy = energyLimit.longValueSafe() - result.getEnergyUsed();
-        if (refundEnergy > 0) {
-            refundEnergy(refundEnergy, "remain energy from the internal call");
-            if (log.isDebugEnabled()) {
-                log.debug("The remaining energy is refunded, account: [{}], energy: [{}] ",
-                        Hex.toHexString(getContractAddress().getLast20Bytes()), refundEnergy);
-            }
-        }
     }
 
     /**
@@ -701,7 +676,6 @@ public class Program {
         }
         // transfer trx validation
         byte[] tokenId = null;
-        checkTokenId(msg);
         boolean isTokenTransfer = isTokenTransfer(msg);
         /*if (!isTokenTransfer) {
             long senderBalance = deposit.getBalance(senderAddress);
@@ -731,7 +705,6 @@ public class Program {
                     msg.getEndowment().getNoLeadZeroesData());
         } else if (!ArrayUtils.isEmpty(senderAddress) && !ArrayUtils.isEmpty(contextAddress)
                 && senderAddress != contextAddress && endowment > 0) {
-            createAccountIfNotExist(deposit, contextAddress);
             if (!isTokenTransfer) {
                 try {
                     VMUtils.validateForSmartContract(deposit, senderAddress, contextAddress, endowment);
@@ -849,43 +822,10 @@ public class Program {
         nonce = 0;
     }
 
-    public void spendEnergy(long energyValue, String opName) {
-    /*if (getEnergylimitLeftLong() < energyValue) {
-      throw new OutOfEnergyException(
-          "Not enough energy for '%s' operation executing: curInvokeEnergyLimit[%d],"
-              + " curOpEnergy[%d], usedEnergy[%d]",
-          opName, invoke.getEnergyLimit(), energyValue, getResult().getEnergyUsed());
-    }*/
-        getResult().spendEnergy(0/*energyValue*/);
-    }
-
-    public void checkCPUTimeLimit(String opName) {
-        if (DBConfig.isDebug()) {
-            return;
-        }
-        long vmNowInUs = System.nanoTime() / 1000;
-        if (vmNowInUs > getVmShouldEndInUs()) {
-            log.info("minTimeRatio: {}, maxTimeRatio: {}, vm should end time in us: {}, "
-                            + "vm now time in us: {}, vm start time in us: {}",
-                    DBConfig.getMinTimeRatio(), DBConfig.getMaxTimeRatio(),
-                    getVmShouldEndInUs(), vmNowInUs, getVmStartInUs());
-            throw Exception.notEnoughTime(opName);
-        }
-
-    }
-
-    public void spendAllEnergy() {
-        spendEnergy(getEnergyLimitLeft().longValue(), "Spending all remaining");
-    }
 
     public void refundEnergy(long energyValue, String cause) {
         log.debug("[{}] Refund for cause: [{}], energy: [{}]", invoke.hashCode(), cause, energyValue);
         getResult().refundEnergy(energyValue);
-    }
-
-    public void futureRefundEnergy(long energyValue) {
-        log.debug("Future refund added: [{}]", energyValue);
-        getResult().addFutureRefund(energyValue);
     }
 
     public void resetFutureRefund() {
@@ -1063,6 +1003,14 @@ public class Program {
         return result;
     }
 
+    public long getCpuTimeCost() {
+        return cpuTimeCost;
+    }
+
+    public void setCpuTimeCost(long cpuTimeCost) {
+        this.cpuTimeCost = cpuTimeCost;
+    }
+
     public void setRuntimeFailure(RuntimeException e) {
         getResult().setException(e);
     }
@@ -1216,25 +1164,8 @@ public class Program {
         }
 
         Repository deposit = getContractState().newRepositoryChild();
-
-        byte[] senderAddress = this.getContractAddress().getLast20Bytes();
-        byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
-        byte[] contextAddress = msg.getType().callIsStateless() ? senderAddress : codeAddress;
-
         long endowment = msg.getEndowment().value().longValueExact();
         long senderBalance = 0;
-        byte[] tokenId = null;
-
-        checkTokenId(msg);
-        boolean isTokenTransfer = isTokenTransfer(msg);
-        // transfer trx validation
-        if (!isTokenTransfer) {
-            senderBalance = deposit.getBalance(senderAddress);
-        } /*else {
-            // transfer trc10 token validation
-            tokenId = String.valueOf(msg.getTokenId().longValue()).getBytes();
-            senderBalance = deposit.getTokenBalance(senderAddress, tokenId);
-        }*/
         if (senderBalance < endowment) {
             stackPushZero();
             refundEnergy(msg.getEnergy().longValue(), "refund energy from message call");
@@ -1279,77 +1210,8 @@ public class Program {
         return invoke.byTestingSuite();
     }
 
-    /**
-     * check TokenId TokenId  \ isTransferToken -------------------------------------------------------------------
-     * false                                     true -----------------------------------------------
-     * (-∞,Long.Min)        Not possible            error: msg.getTokenId().value().longValueExact()
-     * ---------------------------------------------------------------------------------------------
-     * [Long.Min, 0)        Not possible                               error
-     * --------------------------------------------------------------------------------------------- 0
-     * allowed and only allowed                    error (guaranteed in CALLTOKEN) transfertoken id=0
-     * should not transfer trx） ---------------------------------------------------------------------
-     * (0-100_0000]          Not possible                              error
-     * ---------------------------------------------------------------------------------------------
-     * (100_0000, Long.Max]  Not possible                             allowed
-     * ---------------------------------------------------------------------------------------------
-     * (Long.Max,+∞)         Not possible          error: msg.getTokenId().value().longValueExact()
-     * ---------------------------------------------------------------------------------------------
-     */
-    public void checkTokenId(MessageCall msg) {
-        /*if (VmConfig.allowMultiSign()) { //allowMultiSign proposal
-            // tokenid should not get Long type overflow
-            long tokenId;
-            try {
-                tokenId = msg.getTokenId().sValue().longValueExact();
-            } catch (ArithmeticException e) {
-                if (VmConfig.allowTvmConstantinople()) {
-                    refundEnergy(msg.getEnergy().longValue(), "refund energy from message call");
-                    throw new TransferException(VALIDATE_FOR_SMART_CONTRACT_FAILURE, INVALID_TOKEN_ID_MSG);
-                }
-                throw e;
-            }
-            // tokenId can only be 0 when isTokenTransferMsg == false
-            // or tokenId can be (MIN_TOKEN_ID, Long.Max] when isTokenTransferMsg == true
-            if ((tokenId <= VMConstant.MIN_TOKEN_ID && tokenId != 0)
-                    || (tokenId == 0 && msg.isTokenTransferMsg())) {
-                // tokenId == 0 is a default value for token id DataWord.
-                if (VmConfig.allowTvmConstantinople()) {
-                    refundEnergy(msg.getEnergy().longValue(), "refund energy from message call");
-                    throw new TransferException(VALIDATE_FOR_SMART_CONTRACT_FAILURE, INVALID_TOKEN_ID_MSG);
-                }
-                throw new BytecodeExecutionException(
-                        String.format(VALIDATE_FOR_SMART_CONTRACT_FAILURE, INVALID_TOKEN_ID_MSG));
-            }
-        }*/
-    }
-
     public boolean isTokenTransfer(MessageCall msg) {
         return msg.getTokenId().longValue() != 0;
-    }
-
-    public void checkTokenIdInTokenBalance(DataWord tokenIdDataWord) {
-        /*if (VmConfig.allowMultiSign()) { //allowMultiSigns proposal
-            // tokenid should not get Long type overflow
-            long tokenId;
-            try {
-                tokenId = tokenIdDataWord.sValue().longValueExact();
-            } catch (ArithmeticException e) {
-                if (VmConfig.allowTvmConstantinople()) {
-                    throw new TransferException(VALIDATE_FOR_SMART_CONTRACT_FAILURE, INVALID_TOKEN_ID_MSG);
-                }
-                throw e;
-            }
-
-            // or tokenId can only be (MIN_TOKEN_ID, Long.Max]
-            if (tokenId <= VMConstant.MIN_TOKEN_ID) {
-                throw new BytecodeExecutionException(
-                        String.format(VALIDATE_FOR_SMART_CONTRACT_FAILURE, INVALID_TOKEN_ID_MSG));
-            }
-        }*/
-    }
-
-    public DataWord getCallEnergy(OpCode op, DataWord requestedEnergy, DataWord availableEnergy) {
-        return requestedEnergy.compareTo(availableEnergy) > 0 ? availableEnergy : requestedEnergy;
     }
 
     public DataWord getCreateEnergy(DataWord availableEnergy) {
@@ -1357,39 +1219,18 @@ public class Program {
     }
 
     /**
-     * . used mostly for testing reasons
+     * used mostly for testing reasons
      */
     public byte[] getMemory() {
         return memory.read(0, memory.size());
     }
 
-    /**
-     * . used mostly for testing reasons
-     */
-    public void initMem(byte[] data) {
-        this.memory.write(0, data, data.length, false);
-    }
-
-    public long getVmStartInUs() {
-        return this.invoke.getVmStartInUs();
-    }
 
     private boolean isContractExist(AccountCapsule existingAddr, Repository deposit) {
         return deposit.getContract(existingAddr.getAddress().toByteArray()) != null;
     }
 
-    private void createAccountIfNotExist(Repository deposit, byte[] contextAddress) {
-        /*if (VmConfig.allowTvmSolidity059()) {
-            //after solidity059 proposal , allow contract transfer trc10 or trx to non-exist address(would create one)
-            AccountCapsule sender = deposit.getAccount(contextAddress);
-            if (sender == null) {
-                deposit.createNormalAccount(contextAddress);
-            }
-        }*/
-    }
-
     public interface ProgramOutListener {
-
         void output(String out);
     }
 
@@ -1441,7 +1282,6 @@ public class Program {
      */
     @SuppressWarnings("serial")
     public static class BytecodeExecutionException extends RuntimeException {
-
         public BytecodeExecutionException(String message) {
             super(message);
         }
@@ -1452,7 +1292,6 @@ public class Program {
     }
 
     public static class TransferException extends BytecodeExecutionException {
-
         public TransferException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1460,7 +1299,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class OutOfEnergyException extends BytecodeExecutionException {
-
         public OutOfEnergyException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1468,7 +1306,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class OutOfTimeException extends BytecodeExecutionException {
-
         public OutOfTimeException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1476,7 +1313,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class OutOfMemoryException extends BytecodeExecutionException {
-
         public OutOfMemoryException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1484,7 +1320,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class OutOfStorageException extends BytecodeExecutionException {
-
         public OutOfStorageException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1492,7 +1327,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class PrecompiledContractException extends BytecodeExecutionException {
-
         public PrecompiledContractException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1500,7 +1334,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class IllegalOperationException extends BytecodeExecutionException {
-
         public IllegalOperationException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1508,7 +1341,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class BadJumpDestinationException extends BytecodeExecutionException {
-
         public BadJumpDestinationException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1516,7 +1348,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class StackTooSmallException extends BytecodeExecutionException {
-
         public StackTooSmallException(String message, Object... args) {
             super(String.format(message, args));
         }
@@ -1524,7 +1355,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class ReturnDataCopyIllegalBoundsException extends BytecodeExecutionException {
-
         public ReturnDataCopyIllegalBoundsException(DataWord off, DataWord size, long returnDataSize) {
             super(String.format("Illegal RETURNDATACOPY arguments: offset (%s) + size (%s) > RETURNDATASIZE (%d)",
                             off, size, returnDataSize));
@@ -1533,7 +1363,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class JVMStackOverFlowException extends BytecodeExecutionException {
-
         public JVMStackOverFlowException() {
             super("StackOverflowError:  exceed default JVM stack size!");
         }
@@ -1541,7 +1370,6 @@ public class Program {
 
     @SuppressWarnings("serial")
     public static class StaticCallModificationException extends BytecodeExecutionException {
-
         public StaticCallModificationException() {
             super("Attempt to call a state modifying opcode inside STATICCALL");
         }
@@ -1552,26 +1380,8 @@ public class Program {
         private Exception() {
         }
 
-        public static OutOfEnergyException notEnoughOpEnergy(OpCode op, long opEnergy, long programEnergy) {
-            return new OutOfEnergyException(
-                    "Not enough energy for '%s' operation executing: opEnergy[%d], programEnergy[%d];", op,
-                    opEnergy,
-                    programEnergy);
-        }
-
-        public static OutOfEnergyException notEnoughOpEnergy(OpCode op, DataWord opEnergy, DataWord programEnergy) {
-            return notEnoughOpEnergy(op, opEnergy.longValue(), programEnergy.longValue());
-        }
-
-        public static OutOfEnergyException notEnoughSpendEnergy(String hint, long needEnergy, long leftEnergy) {
-            return new OutOfEnergyException(
-                    "Not enough energy for '%s' executing: needEnergy[%d], leftEnergy[%d];", hint, needEnergy,
-                    leftEnergy);
-        }
-
         public static OutOfTimeException notEnoughTime(String op) {
-            return new OutOfTimeException(
-                    "CPU timeout for '%s' operation executing", op);
+            return new OutOfTimeException("CPU timeout for '%s' operation executing", op);
         }
 
         public static OutOfTimeException alreadyTimeOut() {
@@ -1583,10 +1393,6 @@ public class Program {
             return new OutOfMemoryException("Out of Memory when '%s' operation executing", op.name());
         }
 
-        public static OutOfStorageException notEnoughStorage() {
-            return new OutOfStorageException("Not enough ContractState resource");
-        }
-
         public static PrecompiledContractException contractValidateException(LedgerYiException e) {
             return new PrecompiledContractException(e.getMessage());
         }
@@ -1595,8 +1401,7 @@ public class Program {
             return new PrecompiledContractException(e.getMessage());
         }
 
-        public static OutOfEnergyException energyOverflow(BigInteger actualEnergy,
-                                                          BigInteger energyLimit) {
+        public static OutOfEnergyException energyOverflow(BigInteger actualEnergy, BigInteger energyLimit) {
             return new OutOfEnergyException("Energy value overflow: actualEnergy[%d], energyLimit[%d];",
                     actualEnergy.longValueExact(), energyLimit.longValueExact());
         }
@@ -1611,14 +1416,12 @@ public class Program {
         }
 
         public static StackTooSmallException tooSmallStack(int expectedSize, int actualSize) {
-            return new StackTooSmallException("Expected stack size %d but actual %d;", expectedSize,
-                    actualSize);
+            return new StackTooSmallException("Expected stack size %d but actual %d;", expectedSize, actualSize);
         }
     }
 
     @SuppressWarnings("serial")
     public class StackTooLargeException extends BytecodeExecutionException {
-
         public StackTooLargeException(String message) {
             super(message);
         }

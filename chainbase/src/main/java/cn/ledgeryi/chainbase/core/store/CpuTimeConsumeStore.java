@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class NullifierStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
+public class CpuTimeConsumeStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
 
   @Autowired
-  public NullifierStore(@Value("nullifier") String dbName) {
+  public CpuTimeConsumeStore(@Value("cpu-time-consume") String dbName) {
     super(dbName);
   }
 
@@ -31,7 +31,6 @@ public class NullifierStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
   @Override
   public boolean has(byte[] key) {
     byte[] value = revokingDB.getUnchecked(key);
-
     return !ArrayUtils.isEmpty(value);
   }
 }

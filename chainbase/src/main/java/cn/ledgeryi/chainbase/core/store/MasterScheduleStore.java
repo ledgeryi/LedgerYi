@@ -22,7 +22,7 @@ public class MasterScheduleStore extends LedgerYiStoreWithRevoking<BytesCapsule>
   private static final int ADDRESS_BYTE_ARRAY_LENGTH = DecodeUtil.ADDRESS_SIZE / 2;
 
   @Autowired
-  private MasterScheduleStore(@Value("master_schedule") String dbName) {
+  private MasterScheduleStore(@Value("master-schedule") String dbName) {
     super(dbName);
   }
 

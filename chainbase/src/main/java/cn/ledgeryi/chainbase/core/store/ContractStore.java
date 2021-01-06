@@ -30,47 +30,22 @@ public class ContractStore extends LedgerYiStoreWithRevoking<ContractCapsule> {
     }
 
     /**
-     * get total transaction.
-     */
-    public long getTotalContracts() {
-        return Streams.stream(revokingDB.iterator()).count();
-    }
-
-    /* for test
-    public void listContract(){
-        Iterator<Map.Entry<byte[], byte[]>> iterator = revokingDB.iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<byte[], byte[]> next = iterator.next();
-            System.out.println("=============key: " + Hex.toHexString(next.getKey()));
-            System.out.println("=============value: " + Hex.toHexString(next.getValue()));
-        }
-    }*/
-
-
-    /**
-     * find a transaction  by it's id.
+     * find a transaction by it's id.
      */
     public byte[] findContractByHash(byte[] txHash) {
         return revokingDB.getUnchecked(txHash);
     }
 
-    /**
-     *
-     * @param contractAddress
-     * @return
-     */
     public ABI getABI(byte[] contractAddress) {
         byte[] value = revokingDB.getUnchecked(contractAddress);
         if (ArrayUtils.isEmpty(value)) {
             return null;
         }
-
         ContractCapsule contractCapsule = new ContractCapsule(value);
         SmartContractOuterClass.SmartContract smartContract = contractCapsule.getInstance();
         if (smartContract == null) {
             return null;
         }
-
         return smartContract.getAbi();
     }
 

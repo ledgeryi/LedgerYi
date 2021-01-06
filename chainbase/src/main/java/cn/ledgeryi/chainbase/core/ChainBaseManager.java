@@ -50,9 +50,12 @@ public class ChainBaseManager {
   private StorageRowStore storageRowStore;
   @Autowired
   @Getter
-  private NullifierStore nullifierStore;
+  private KhaosDatabase khaosDb;
   @Autowired
   @Getter
-  private KhaosDatabase khaosDb;
+  private CpuTimeConsumeStore cpuTimeConsumeStore;
+  @Autowired
+  @Getter
+  private StorageConsumeStore storageConsumeStore;
 
 }

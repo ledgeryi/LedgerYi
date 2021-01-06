@@ -67,18 +67,9 @@ public class LedgerYiVmActuator implements VmActuator {
   @Setter
   private boolean enableEventListener;
 
-
   public LedgerYiVmActuator(boolean isConstantCall) {
     this.isConstantCall = isConstantCall;
     programInvokeFactory = new ProgramInvokeFactoryImpl();
-  }
-
-  private static long getEnergyFee(long callerEnergyUsage, long callerEnergyFrozen, long callerEnergyTotal) {
-    if (callerEnergyTotal <= 0) {
-      return 0;
-    }
-    return BigInteger.valueOf(callerEnergyFrozen).multiply(BigInteger.valueOf(callerEnergyUsage))
-        .divide(BigInteger.valueOf(callerEnergyTotal)).longValueExact();
   }
 
   @Override
@@ -92,7 +83,6 @@ public class LedgerYiVmActuator implements VmActuator {
     ConfigLoader.load(context.getStoreFactory());
     tx = context.getTxCap().getInstance();
     blockCap = context.getBlockCap();
-    //Route Type
     Protocol.Transaction.Contract.ContractType contractType = this.tx.getRawData().getContract().getType();
     //Prepare Repository
     repository = RepositoryImpl.createRoot(context.getStoreFactory());
@@ -100,11 +90,9 @@ public class LedgerYiVmActuator implements VmActuator {
     if (Objects.nonNull(blockCap)) {
       this.executorType = InternalTransaction.ExecutorType.ET_NORMAL_TYPE;
     } else {
-      //打包交易或push交易时，blockCap为空，只为在打包交易时预执行交易
       this.blockCap = new BlockCapsule(Protocol.Block.newBuilder().build());
       this.executorType = InternalTransaction.ExecutorType.ET_PRE_TYPE;
     }
-    //打包交易和处理区块时，为false
     if (isConstantCall) {
       this.executorType = InternalTransaction.ExecutorType.ET_PRE_TYPE;
     }
@@ -124,7 +112,7 @@ public class LedgerYiVmActuator implements VmActuator {
   }
 
   @Override
-  public void execute(Object object) throws ContractExeException {
+  public void execute(Object object) {
     TransactionContext context = (TransactionContext) object;
     if (Objects.isNull(context)){
       throw new RuntimeException("TransactionContext is null");
@@ -136,8 +124,6 @@ public class LedgerYiVmActuator implements VmActuator {
             && null != TransactionUtil.getContractRet(tx)
             && Protocol.Transaction.Result.ContractResult.OUT_OF_TIME == TransactionUtil.getContractRet(tx)) {
           result = program.getResult();
-          program.spendAllEnergy();
-
           Program.OutOfTimeException e = Program.Exception.alreadyTimeOut();
           result.setRuntimeError(e.getMessage());
           result.setException(e);
@@ -147,14 +133,10 @@ public class LedgerYiVmActuator implements VmActuator {
         vm.play(program);
         result = program.getResult();
 
-        //打包交易和处理区块时为false
+        long cpuTimeCost = program.getCpuTimeCost();
+        repository.putCpuTimeConsumeValue(program.getContractAddress().getNoLeadZeroesData(), cpuTimeCost);
+
         if (isConstantCall) {
-          long callValue = TransactionUtil.getCallValue(tx.getRawData().getContract());
-          long callTokenValue = TransactionUtil.getCallTokenValue(tx.getRawData().getContract());
-          if (callValue > 0 || callTokenValue > 0) {
-            result.setRuntimeError("constant cannot set call value or call token value.");
-            result.rejectInternalTransactions();
-          }
           if (result.getException() != null) {
             result.setRuntimeError(result.getException().getMessage());
             result.rejectInternalTransactions();
@@ -165,24 +147,7 @@ public class LedgerYiVmActuator implements VmActuator {
 
         if (InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE == txType && !result.isRevert()) {
           byte[] code = program.getResult().getHReturn();
-          /*long saveCodeEnergy = (long) getLength(code) * EnergyCost.getInstance().getCREATE_DATA();
-          long afterSpend = program.getEnergyLimitLeft().longValue() - saveCodeEnergy;
-          if (afterSpend < 0) {
-            if (null == result.getException()) {
-              result.setException(Program.Exception
-                  .notEnoughSpendEnergy("save just created contract code",
-                      saveCodeEnergy, program.getEnergyLimitLeft().longValue()));
-            }
-          } else {
-            result.spendEnergy(saveCodeEnergy);
-            if (VmConfig.allowTvmConstantinople()) {
-              repository.saveCode(program.getContractAddress().getNoLeadZeroesData(), code);
-            }
-          }*/
-          result.spendEnergy(0/*saveCodeEnergy*/);
-          if (VmConfig.allowTvmConstantinople()) {
-            repository.saveCode(program.getContractAddress().getNoLeadZeroesData(), code);
-          }
+          repository.saveCode(program.getContractAddress().getNoLeadZeroesData(), code);
         }
 
         if (result.getException() != null || result.isRevert()) {
@@ -191,9 +156,6 @@ public class LedgerYiVmActuator implements VmActuator {
           result.resetFutureRefund();
           result.rejectInternalTransactions();
           if (result.getException() != null) {
-            if (!(result.getException() instanceof Program.TransferException)) {
-              program.spendAllEnergy();
-            }
             result.setRuntimeError(result.getException().getMessage());
             throw result.getException();
           } else {
@@ -210,23 +172,18 @@ public class LedgerYiVmActuator implements VmActuator {
         repository.commit();
       }
     } catch (Program.JVMStackOverFlowException e) {
-      program.spendAllEnergy();
       result = program.getResult();
       result.setException(e);
       result.rejectInternalTransactions();
       result.setRuntimeError(result.getException().getMessage());
-      log.info("JVMStackOverFlowException: {}", result.getException().getMessage());
+      log.info("jvm stack overflow exception: {}", result.getException().getMessage());
     } catch (Program.OutOfTimeException e) {
-      program.spendAllEnergy();
       result = program.getResult();
       result.setException(e);
       result.rejectInternalTransactions();
       result.setRuntimeError(result.getException().getMessage());
       log.info("timeout: {}", result.getException().getMessage());
     } catch (Throwable e) {
-      if (!(e instanceof Program.TransferException)) {
-        program.spendAllEnergy();
-      }
       result = program.getResult();
       result.rejectInternalTransactions();
       if (Objects.isNull(result.getException())) {
@@ -238,13 +195,12 @@ public class LedgerYiVmActuator implements VmActuator {
       }
       log.info("runtime result is :{}", result.getException().getMessage());
     }
+
     //use program returned fill context
     context.setProgramResult(result);
+
     if (VmConfig.vmTrace() && program != null) {
-      String traceContent = program.getTrace()
-          .result(result.getHReturn())
-          .error(result.getException())
-          .toString();
+      String traceContent = program.getTrace().result(result.getHReturn()).error(result.getException()).toString();
       if (VmConfig.vmTraceCompressed()) {
         traceContent = VMUtils.zipAndEncode(traceContent);
       }
@@ -261,14 +217,12 @@ public class LedgerYiVmActuator implements VmActuator {
     if (contract == null) {
       throw new ContractValidateException("Cannot get CreateSmartContract from transaction");
     }
-    //获取合约参数信息：contractName、originAddress、abi、consumeUserResourcePercent、originEnergyLimit、value
     SmartContract newSmartContract = contract.getNewContract();
     if (!contract.getOwnerAddress().equals(newSmartContract.getOriginAddress())) {
       log.info("OwnerAddress not equals OriginAddress");
       throw new ContractValidateException("OwnerAddress is not equals OriginAddress");
     }
     byte[] contractName = newSmartContract.getName().getBytes();
-    //合约名称字符长度校验，要求长度不大于32字节
     if (contractName.length > VMConstant.CONTRACT_NAME_LENGTH) {
       throw new ContractValidateException("contractName's length cannot be greater than 32");
     }
@@ -276,7 +230,6 @@ public class LedgerYiVmActuator implements VmActuator {
     if (percent < 0 || percent > VMConstant.ONE_HUNDRED) {
       throw new ContractValidateException("percent must be >= 0 and <= 100");
     }
-    //生成合约地址
     byte[] contractAddress = ContractUtils.generateContractAddress(tx);
     // insure the new contract address haven't exist
     if (repository.getAccount(contractAddress) != null) {
@@ -284,14 +237,9 @@ public class LedgerYiVmActuator implements VmActuator {
               + DecodeUtil.createReadableString(contractAddress));
     }
     newSmartContract = newSmartContract.toBuilder().setContractAddress(ByteString.copyFrom(contractAddress)).build();
-    long callValue = newSmartContract.getCallValue();
     long tokenValue = 0;
     long tokenId = 0;
-    /*if (VmConfig.allowTvmTransferTrc10()) {
-      tokenValue = contract.getCallTokenValue();
-      tokenId = contract.getTokenId();
-    }*/
-    //获取调用者地址
+
     byte[] callerAddress = contract.getOwnerAddress().toByteArray();
     // create vm to constructor smart contract
     try {
@@ -300,19 +248,10 @@ public class LedgerYiVmActuator implements VmActuator {
         log.info("invalid feeLimit {}", feeLimit);
         throw new ContractValidateException("feeLimit must be >= 0 and <= " + VmConfig.MAX_FEE_LIMIT);
       }
-      //查询创建合约的地址对应的账户
-      AccountCapsule creator = this.repository.getAccount(newSmartContract.getOriginAddress().toByteArray());
-      long energyLimit;
-      checkTokenValueAndId(tokenValue, tokenId);
-      //获取合约的操作字节码
       byte[] ops = newSmartContract.getBytecode().toByteArray();
       rootInternalTransaction = new InternalTransaction(tx, txType);
-      long maxCpuTimeOfOneTx = repository.getDynamicPropertiesStore().getMaxCpuTimeOfOneTx() * VMConstant.ONE_THOUSAND;
-      long thisTxCPULimitInUs = (long) (maxCpuTimeOfOneTx * getCpuLimitInUsRatio());
-      long vmStartInUs = System.nanoTime() / VMConstant.ONE_THOUSAND;
-      long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE, executorType, tx,
-              tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs);
+              tokenValue, tokenId, blockCap.getInstance(), repository, 0, 0);
       this.vm = new VM();
       this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
@@ -325,24 +264,12 @@ public class LedgerYiVmActuator implements VmActuator {
       throw new ContractValidateException(e.getMessage());
     }
     program.getResult().setContractAddress(contractAddress);
-    //创建合约账户，保存合约地址与合约名称的关系
     repository.createAccount(contractAddress, newSmartContract.getName(), Protocol.AccountType.Contract);
-    //创建合约，保存合约地址与合约内容的关系，合约内容有SmartContract数据结构（smart_contract.proto）
     repository.createContract(contractAddress, new ContractCapsule(newSmartContract));
     byte[] code = newSmartContract.getBytecode().toByteArray();
     if (!VmConfig.allowTvmConstantinople()) {
       repository.saveCode(contractAddress, ProgramPrecompile.getCode(code));
     }
-    // transfer from callerAddress to contractAddress according to callValue
-    if (callValue > 0) {
-      transfer(this.repository, callerAddress, contractAddress, callValue);
-    }
-    /*if (VmConfig.allowTvmTransferTrc10()) {
-      if (tokenValue > 0) {
-        transferToken(this.repository, callerAddress, contractAddress, String.valueOf(tokenId), tokenValue);
-      }
-    }*/
-
   }
 
   private void call() throws ContractValidateException {
@@ -359,34 +286,13 @@ public class LedgerYiVmActuator implements VmActuator {
       log.info("No contract or not a smart contract");
       throw new ContractValidateException("No contract or not a smart contract");
     }
-
-    long callValue = contract.getCallValue();
     long tokenValue = 0;
     long tokenId = 0;
-
     byte[] callerAddress = contract.getOwnerAddress().toByteArray();
-    checkTokenValueAndId(tokenValue, tokenId);
     byte[] code = repository.getCode(contractAddress);
     if (isNotEmpty(code)) {
-      long feeLimit = tx.getRawData().getFeeLimit();
-      if (feeLimit < 0 || feeLimit > VmConfig.MAX_FEE_LIMIT) {
-        log.info("invalid feeLimit {}", feeLimit);
-        throw new ContractValidateException("feeLimit must be >= 0 and <= " + VmConfig.MAX_FEE_LIMIT);
-      }
-      AccountCapsule caller = repository.getAccount(callerAddress);
-      long energyLimit;
-      if (isConstantCall) {
-        energyLimit = VMConstant.ENERGY_LIMIT_IN_CONSTANT_TX;
-      } else {
-        AccountCapsule creator = repository.getAccount(deployedContract.getInstance().getOriginAddress().toByteArray());
-        energyLimit = getTotalEnergyLimit(creator, caller, contract, feeLimit, callValue);
-      }
-      long maxCpuTimeOfOneTx = repository.getDynamicPropertiesStore().getMaxCpuTimeOfOneTx() * VMConstant.ONE_THOUSAND;
-      long thisTxCPULimitInUs = (long) (maxCpuTimeOfOneTx * getCpuLimitInUsRatio());
-      long vmStartInUs = System.nanoTime() / VMConstant.ONE_THOUSAND;
-      long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CALL_TYPE,
-              executorType, tx, tokenValue, tokenId, blockCap.getInstance(), repository, vmStartInUs, vmShouldEndInUs);
+              executorType, tx, tokenValue, tokenId, blockCap.getInstance(), repository, 0, 0);
       if (isConstantCall) {
         programInvoke.setConstantCall();
       }
@@ -399,91 +305,7 @@ public class LedgerYiVmActuator implements VmActuator {
         logInfoTriggerParser = new LogInfoTriggerParser(blockCap.getNum(), blockCap.getTimeStamp(), txId, callerAddress);
       }
     }
-
     program.getResult().setContractAddress(contractAddress);
-    //transfer from callerAddress to targetAddress according to callValue
-
-    if (callValue > 0) {
-      transfer(this.repository, callerAddress, contractAddress, callValue);
-    }
-    /*if (VmConfig.allowTvmTransferTrc10()) {
-      if (tokenValue > 0) {
-        transferToken(this.repository, callerAddress, contractAddress, String.valueOf(tokenId), tokenValue);
-      }
-    }*/
-  }
-
-  public long getAccountEnergyLimitWithFixRatio(AccountCapsule account, long feeLimit, long callValue) {
-    long sunPerEnergy = VMConstant.SUN_PER_ENERGY;
-    if (repository.getDynamicPropertiesStore().getEnergyFee() > 0) {
-      sunPerEnergy = repository.getDynamicPropertiesStore().getEnergyFee();
-    }
-    long leftFrozenEnergy = repository.getAccountLeftEnergyFromFreeze(account);
-    long energyFromBalance = max(account.getBalance() - callValue, 0) / sunPerEnergy;
-    long availableEnergy = Math.addExact(leftFrozenEnergy, energyFromBalance);
-    long energyFromFeeLimit = feeLimit / sunPerEnergy;
-    return min(availableEnergy, energyFromFeeLimit);
-  }
-
-  private long getAccountEnergyLimitWithFloatRatio(AccountCapsule account, long feeLimit, long callValue) {
-    long sunPerEnergy = VMConstant.SUN_PER_ENERGY;
-    if (repository.getDynamicPropertiesStore().getEnergyFee() > 0) {
-      sunPerEnergy = repository.getDynamicPropertiesStore().getEnergyFee();
-    }
-    // can change the calc way
-    long leftEnergyFromFreeze = repository.getAccountLeftEnergyFromFreeze(account);
-    callValue = max(callValue, 0);
-    long energyFromBalance = Math.floorDiv(max(account.getBalance() - callValue, 0), sunPerEnergy);
-    long energyFromFeeLimit;
-    long totalBalanceForEnergyFreeze = 0;//account.getAllFrozenBalanceForEnergy();
-    if (0 == totalBalanceForEnergyFreeze) {
-      energyFromFeeLimit = feeLimit / sunPerEnergy;
-    } else {
-      long totalEnergyFromFreeze = repository.calculateGlobalEnergyLimit(account);
-      long leftBalanceForEnergyFreeze = getEnergyFee(totalBalanceForEnergyFreeze,
-          leftEnergyFromFreeze, totalEnergyFromFreeze);
-      if (leftBalanceForEnergyFreeze >= feeLimit) {
-        energyFromFeeLimit = BigInteger.valueOf(totalEnergyFromFreeze)
-            .multiply(BigInteger.valueOf(feeLimit))
-            .divide(BigInteger.valueOf(totalBalanceForEnergyFreeze)).longValueExact();
-      } else {
-        energyFromFeeLimit = Math.addExact(leftEnergyFromFreeze,
-                (feeLimit - leftBalanceForEnergyFreeze) / sunPerEnergy);
-      }
-    }
-    return min(Math.addExact(leftEnergyFromFreeze, energyFromBalance), energyFromFeeLimit);
-  }
-
-  public long getTotalEnergyLimit(AccountCapsule creator, AccountCapsule caller,
-                                  TriggerSmartContract contract, long feeLimit, long callValue)
-      throws ContractValidateException {
-    if (Objects.isNull(creator) && VmConfig.allowTvmConstantinople()) {
-      return getAccountEnergyLimitWithFixRatio(caller, feeLimit, callValue);
-    }
-    //  according to version
-    if (VmConfig.getEnergyLimitHardFork()) {
-      return getTotalEnergyLimitWithFixRatio(creator, caller, contract, feeLimit, callValue);
-    } else {
-      return getTotalEnergyLimitWithFloatRatio(creator, caller, contract, feeLimit, callValue);
-    }
-  }
-
-
-  public void checkTokenValueAndId(long tokenValue, long tokenId) throws ContractValidateException {
-    /*if (VmConfig.allowTvmTransferTrc10()) {
-      if (VmConfig.allowMultiSign()) { //allowMultiSigns
-        // tokenid can only be 0
-        // or (MIN_TOKEN_ID, Long.Max]
-        if (tokenId <= VMConstant.MIN_TOKEN_ID && tokenId != 0) {
-          throw new ContractValidateException("tokenId must be > " + VMConstant.MIN_TOKEN_ID);
-        }
-        // tokenid can only be 0 when tokenvalue = 0,
-        // or (MIN_TOKEN_ID, Long.Max]
-        if (tokenValue > 0 && tokenId == 0) {
-          throw new ContractValidateException("invalid arguments with tokenValue = " + tokenValue + ", tokenId = " + tokenId);
-        }
-      }
-    }*/
   }
 
   private double getCpuLimitInUsRatio() {
@@ -506,59 +328,6 @@ public class LedgerYiVmActuator implements VmActuator {
       cpuLimitRatio = 1.0;
     }
     return cpuLimitRatio;
-  }
-
-  public long getTotalEnergyLimitWithFixRatio(AccountCapsule creator, AccountCapsule caller,
-                                              TriggerSmartContract contract, long feeLimit, long callValue)
-      throws ContractValidateException {
-    long callerEnergyLimit = getAccountEnergyLimitWithFixRatio(caller, feeLimit, callValue);
-    if (Arrays.equals(creator.getAddress().toByteArray(), caller.getAddress().toByteArray())) {
-      // when the creator calls his own contract, this logic will be used.
-      // so, the creator must use a BIG feeLimit to call his own contract,
-      // which will cost the feeLimit tx when the creator's frozen energy is 0.
-      return callerEnergyLimit;
-    }
-    long creatorEnergyLimit = 0;
-    ContractCapsule contractCapsule = repository.getContract(contract.getContractAddress().toByteArray());
-    long consumeUserResourcePercent = contractCapsule.getConsumeUserResourcePercent();
-    long originEnergyLimit = contractCapsule.getOriginEnergyLimit();
-    if (originEnergyLimit < 0) {
-      throw new ContractValidateException("originEnergyLimit can't be < 0");
-    }
-    if (consumeUserResourcePercent <= 0) {
-      creatorEnergyLimit = min(repository.getAccountLeftEnergyFromFreeze(creator), originEnergyLimit);
-    } else {
-      if (consumeUserResourcePercent < VMConstant.ONE_HUNDRED) {
-        // creatorEnergyLimit =
-        // min(callerEnergyLimit * (100 - percent) / percent, creatorLeftFrozenEnergy, originEnergyLimit)
-        creatorEnergyLimit = min(
-            BigInteger.valueOf(callerEnergyLimit)
-                .multiply(BigInteger.valueOf(VMConstant.ONE_HUNDRED - consumeUserResourcePercent))
-                .divide(BigInteger.valueOf(consumeUserResourcePercent)).longValueExact(),
-            min(repository.getAccountLeftEnergyFromFreeze(creator), originEnergyLimit)
-        );
-      }
-    }
-    return Math.addExact(callerEnergyLimit, creatorEnergyLimit);
-  }
-
-  private long getTotalEnergyLimitWithFloatRatio(AccountCapsule creator, AccountCapsule caller,
-                                                 TriggerSmartContract contract, long feeLimit, long callValue) {
-    long callerEnergyLimit = getAccountEnergyLimitWithFloatRatio(caller, feeLimit, callValue);
-    if (Arrays.equals(creator.getAddress().toByteArray(), caller.getAddress().toByteArray())) {
-      return callerEnergyLimit;
-    }
-
-    // creatorEnergyFromFreeze
-    long creatorEnergyLimit = repository.getAccountLeftEnergyFromFreeze(creator);
-    ContractCapsule contractCapsule = repository.getContract(contract.getContractAddress().toByteArray());
-    long consumeUserResourcePercent = contractCapsule.getConsumeUserResourcePercent();
-    if (creatorEnergyLimit * consumeUserResourcePercent
-        > (VMConstant.ONE_HUNDRED - consumeUserResourcePercent) * callerEnergyLimit) {
-      return Math.floorDiv(callerEnergyLimit * VMConstant.ONE_HUNDRED, consumeUserResourcePercent);
-    } else {
-      return Math.addExact(callerEnergyLimit, creatorEnergyLimit);
-    }
   }
 
   private boolean isCheckTransaction() {

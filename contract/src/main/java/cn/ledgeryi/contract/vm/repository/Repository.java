@@ -34,6 +34,10 @@ public interface Repository {
 
   void putStorageValue(byte[] address, DataWord key, DataWord value);
 
+  void putStorageConsumeValue(byte[] address, long value);
+
+  void putCpuTimeConsumeValue(byte[] address, long value);
+
   DataWord getStorageValue(byte[] address, DataWord key);
 
   Storage getStorage(byte[] address);
@@ -58,14 +62,9 @@ public interface Repository {
 
   void putAccountValue(byte[] address, AccountCapsule accountCapsule);
 
-  long getAccountLeftEnergyFromFreeze(AccountCapsule accountCapsule);
-
   byte[] getBlackHoleAddress();
 
   public BlockCapsule getBlockByNum(final long num);
 
   public AccountCapsule createNormalAccount(byte[] address);
-
-  long calculateGlobalEnergyLimit(AccountCapsule accountCapsule);
-
 }
