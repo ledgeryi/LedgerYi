@@ -127,6 +127,8 @@ message Votes {
 
 message ResourceReceipt {
   Transaction.Result.ContractResult result = 1;
+  int64 cpuTimeUsed = 2;
+  int64 storageUsed = 3;
 }
 
 message Transaction {

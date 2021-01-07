@@ -24,8 +24,6 @@ import cn.ledgeryi.chainbase.common.utils.ContractUtils;
 import cn.ledgeryi.chainbase.core.capsule.AccountCapsule;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
-import cn.ledgeryi.chainbase.core.store.CpuTimeConsumeStore;
-import cn.ledgeryi.chainbase.core.store.StorageConsumeStore;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.core.exception.LedgerYiException;
 import cn.ledgeryi.common.runtime.vm.DataWord;
@@ -46,7 +44,6 @@ import cn.ledgeryi.contract.vm.program.listener.ProgramTraceListener;
 import cn.ledgeryi.contract.vm.repository.Repository;
 import cn.ledgeryi.contract.vm.trace.ProgramTrace;
 import cn.ledgeryi.crypto.utils.Hash;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -74,7 +71,8 @@ public class Program {
     private Stack stack;
     private Memory memory;
     private boolean stopped;
-    private long cpuTimeCost;
+    private long cpuTimeUsed;
+    private long storageUsed;
     private ProgramTrace trace;
     private ProgramInvoke invoke;
     private final VmConfig config;
@@ -835,7 +833,15 @@ public class Program {
     public void storageSave(DataWord word1, DataWord word2) {
         DataWord keyWord = word1.clone();
         DataWord valWord = word2.clone();
-        getContractState().putStorageValue(getContractAddress().getLast20Bytes(), keyWord, valWord);
+        Repository contractState = getContractState();
+        contractState.putStorageValue(getContractAddress().getLast20Bytes(), keyWord, valWord);
+
+        //process storage used
+        DataWord storageValue = contractState.getStorageValue(getContractAddress().getLast20Bytes(), keyWord);
+        if (storageValue != null && storageValue.longValue() != valWord.longValue()) {
+            long currentStorageUsedTotal = keyWord.getData().length + valWord.getData().length;
+            setStorageUsed(currentStorageUsedTotal);
+        }
     }
 
     public byte[] getCode() {
@@ -1003,12 +1009,20 @@ public class Program {
         return result;
     }
 
-    public long getCpuTimeCost() {
-        return cpuTimeCost;
+    public long getCpuTimeUsed() {
+        return cpuTimeUsed;
     }
 
-    public void setCpuTimeCost(long cpuTimeCost) {
-        this.cpuTimeCost = cpuTimeCost;
+    public void setCpuTimeUsed(long cpuTimeUsed) {
+        this.cpuTimeUsed = cpuTimeUsed;
+    }
+
+    public long getStorageUsed() {
+        return storageUsed;
+    }
+
+    public void setStorageUsed(long storageUsed) {
+        this.storageUsed = storageUsed;
     }
 
     public void setRuntimeFailure(RuntimeException e) {

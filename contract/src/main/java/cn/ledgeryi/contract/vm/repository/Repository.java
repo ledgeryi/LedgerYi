@@ -34,9 +34,9 @@ public interface Repository {
 
   void putStorageValue(byte[] address, DataWord key, DataWord value);
 
-  void putStorageConsumeValue(byte[] address, long value);
+  void putStorageUsedValue(byte[] address, long value);
 
-  void putCpuTimeConsumeValue(byte[] address, long value);
+  void putCpuTimeUsedValue(byte[] address, long value);
 
   DataWord getStorageValue(byte[] address, DataWord key);
 

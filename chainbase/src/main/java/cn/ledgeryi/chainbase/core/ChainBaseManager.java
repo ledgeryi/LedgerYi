@@ -53,9 +53,9 @@ public class ChainBaseManager {
   private KhaosDatabase khaosDb;
   @Autowired
   @Getter
-  private CpuTimeConsumeStore cpuTimeConsumeStore;
+  private CpuTimeUsedStore cpuTimeUsedStore;
   @Autowired
   @Getter
-  private StorageConsumeStore storageConsumeStore;
+  private StorageUsedStore storageUsedStore;
 
 }

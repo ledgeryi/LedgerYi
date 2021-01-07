@@ -72,7 +72,7 @@ public class InternalTransaction {
       this.value = contract.getNewContract().getCallValue();
       this.data = contract.getNewContract().getBytecode().toByteArray();
       this.tokenInfo.put(String.valueOf(contract.getTokenId()), contract.getCallTokenValue());
-    } else if (trxType == TxType.TRX_CONTRACT_CALL_TYPE) {
+    } else if (trxType == TxType.TX_CONTRACT_CALL_TYPE) {
       SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
       if (contract == null) {
         throw new ContractValidateException("Invalid TriggerSmartContract Protocol");
@@ -199,7 +199,6 @@ public class InternalTransaction {
     TX_CONTRACT_CREATION_TYPE,
     TX_CONTRACT_CALL_TYPE,
     TX_UNKNOWN_TYPE,
-    TRX_CONTRACT_CALL_TYPE,
   }
 
   public enum ExecutorType {

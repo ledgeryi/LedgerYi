@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CpuTimeConsumeStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
+public class CpuTimeUsedStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
 
   @Autowired
-  public CpuTimeConsumeStore(@Value("cpu-time-consume") String dbName) {
+  public CpuTimeUsedStore(@Value("cpu-time-used") String dbName) {
     super(dbName);
   }
 

@@ -5,11 +5,9 @@ import cn.ledgeryi.chainbase.common.runtime.InternalTransaction;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.ContractUtils;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
-import cn.ledgeryi.chainbase.core.capsule.AccountCapsule;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
-import cn.ledgeryi.common.core.exception.ContractExeException;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.logsfilter.trigger.ContractTrigger;
 import cn.ledgeryi.common.utils.DecodeUtil;
@@ -24,7 +22,9 @@ import cn.ledgeryi.contract.vm.program.invoke.ProgramInvokeFactoryImpl;
 import cn.ledgeryi.contract.vm.repository.Repository;
 import cn.ledgeryi.contract.vm.repository.RepositoryImpl;
 import cn.ledgeryi.protos.Protocol;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.*;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,14 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static cn.ledgeryi.contract.utils.MUtil.transfer;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 @Slf4j(topic = "VM")
@@ -133,8 +128,12 @@ public class LedgerYiVmActuator implements VmActuator {
         vm.play(program);
         result = program.getResult();
 
-        long cpuTimeCost = program.getCpuTimeCost();
-        repository.putCpuTimeConsumeValue(program.getContractAddress().getNoLeadZeroesData(), cpuTimeCost);
+        long cpuTimeUsed = program.getCpuTimeUsed();
+        result.setCpuTimeUsed(cpuTimeUsed);
+        repository.putCpuTimeUsedValue(program.getContractAddress().getNoLeadZeroesData(), cpuTimeUsed);
+        long storageUsed = program.getStorageUsed();
+        result.setStorageUsed(storageUsed);
+        repository.putStorageUsedValue(program.getContractAddress().getNoLeadZeroesData(), storageUsed);
 
         if (isConstantCall) {
           if (result.getException() != null) {

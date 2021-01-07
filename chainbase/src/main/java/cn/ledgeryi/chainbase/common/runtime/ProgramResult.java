@@ -28,6 +28,13 @@ public class ProgramResult {
   private long energyUsed = 0;
   private long futureRefund = 0;
 
+  @Getter
+  @Setter
+  private long cpuTimeUsed = 0;
+  @Getter
+  @Setter
+  private long storageUsed = 0;
+
   private byte[] hReturn = ByteArray.EMPTY_BYTE_ARRAY;
   private byte[] contractAddress = ByteArray.EMPTY_BYTE_ARRAY;
   private RuntimeException exception;

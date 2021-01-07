@@ -85,8 +85,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                     vmShouldEndInUs);
 
         } else if (txType == TX_CONTRACT_CALL_TYPE) {
-            SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule
-                    .getTriggerContractFromTransaction(tx);
+            SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
             // ADDRESS op
             // YP: Get address of currently executing account.
             byte[] address = contract.getContractAddress().toByteArray();

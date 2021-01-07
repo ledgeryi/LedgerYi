@@ -742,14 +742,16 @@ public class Manager {
 
     trace.finalization();
     if (Objects.nonNull(blockCap) && getDynamicPropertiesStore().supportVM()) {
+      // set the result of the transaction execution
       txCap.setResult(trace.getTransactionContext());
     }
+
+    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, blockCap, trace);
     if (Objects.nonNull(blockCap)){
-      TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, blockCap, trace);
       this.transactionHistoryStore.put(txCap.getTransactionId().getBytes(), transactionInfo);
     }
 
-    return TransactionInfoCapsule.buildInstance(txCap, blockCap, trace).getInstance();
+    return transactionInfo.getInstance();
   }
 
   /**

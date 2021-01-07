@@ -1,5 +1,6 @@
 package cn.ledgeryi.chainbase.core.capsule;
 
+import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.protos.Protocol.ResourceReceipt;
 import cn.ledgeryi.protos.Protocol.Transaction;
@@ -32,8 +33,12 @@ public class ReceiptCapsule {
     return this.receipt.getResult();
   }
 
-  public void setResult(Transaction.Result.ContractResult success) {
-    this.receipt = receipt.toBuilder().setResult(success).build();
+  public void setResult(ProgramResult result) {
+    this.receipt = receipt.toBuilder()
+            .setResult(result.getResultCode())
+            .setStorageUsed(result.getStorageUsed())
+            .setCpuTimeUsed(result.getCpuTimeUsed())
+            .build();
   }
 
   public ResourceReceipt getReceipt() {

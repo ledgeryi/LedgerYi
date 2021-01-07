@@ -17,7 +17,6 @@ import cn.ledgeryi.common.runtime.vm.DataWord;
 import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.common.utils.Sha256Hash;
-import cn.ledgeryi.contract.vm.config.VmConfig;
 import cn.ledgeryi.contract.vm.program.Program;
 import cn.ledgeryi.contract.vm.program.Storage;
 import cn.ledgeryi.crypto.utils.Hash;
@@ -30,7 +29,6 @@ import org.spongycastle.util.Strings;
 import java.util.HashMap;
 
 import static cn.ledgeryi.chainbase.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
-import static java.lang.Long.max;
 
 @Slf4j(topic = "Repository")
 public class RepositoryImpl implements Repository {
@@ -53,9 +51,9 @@ public class RepositoryImpl implements Repository {
   @Getter
   private BlockIndexStore blockIndexStore;
   @Getter
-  private CpuTimeConsumeStore cpuTimeConsumeStore;
+  private CpuTimeUsedStore cpuTimeUsedStore;
   @Getter
-  private StorageConsumeStore storageConsumeStore;
+  private StorageUsedStore storageUsedStore;
 
   private Repository parent = null;
 
@@ -87,8 +85,8 @@ public class RepositoryImpl implements Repository {
       blockStore = manager.getBlockStore();
       khaosDb = manager.getKhaosDb();
       blockIndexStore = manager.getBlockIndexStore();
-      cpuTimeConsumeStore = manager.getCpuTimeConsumeStore();
-      storageConsumeStore = manager.getStorageConsumeStore();
+      cpuTimeUsedStore = manager.getCpuTimeUsedStore();
+      storageUsedStore = manager.getStorageUsedStore();
     }
     this.parent = parent;
   }
@@ -321,8 +319,10 @@ public class RepositoryImpl implements Repository {
 
   @Override
   public void commit() {
+    log.info("============= commit start ==========================");
     Repository repository = null;
     if (parent != null) {
+      log.info("============= parent != null ==========================");
       repository = parent;
     }
     commitAccountCache(repository);
@@ -331,6 +331,7 @@ public class RepositoryImpl implements Repository {
     commitStorageCache(repository);
     commitStorageConsumeCache(repository);
     cpuTimeConsumeCache(repository);
+    log.info("============= commit end ==========================");
   }
 
   @Override
@@ -437,7 +438,7 @@ public class RepositoryImpl implements Repository {
         if (deposit != null) {
           deposit.putContract(key, value);
         } else {
-          getStorageConsumeStore().put(key.getData(), value.getBytes());
+          getStorageUsedStore().put(key.getData(), value.getBytes());
         }
       }
     });
@@ -449,7 +450,7 @@ public class RepositoryImpl implements Repository {
         if (deposit != null) {
           deposit.putContract(key, value);
         } else {
-          getCpuTimeConsumeStore().put(key.getData(), value.getBytes());
+          getCpuTimeUsedStore().put(key.getData(), value.getBytes());
         }
       }
     });
@@ -471,16 +472,32 @@ public class RepositoryImpl implements Repository {
   }
 
   @Override
-  public void putStorageConsumeValue(byte[] address, long value) {
+  public void putStorageUsedValue(byte[] address, long value) {
     Key key = new Key(address);
-    DataWord cpuTimeConsume = new DataWord(value);
+    BytesCapsule storageUsed = storageUsedStore.get(address);
+    DataWord storageUsedDataWord;
+    if (storageUsed != null){
+      storageUsedDataWord = new DataWord(storageUsed.getData());
+      System.out.println("==============storageUsed: " + storageUsedDataWord.longValue());
+    } else {
+      storageUsedDataWord = DataWord.ZERO;
+    }
+    DataWord cpuTimeConsume = new DataWord(value + storageUsedDataWord.longValue());
     storageConsumeCache.put(key, Value.create(cpuTimeConsume.getData()));
   }
 
   @Override
-  public void putCpuTimeConsumeValue(byte[] address, long value) {
+  public void putCpuTimeUsedValue(byte[] address, long value) {
     Key key = new Key(address);
-    DataWord cpuTimeConsume = new DataWord(value);
+    BytesCapsule cpuTimeUsed = cpuTimeUsedStore.get(address);
+    DataWord cpuTimeUsedDataWord;
+    if (cpuTimeUsed != null){
+      cpuTimeUsedDataWord = new DataWord(cpuTimeUsed.getData());
+      System.out.println("==============cpuTimeUsed: " + cpuTimeUsedDataWord.longValue());
+    } else {
+      cpuTimeUsedDataWord = DataWord.ZERO;
+    }
+    DataWord cpuTimeConsume = new DataWord(value + cpuTimeUsedDataWord.longValue());
     cpuTimeConsumeCache.put(key, Value.create(cpuTimeConsume.getData()));
   }
 }

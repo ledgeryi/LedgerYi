@@ -12,7 +12,6 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static cn.ledgeryi.contract.vm.OpCode.*;
@@ -68,9 +67,9 @@ public class VM {
       program.verifyStackSize(op.require());
       program.verifyStackOverflow(op.require(), op.ret());
 
-      long currentCpuTimeCost = op.getTier().asInt();
-      long CpuTimeCostTotal = program.getCpuTimeCost();
-      program.setCpuTimeCost(CpuTimeCostTotal + currentCpuTimeCost);
+      long currentCpuTimeUsed = op.getTier().asInt();
+      long CpuTimeUsedTotal = program.getCpuTimeUsed();
+      program.setCpuTimeUsed(CpuTimeUsedTotal + currentCpuTimeUsed);
 
       Stack stack = program.getStack();
       // Execute operation code

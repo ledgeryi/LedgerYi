@@ -196,12 +196,12 @@ public class ContractState implements Repository, ProgramListenerAware {
   }
 
   @Override
-  public void putStorageConsumeValue(byte[] address, long value) {
+  public void putStorageUsedValue(byte[] address, long value) {
 
   }
 
   @Override
-  public void putCpuTimeConsumeValue(byte[] address, long value) {
+  public void putCpuTimeUsedValue(byte[] address, long value) {
 
   }
 }

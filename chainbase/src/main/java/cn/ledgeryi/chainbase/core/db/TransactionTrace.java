@@ -18,6 +18,7 @@ import cn.ledgeryi.common.core.exception.VMIllegalException;
 import cn.ledgeryi.common.runtime.vm.DataWord;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.common.utils.Sha256Hash;
+import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
@@ -53,7 +54,18 @@ public class TransactionTrace {
 
   public TransactionTrace(TransactionCapsule tx, StoreFactory storeFactory, Runtime runtime) {
     this.tx = tx;
-    this.txType = InternalTransaction.TxType.TX_PRECOMPILED_TYPE;
+    Protocol.Transaction.Contract.ContractType contractType = this.tx.getInstance().getRawData().getContract().getType();
+    switch (contractType.getNumber()) {
+      case Protocol.Transaction.Contract.ContractType.TriggerSmartContract_VALUE:
+        txType = TX_CONTRACT_CALL_TYPE;
+        break;
+      case Protocol.Transaction.Contract.ContractType.CreateSmartContract_VALUE:
+        txType = TX_CONTRACT_CREATION_TYPE;
+        break;
+      default:
+        txType = TX_PRECOMPILED_TYPE;
+    }
+
     this.storeFactory = storeFactory;
     this.dynamicPropertiesStore = storeFactory.getChainBaseManager().getDynamicPropertiesStore();
     this.contractStore = storeFactory.getChainBaseManager().getContractStore();
@@ -85,7 +97,7 @@ public class TransactionTrace {
 
   public void checkIsConstant() throws ContractValidateException, VMIllegalException {
     TriggerSmartContract triggerContract = ContractCapsule.getTriggerContractFromTransaction(this.getTx().getInstance());
-    if (TRX_CONTRACT_CALL_TYPE == this.txType) {
+    if (TX_CONTRACT_CALL_TYPE == this.txType) {
       ContractCapsule contract = contractStore.get(triggerContract.getContractAddress().toByteArray());
       if (contract == null) {
         log.info("contract: {} is not in contract store",
@@ -151,7 +163,7 @@ public class TransactionTrace {
     if (!needVM()) {
       return;
     }
-    receipt.setResult(transactionContext.getProgramResult().getResultCode());
+    receipt.setResult(transactionContext.getProgramResult());
   }
 
   public String getRuntimeError() {

@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class StorageConsumeStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
+public class StorageUsedStore extends LedgerYiStoreWithRevoking<BytesCapsule> {
 
     @Autowired
-    public StorageConsumeStore(@Value("storage-consume") String dbName) {
+    public StorageUsedStore(@Value("storage-used") String dbName) {
         super(dbName);
     }
 
