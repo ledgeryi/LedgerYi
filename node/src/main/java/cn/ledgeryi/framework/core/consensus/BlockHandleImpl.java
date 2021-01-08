@@ -47,10 +47,10 @@ public class BlockHandleImpl implements BlockHandle {
     if (blockCapsule == null) {
       return null;
     }
-    if (blockCapsule.getTransactions().size() <= 0){
+    /*if (blockCapsule.getTransactions().size() <= 0){
       log.info("Produce block failed: " + State.BLOCK_NOT_CONTAIN_TRANSACTIONS);
      return null;
-    }
+    }*/
     try {
       consensus.receiveBlock(blockCapsule);
       BlockMessage blockMessage = new BlockMessage(blockCapsule);
