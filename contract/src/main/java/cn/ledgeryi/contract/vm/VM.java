@@ -436,7 +436,9 @@ public class VM {
         case CODECOPY:
           checkMemorySize(op,memNeeded(stack.peek(), stack.get(stack.size() - 3)));
         case EXTCODECOPY: {
-          checkMemorySize(op,memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 4)));
+          if (EXTCODECOPY.equals(op)){
+            checkMemorySize(op,memNeeded(stack.get(stack.size() - 2), stack.get(stack.size() - 4)));
+          }
           byte[] fullCode = ByteArray.EMPTY_BYTE_ARRAY;
           if (op == CODECOPY) {
             fullCode = program.getCode();

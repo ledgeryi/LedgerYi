@@ -63,7 +63,7 @@ public class RequestNodeApi {
         return rpcCli.getContract(address);
     }
 
-    public static boolean clearContractABI(byte[] owner, byte[] contractAddress, byte[] privateKeys) throws IOException, CipherException {
+    public static boolean clearContractABI(byte[] owner, byte[] contractAddress, byte[] privateKeys) {
         ClearABIContract clearABIContract = createClearABIContract(owner, contractAddress);
         TransactionExtention transactionExtention = rpcCli.clearContractABI(clearABIContract);
         if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
