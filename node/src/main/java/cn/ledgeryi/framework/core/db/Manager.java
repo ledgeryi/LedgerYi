@@ -39,7 +39,7 @@ import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache .commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -303,33 +303,11 @@ public class Manager {
         this.dynamicPropertiesStore.saveLatestBlockHeaderNumber(0);
         this.dynamicPropertiesStore.saveLatestBlockHeaderHash(this.genesisBlock.getBlockId().getByteString());
         this.dynamicPropertiesStore.saveLatestBlockHeaderTimestamp(this.genesisBlock.getTimeStamp());
-        this.initAccount();
         this.initMaster();
         this.khaosDb.start(genesisBlock);
         this.updateRecentBlock(genesisBlock);
       }
     }
-  }
-
-  /**
-   * save account into database.
-   */
-  public void initAccount() {
-    final Args args = Args.getInstance();
-    final GenesisBlock genesisBlockArg = args.getGenesisBlock();
-    genesisBlockArg.getAssets().forEach(
-            account -> {
-              account.setAccountType("Normal"); // to be set in conf
-              final AccountCapsule accountCapsule =
-                  new AccountCapsule(
-                      account.getAccountName(),
-                      ByteString.copyFrom(account.getAddress()),
-                      account.getAccountType(),
-                      account.getBalance());
-              this.accountStore.put(account.getAddress(), accountCapsule);
-              this.accountIdIndexStore.put(accountCapsule);
-              this.accountIndexStore.put(accountCapsule);
-            });
   }
 
   /**
@@ -344,7 +322,7 @@ public class Manager {
               ByteString address = ByteString.copyFrom(keyAddress);
               final AccountCapsule accountCapsule;
               if (!this.accountStore.has(keyAddress)) {
-                accountCapsule = new AccountCapsule(ByteString.EMPTY, address, Protocol.AccountType.AssetIssue, 0L);
+                accountCapsule = new AccountCapsule(address, Protocol.AccountType.AssetIssue, 0L);
               } else {
                 accountCapsule = this.accountStore.getUnchecked(keyAddress);
               }
@@ -469,11 +447,7 @@ public class Manager {
     }
   }
 
-  private void switchFork(BlockCapsule newHead)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      ValidateScheduleException, TaposException,
-      TooBigTransactionException, DupTransactionException, TransactionExpirationException,
-      NonCommonBlockException, ReceiptCheckErrException, BadBlockException {
+  private void switchFork(BlockCapsule newHead) throws  NonCommonBlockException, ReceiptCheckErrException, BadBlockException {
     Pair<LinkedList<KhaosDatabase.KhaosBlock>, LinkedList<KhaosDatabase.KhaosBlock>> binaryTree;
     try {
       binaryTree = khaosDb.getBranch(newHead.getBlockId(), getDynamicPropertiesStore().getLatestBlockHeaderHash());
@@ -488,9 +462,7 @@ public class Manager {
     }
 
     if (CollectionUtils.isNotEmpty(binaryTree.getValue())) {
-      while (!getDynamicPropertiesStore()
-          .getLatestBlockHeaderHash()
-          .equals(binaryTree.getValue().peekLast().getParentHash())) {
+      while (!getDynamicPropertiesStore().getLatestBlockHeaderHash().equals(binaryTree.getValue().peekLast().getParentHash())) {
         eraseBlock();
       }
     }
@@ -1030,10 +1002,6 @@ public class Manager {
     } catch (ReceiptCheckErrException e) {
       log.debug("outOfSlotTime transaction");
     }
-  }
-
-  public void setMode(boolean mode) {
-    revokingStore.setMode(mode);
   }
 
   private void prepareStoreFactory() {

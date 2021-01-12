@@ -21,7 +21,6 @@ public class Node implements Serializable {
 
   private String host;
 
-  // UDP监听端口
   private int port;
 
   @Getter
@@ -32,7 +31,6 @@ public class Node implements Serializable {
 
   private int reputation = 0;
 
-  // 是否存证真实的节点
   private boolean isFakeNodeId = false;
 
   public Node(String enodeURL) {

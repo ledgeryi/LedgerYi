@@ -93,7 +93,6 @@ public class Wallet {
       return null;
     }
     long genesisTimeStamp = dbManager.getGenesisBlock().getTimeStamp();
-    accountCapsule.setLatestConsumeTime(genesisTimeStamp + BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeTime());
     return accountCapsule.getInstance();
   }
 
@@ -108,9 +107,6 @@ public class Wallet {
     if (accountCapsule == null) {
       return null;
     }
-
-    long genesisTimeStamp = dbManager.getGenesisBlock().getTimeStamp();
-    accountCapsule.setLatestConsumeTime(genesisTimeStamp + BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeTime());
     return accountCapsule.getInstance();
   }
 

@@ -35,18 +35,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   /**
-   * initial account capsule.
-   */
-  public AccountCapsule(ByteString accountName, ByteString address, AccountType accountType, long balance) {
-    this.account = Account.newBuilder()
-            .setAccountName(accountName)
-            .setType(accountType)
-            .setAddress(address)
-            .setBalance(balance)
-            .build();
-  }
-
-  /**
    * construct account from AccountCreateContract.
    */
   public AccountCapsule(final AccountCreateContract contract) {
@@ -60,7 +48,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * construct account from AccountCreateContract and createTime.
    */
-  public AccountCapsule(final AccountCreateContract contract, long createTime,DynamicPropertiesStore dynamicPropertiesStore) {
+  public AccountCapsule(final AccountCreateContract contract, long createTime) {
       this.account = Account.newBuilder()
           .setType(contract.getType())
           .setAddress(contract.getAccountAddress())
@@ -93,33 +81,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * get account from address.
    */
-  public AccountCapsule(ByteString address,
-                        AccountType accountType, long createTime,
-                        boolean withDefaultPermission, DynamicPropertiesStore dynamicPropertiesStore) {
-    if (withDefaultPermission) {
-      Permission owner = createDefaultOwnerPermission(address);
-      Permission active = createDefaultActivePermission(address, dynamicPropertiesStore);
-
-      this.account = Account.newBuilder()
-              .setType(accountType)
-              .setAddress(address)
-              .setCreateTime(createTime)
-              .setOwnerPermission(owner)
-              .addActivePermission(active)
-              .build();
-    } else {
-      this.account = Account.newBuilder()
-              .setType(accountType)
-              .setAddress(address)
-              .setCreateTime(createTime)
-              .build();
-    }
-
-  }
-
-  /**
-   * get account from address.
-   */
   public AccountCapsule(ByteString address, AccountType accountType, long createTime) {
     this.account = Account.newBuilder()
             .setType(accountType)
@@ -128,44 +89,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
             .build();
   }
 
-  public static Permission createDefaultOwnerPermission(ByteString address) {
-    Key.Builder key = Key.newBuilder();
-    key.setAddress(address);
-    key.setWeight(1);
-
-    Permission.Builder owner = Permission.newBuilder();
-    owner.setType(PermissionType.Owner);
-    owner.setId(0);
-    owner.setPermissionName("owner");
-    owner.setThreshold(0);
-    owner.setParentId(0);
-    owner.addKeys(key);
-
-    return owner.build();
-  }
-
-  public static Permission createDefaultActivePermission(ByteString address,
-                                                         DynamicPropertiesStore dynamicPropertiesStore) {
-    Key.Builder key = Key.newBuilder();
-    key.setAddress(address);
-    key.setWeight(1);
-
-    Permission.Builder active = Permission.newBuilder();
-    active.setType(PermissionType.Active);
-    active.setId(2);
-    active.setPermissionName("active");
-    active.setThreshold(1);
-    active.setParentId(0);
-    active.setOperations(getActiveDefaultOperations(dynamicPropertiesStore));
-    active.addKeys(key);
-
-    return active.build();
-  }
-
-  private static ByteString getActiveDefaultOperations(
-          DynamicPropertiesStore dynamicPropertiesStore) {
-    return ByteString.copyFrom(dynamicPropertiesStore.getActiveDefaultOperations());
-  }
 
   /**
    * get account from address.
@@ -207,6 +130,15 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return this.account.getAccountName();
   }
 
+  public void setIsMaster(boolean isMaster){
+    this.account = this.account.toBuilder().setIsMaster(isMaster).build();
+  }
+
+  public boolean getIsMaster(){
+    return getInstance().getIsMaster();
+  }
+
+
   /**
    * set account name
    */
@@ -223,37 +155,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
    */
   public void setAccountId(byte[] id) {
     this.account = this.account.toBuilder().setAccountId(ByteString.copyFrom(id)).build();
-  }
-
-  public void setBalance(long balance) {
-    this.account = this.account.toBuilder().setBalance(balance).build();
-  }
-  public long getBalance() {
-    return this.account.getBalance();
-  }
-
-  public byte[] getMasterPermissionAddress() {
-    if (this.account.getMasterPermission().getKeysCount() == 0) {
-      return getAddress().toByteArray();
-    } else {
-      return this.account.getMasterPermission().getKeys(0).getAddress().toByteArray();
-    }
-  }
-
-  public long getLatestOperationTime() {
-    return this.account.getLatestOprationTime();
-  }
-
-  public void setLatestOperationTime(long latest_time) {
-    this.account = this.account.toBuilder().setLatestOprationTime(latest_time).build();
-  }
-
-  public long getLatestConsumeTime() {
-    return this.account.getLatestConsumeTime();
-  }
-
-  public void setLatestConsumeTime(long latest_time) {
-    this.account = this.account.toBuilder().setLatestConsumeTime(latest_time).build();
   }
 
   @Override
@@ -278,79 +179,8 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     }
   }
 
-  public long getAllFrozenBalanceForEnergy() {
-    return getEnergyFrozenBalance() + getAcquiredDelegatedFrozenBalanceForEnergy();
-  }
-
-  public long getEnergyFrozenBalance() {
-    return this.account.getAccountResource().getFrozenBalanceForEnergy().getFrozenBalance();
-  }
-
-  public long getAcquiredDelegatedFrozenBalanceForEnergy() {
-    return getAccountResource().getAcquiredDelegatedFrozenBalanceForEnergy();
-  }
-
-  public Account.AccountResource getAccountResource() {
-    return this.account.getAccountResource();
-  }
-
-  public long getLatestAssetOperationTimeV2(String assetName) {
-    return this.account.getLatestAssetOperationTimeV2OrDefault(assetName, 0);
-  }
-
-  public ByteString getAssetIssuedName() {
-    return getInstance().getAssetIssuedName();
-  }
-
-  public void setAssetIssuedID(byte[] id) {
-    ByteString assetIssuedID = ByteString.copyFrom(id);
-    this.account = this.account.toBuilder().setAssetIssuedID(assetIssuedID).build();
-  }
-
-  public long getAllowance() {
-    return getInstance().getAllowance();
-  }
-
-  public void setAllowance(long allowance) {
-    this.account = this.account.toBuilder().setAllowance(allowance).build();
-  }
-
-  public long getLatestWithdrawTime() {
-    return getInstance().getLatestWithdrawTime();
-  }
-
-  public boolean getIsMaster() {
-    return getInstance().getIsMaster();
-  }
-
-  public void setIsMaster(boolean isMaster) {
-    this.account = this.account.toBuilder().setIsMaster(isMaster).build();
-  }
-
-  public boolean getIsCommittee() {
-    return getInstance().getIsCommittee();
-  }
-
-  public void setIsCommittee(boolean isCommittee) {
-    this.account = this.account.toBuilder().setIsCommittee(isCommittee).build();
-  }
-
-  public void updateAccountType(AccountType accountType) {
-    this.account = this.account.toBuilder().setType(accountType).build();
-  }
-
   @Override
   public int compareTo(AccountCapsule otherObject) {
     return 0;
   }
-
-  // just for vm create2 instruction
-  /*public void clearDelegatedResource() {
-    Builder builder = account.toBuilder();
-    AccountResource newAccountResource = getAccountResource().toBuilder()
-            .setAcquiredDelegatedFrozenBalanceForEnergy(0L).build();
-    builder.setAccountResource(newAccountResource);
-    builder.setAcquiredDelegatedFrozenBalanceForBandwidth(0L);
-    this.account = builder.build();
-  }*/
 }

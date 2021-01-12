@@ -1,6 +1,5 @@
 package cn.ledgeryi.framework.core.config.args;
 
-import cn.ledgeryi.chainbase.common.utils.AdjustBalanceUtil;
 import cn.ledgeryi.chainbase.core.config.Parameter.NetConstants;
 import cn.ledgeryi.chainbase.core.config.Parameter.NodeConstant;
 import cn.ledgeryi.chainbase.common.storage.rocksdb.RocksDbSettings;
@@ -26,7 +25,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.omg.CORBA.TRANSACTION_MODE;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -328,10 +326,6 @@ public class Args {
 
   @Getter
   @Setter
-  private boolean needToUpdateAsset;
-
-  @Getter
-  @Setter
   private String txReferenceBlock;
 
   @Getter
@@ -623,8 +617,6 @@ public class Args {
 
     INSTANCE.isOpenFullTcpDisconnect = config.hasPath(Constant.NODE_IS_OPEN_FULL_TCP_DISCONNECT) && config
         .getBoolean(Constant.NODE_IS_OPEN_FULL_TCP_DISCONNECT);
-
-    INSTANCE.needToUpdateAsset = !config.hasPath(Constant.STORAGE_NEEDTO_UPDATE_ASSET) || config.getBoolean(Constant.STORAGE_NEEDTO_UPDATE_ASSET);
 
     INSTANCE.txReferenceBlock = config.hasPath(Constant.TX_REFERENCE_BLOCK) ?
         config.getString(Constant.TX_REFERENCE_BLOCK) : "head";

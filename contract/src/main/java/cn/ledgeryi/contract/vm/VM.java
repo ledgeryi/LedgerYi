@@ -352,9 +352,7 @@ public class VM {
         }
         break;
         case BALANCE: {
-          DataWord address = program.stackPop();
-          DataWord balance = program.getBalance(address);
-          program.stackPush(balance);
+          //todo
           program.step();
         }
         break;
@@ -599,8 +597,6 @@ public class VM {
         }
         break;
         case GAS: {
-          DataWord energy = program.getEnergyLimitLeft();
-          program.stackPush(energy);
           program.step();
         }
         break;
@@ -814,8 +810,7 @@ public class VM {
             throw new Program.StaticCallModificationException();
           }
           DataWord address = program.stackPop();
-          program.suicide(address);
-          program.getResult().addTouchAccount(address.getLast20Bytes());
+          //todo
           program.stop();
         }
         break;

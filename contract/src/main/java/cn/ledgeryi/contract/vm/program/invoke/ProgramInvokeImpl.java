@@ -35,10 +35,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
   private final DataWord address;
   private final DataWord origin;
   private final DataWord caller;
-  private final DataWord balance;
   private final DataWord callValue;
-  private final DataWord tokenValue;
-  private final DataWord tokenId;
   /* BLOCK  env **/
   private final DataWord prevHash;
   private final DataWord coinbase;
@@ -54,19 +51,14 @@ public class ProgramInvokeImpl implements ProgramInvoke {
   private boolean isStaticCall = false;
   private boolean isConstantCall = false;
 
-  public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
-                           DataWord callValue, DataWord tokenValue, DataWord tokenId, byte[] msgData,
-                           DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number,
-                           DataWord difficulty,
-                           Repository deposit, int callDeep, boolean isStaticCall, boolean byTestingSuite,
-                           long vmStartInUs, long vmShouldEndInUs) {
+  public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord callValue,
+                           byte[] msgData, DataWord lastHash,  DataWord coinbase, DataWord timestamp,
+                           DataWord number, Repository deposit,  int callDeep, boolean isStaticCall,
+                           boolean byTestingSuite, long vmStartInUs, long vmShouldEndInUs) {
     this.address = address;
     this.origin = origin;
     this.caller = caller;
-    this.balance = balance;
     this.callValue = callValue;
-    this.tokenValue = tokenValue;
-    this.tokenId = tokenId;
     if (Objects.nonNull(msgData)) {
       this.msgData = Arrays.copyOf(msgData, msgData.length);
     }
@@ -86,27 +78,14 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     this.vmShouldEndInUs = vmShouldEndInUs;
   }
 
-  public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, long balance,
-      long callValue, long tokenValue, long tokenId, byte[] msgData,
-      byte[] lastHash, byte[] coinbase, long timestamp, long number, Repository deposit,
-      long vmStartInUs, long vmShouldEndInUs, boolean byTestingSuite) {
-    this(address, origin, caller, balance, callValue, tokenValue, tokenId, msgData, lastHash,
-        coinbase, timestamp, number, deposit, vmStartInUs, vmShouldEndInUs);
-    this.byTestingSuite = byTestingSuite;
-  }
-
-  public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, long balance,
-      long callValue, long tokenValue, long tokenId, byte[] msgData, byte[] lastHash,
-      byte[] coinbase, long timestamp, long number, Repository deposit, long vmStartInUs, long vmShouldEndInUs) {
+  public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller,long callValue, byte[] msgData, byte[] lastHash,
+                           byte[] coinbase, long timestamp, Repository deposit, long number, long vmStartInUs, long vmShouldEndInUs) {
 
     // Transaction env
     this.address = new DataWord(address);
     this.origin = new DataWord(origin);
     this.caller = new DataWord(caller);
-    this.balance = new DataWord(balance);
     this.callValue = new DataWord(callValue);
-    this.tokenValue = new DataWord(tokenValue);
-    this.tokenId = new DataWord(tokenId);
     this.msgData = Arrays.copyOf(msgData, msgData.length);
 
     // last Block env
@@ -125,10 +104,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     return address;
   }
 
-  public DataWord getBalance() {
-    return balance;
-  }
-
   public DataWord getOriginAddress() {
     return origin;
   }
@@ -140,15 +115,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
   public DataWord getCallValue() {
     return callValue;
   }
-
-  public DataWord getTokenValue() {
-    return tokenValue;
-  }
-
-  public DataWord getTokenId() {
-    return tokenId;
-  }
-
 
   public DataWord getDataValue(DataWord indexData) {
 
@@ -263,9 +229,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     if (address != null ? !address.equals(that.address) : that.address != null) {
       return false;
     }
-    if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
-      return false;
-    }
     if (callValue != null ? !callValue.equals(that.callValue) : that.callValue != null) {
       return false;
     }
@@ -298,7 +261,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     return new Integer(Boolean.valueOf(byTestingSuite).hashCode()
         + Boolean.valueOf(byTransaction).hashCode()
         + address.hashCode()
-        + balance.hashCode()
         + callValue.hashCode()
         + caller.hashCode()
         + coinbase.hashCode()
@@ -317,7 +279,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         "address=" + address +
         ", origin=" + origin +
         ", caller=" + caller +
-        ", balance=" + balance +
         ", callValue=" + callValue +
         ", msgData=" + Arrays.toString(msgData) +
         ", prevHash=" + prevHash +

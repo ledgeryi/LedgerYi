@@ -32,15 +32,12 @@ public interface ProgramInvokeFactory {
 
   ProgramInvoke createProgramInvoke(InternalTransaction.TxType trxType,
                                     InternalTransaction.ExecutorType executorType,
-                                    Protocol.Transaction tx, long tokenValue, long tokenId, Protocol.Block block, Repository deposit,
-                                    long vmStartInUs,
-                                    long vmShouldEndInUs) throws ContractValidateException;
+                                    Protocol.Transaction tx, Protocol.Block block,
+                                    Repository deposit, long vmStartInUs, long vmShouldEndInUs) throws ContractValidateException;
 
   ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord callerAddress,
-                                    DataWord inValue, DataWord tokenValue, DataWord tokenId,
-                                    long balanceInt, byte[] dataIn, Repository deposit, boolean staticCall,
-                                    boolean byTestingSuite,
-                                    long vmStartInUs, long vmShouldEndInUs);
+                                    DataWord inValue, byte[] dataIn, Repository deposit,
+                                    boolean staticCall, boolean byTestingSuite, long vmStartInUs, long vmShouldEndInUs);
 
 
 }

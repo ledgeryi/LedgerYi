@@ -42,10 +42,6 @@ public interface Repository {
 
   Storage getStorage(byte[] address);
 
-  long getBalance(byte[] address);
-
-  long addBalance(byte[] address, long value);
-
   Repository newRepositoryChild();
 
   void setParent(Repository deposit);
@@ -64,7 +60,7 @@ public interface Repository {
 
   byte[] getBlackHoleAddress();
 
-  public BlockCapsule getBlockByNum(final long num);
+  BlockCapsule getBlockByNum(final long num);
 
-  public AccountCapsule createNormalAccount(byte[] address);
+  AccountCapsule createNormalAccount(byte[] address);
 }

@@ -1,6 +1,5 @@
 package cn.ledgeryi.chainbase.core.capsule;
 
-import cn.ledgeryi.chainbase.common.utils.AdjustBalanceUtil;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.capsule.utils.MerkleTree;
 import cn.ledgeryi.chainbase.core.config.Parameter;
@@ -67,7 +66,7 @@ public class BlockCapsule implements ProtoCapsule<Block> {
   }
 
 
-  public BlockCapsule(long timestamp, ByteString parentHash, long number, List<Transaction> transactionList) {
+  public BlockCapsule(long timestamp, ByteString parentHash, long number) {
     // blockheader raw
     BlockHeader.raw.Builder blockHeaderRawBuild = BlockHeader.raw.newBuilder();
     BlockHeader.raw blockHeaderRaw = blockHeaderRawBuild
@@ -82,7 +81,6 @@ public class BlockCapsule implements ProtoCapsule<Block> {
 
     // block
     Block.Builder blockBuild = Block.newBuilder();
-    transactionList.forEach(tx -> blockBuild.addTransactions(tx));
     this.block = blockBuild.setBlockHeader(blockHeader).build();
     initTxs();
   }

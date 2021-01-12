@@ -287,42 +287,14 @@ public class RepositoryImpl implements Repository {
   }
 
   @Override
-  public long getBalance(byte[] address) {
-    AccountCapsule accountCapsule = getAccount(address);
-    return accountCapsule == null ? 0L : accountCapsule.getBalance();
-  }
-
-  @Override
-  public long addBalance(byte[] address, long value) {
-    AccountCapsule accountCapsule = getAccount(address);
-    if (accountCapsule == null) {
-      accountCapsule = createAccount(address, AccountType.Normal);
-    }
-    long balance = accountCapsule.getBalance();
-    if (value == 0) {
-      return balance;
-    }
-    if (value < 0 && balance < -value) {
-      throw new RuntimeException(DecodeUtil.createReadableString(accountCapsule.createDbKey())  + " insufficient balance");
-    }
-    accountCapsule.setBalance(Math.addExact(balance, value));
-    Key key = Key.create(address);
-    Value val = Value.create(accountCapsule.getData(),Type.VALUE_TYPE_DIRTY | accountCache.get(key).getType().getType());
-    accountCache.put(key, val);
-    return accountCapsule.getBalance();
-  }
-
-  @Override
   public void setParent(Repository repository) {
     parent = repository;
   }
 
   @Override
   public void commit() {
-    log.info("============= commit start ==========================");
     Repository repository = null;
     if (parent != null) {
-      log.info("============= parent != null ==========================");
       repository = parent;
     }
     commitAccountCache(repository);
@@ -331,7 +303,6 @@ public class RepositoryImpl implements Repository {
     commitStorageCache(repository);
     commitStorageConsumeCache(repository);
     cpuTimeConsumeCache(repository);
-    log.info("============= commit end ==========================");
   }
 
   @Override
@@ -462,11 +433,9 @@ public class RepositoryImpl implements Repository {
 
   @Override
   public AccountCapsule createNormalAccount(byte[] address) {
-    boolean withDefaultPermission = false;
     Key key = new Key(address);
     AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), AccountType.Normal,
-            getDynamicPropertiesStore().getLatestBlockHeaderTimestamp(), withDefaultPermission,
-            getDynamicPropertiesStore());
+            getDynamicPropertiesStore().getLatestBlockHeaderTimestamp());
     accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
     return account;
   }
@@ -478,7 +447,7 @@ public class RepositoryImpl implements Repository {
     DataWord storageUsedDataWord;
     if (storageUsed != null){
       storageUsedDataWord = new DataWord(storageUsed.getData());
-      System.out.println("==============storageUsed: " + storageUsedDataWord.longValue());
+      log.debug("==============storageUsed: " + storageUsedDataWord.longValue());
     } else {
       storageUsedDataWord = DataWord.ZERO;
     }

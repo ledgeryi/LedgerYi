@@ -45,13 +45,10 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     @Override
     public ProgramInvoke createProgramInvoke(InternalTransaction.TxType txType,
                                              InternalTransaction.ExecutorType executorType, Protocol.Transaction tx,
-                                             long tokenValue, long tokenId,
-                                             Protocol.Block block,
-                                             Repository deposit, long vmStartInUs,
+                                             Protocol.Block block, Repository deposit, long vmStartInUs,
                                              long vmShouldEndInUs) throws ContractValidateException {
         byte[] contractAddress;
         byte[] ownerAddress;
-        long balance;
         byte[] data;
         byte[] lastHash = null;
         byte[] coinbase = null;
@@ -62,7 +59,6 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
             SmartContractOuterClass.CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);
             contractAddress = ContractUtils.generateContractAddress(tx);
             ownerAddress = contract.getOwnerAddress().toByteArray();
-            balance = deposit.getBalance(ownerAddress);
             data = ByteUtil.EMPTY_BYTE_ARRAY;
             long callValue = contract.getNewContract().getCallValue();
 
@@ -79,10 +75,8 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                 default:
                     break;
             }
-
-            return new ProgramInvokeImpl(contractAddress, ownerAddress, ownerAddress, balance, callValue,
-                    tokenValue, tokenId, data, lastHash, coinbase, timestamp, number, deposit, vmStartInUs,
-                    vmShouldEndInUs);
+            return new ProgramInvokeImpl(contractAddress, ownerAddress, ownerAddress, callValue,
+                    data, lastHash, coinbase, timestamp, deposit, number,  vmStartInUs, vmShouldEndInUs);
 
         } else if (txType == TX_CONTRACT_CALL_TYPE) {
             SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
@@ -97,9 +91,6 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
             // CALLER op
             // YP: This is the address of the account that is directly responsible for this execution.
             byte[] caller = contract.getOwnerAddress().toByteArray();
-
-            // BALANCE op
-            balance = deposit.getBalance(caller);
 
             // CALLVALUE op
             long callValue = contract.getCallValue();
@@ -128,8 +119,9 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                 default:
                     break;
             }
-            return new ProgramInvokeImpl(address, origin, caller, balance, callValue, tokenValue, tokenId,
-                    data, lastHash, coinbase, timestamp, number, deposit, vmStartInUs, vmShouldEndInUs);
+
+            return new ProgramInvokeImpl(address, origin, caller, callValue, data, lastHash,
+                    coinbase, timestamp, deposit, number, vmStartInUs, vmShouldEndInUs);
         }
         throw new ContractValidateException("Unknown contract type");
     }
@@ -140,28 +132,21 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
                                              DataWord callerAddress,
-                                             DataWord inValue, DataWord tokenValue, DataWord tokenId, long balanceInt, byte[] dataIn,
+                                             DataWord inValue, byte[] dataIn,
                                              Repository deposit, boolean isStaticCall, boolean byTestingSuite, long vmStartInUs,
                                              long vmShouldEndInUs) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
         DataWord caller = callerAddress;
-        DataWord balance = new DataWord(balanceInt);
         DataWord callValue = inValue;
-
         byte[] data = Arrays.clone(dataIn);
         DataWord lastHash = program.getPrevHash();
         DataWord coinbase = program.getCoinbase();
         DataWord timestamp = program.getTimestamp();
         DataWord number = program.getNumber();
-        DataWord difficulty = program.getDifficulty();
+        return new ProgramInvokeImpl(address, origin, caller, callValue,  data, lastHash, coinbase, timestamp, number,
+                deposit, program.getCallDeep() + 1, isStaticCall, byTestingSuite, vmStartInUs, vmShouldEndInUs);
 
-        return new ProgramInvokeImpl(address, origin, caller, balance, callValue, tokenValue, tokenId,
-                data, lastHash, coinbase, timestamp, number, difficulty,
-                deposit, program.getCallDeep() + 1, isStaticCall, byTestingSuite, vmStartInUs,
-                vmShouldEndInUs);
     }
-
-
 }

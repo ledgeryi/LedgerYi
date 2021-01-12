@@ -25,9 +25,6 @@ public class TransactionUtils {
     ByteString owner;
     try {
       switch (contract.getType()) {
-        case TransferContract:
-          owner = contract.getParameter().unpack(BalanceContract.TransferContract.class).getOwnerAddress();
-          break;
         case CreateSmartContract:
           owner = contract.getParameter().unpack(SmartContractOuterClass.CreateSmartContract.class).getOwnerAddress();
           break;

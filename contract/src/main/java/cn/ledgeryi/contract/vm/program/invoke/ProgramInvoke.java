@@ -29,17 +29,11 @@ public interface ProgramInvoke {
 
   DataWord getContractAddress();
 
-  DataWord getBalance();
-
   DataWord getOriginAddress();
 
   DataWord getCallerAddress();
 
   DataWord getCallValue();
-
-  DataWord getTokenValue();
-
-  DataWord getTokenId();
 
   DataWord getDataSize();
 

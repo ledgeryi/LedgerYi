@@ -1,17 +1,17 @@
 package cn.ledgeryi.framework.core.services.http;
 
+import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.protos.Protocol.Account;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.framework.core.Wallet;
-import cn.ledgeryi.framework.core.db.Manager;
-import cn.ledgeryi.protos.Protocol.Account;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -20,22 +20,6 @@ public class GetAccountServlet extends RateLimiterServlet {
 
   @Autowired
   private Wallet wallet;
-
-  @Autowired
-  private Manager dbManager;
-
-  private String convertOutput(Account account) {
-    // convert asset id
-    if (account.getAssetIssuedID().isEmpty()) {
-      return JsonFormat.printToString(account, false);
-    } else {
-      JSONObject accountJson = JSONObject.parseObject(JsonFormat.printToString(account, false));
-      String assetId = accountJson.get("asset_issued_ID").toString();
-      accountJson.put(
-          "asset_issued_ID", ByteString.copyFrom(ByteArray.fromHexString(assetId)).toStringUtf8());
-      return accountJson.toJSONString();
-    }
-  }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -50,8 +34,6 @@ public class GetAccountServlet extends RateLimiterServlet {
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));
-        } else {
-          response.getWriter().println(convertOutput(reply));
         }
       } else {
         response.getWriter().println("{}");
@@ -74,8 +56,6 @@ public class GetAccountServlet extends RateLimiterServlet {
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));
-        } else {
-          response.getWriter().println(convertOutput(reply));
         }
       } else {
         response.getWriter().println("{}");
