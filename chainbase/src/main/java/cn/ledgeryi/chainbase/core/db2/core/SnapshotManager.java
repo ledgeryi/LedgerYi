@@ -74,10 +74,12 @@ public class SnapshotManager implements RevokingDatabase {
     return new String(value);
   }
 
+  @Override
   public ISession buildSession() {
     return buildSession(false);
   }
 
+  @Override
   public synchronized ISession buildSession(boolean forceEnable) {
     if (disabled && !forceEnable) {
       return new Session(this);
@@ -122,6 +124,7 @@ public class SnapshotManager implements RevokingDatabase {
     --size;
   }
 
+  @Override
   public void merge() {
     if (activeSession <= 0) {
       throw new RevokingStoreIllegalStateException("activeDialog has to be greater than 0");
@@ -136,6 +139,7 @@ public class SnapshotManager implements RevokingDatabase {
     --activeSession;
   }
 
+  @Override
   public synchronized void revoke() {
     if (disabled) {
       return;
@@ -159,6 +163,7 @@ public class SnapshotManager implements RevokingDatabase {
     --activeSession;
   }
 
+  @Override
   public synchronized void commit() {
     if (activeSession <= 0) {
       throw new RevokingStoreIllegalStateException("activeSession has to be greater than 0");
@@ -167,6 +172,7 @@ public class SnapshotManager implements RevokingDatabase {
     --activeSession;
   }
 
+  @Override
   public synchronized void pop() {
     if (activeSession != 0) {
       throw new RevokingStoreIllegalStateException("activeSession has to be equal 0");
@@ -190,6 +196,7 @@ public class SnapshotManager implements RevokingDatabase {
     pop();
   }
 
+  @Override
   public synchronized void enable() {
     disabled = false;
   }
@@ -208,6 +215,7 @@ public class SnapshotManager implements RevokingDatabase {
     this.maxSize.set(maxSize);
   }
 
+  @Override
   public synchronized void disable() {
     disabled = true;
   }
