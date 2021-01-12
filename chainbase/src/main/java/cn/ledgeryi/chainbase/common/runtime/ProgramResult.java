@@ -25,7 +25,6 @@ import lombok.Setter;
 
 public class ProgramResult {
 
-  private long energyUsed = 0;
   private long futureRefund = 0;
 
   @Getter
@@ -57,22 +56,7 @@ public class ProgramResult {
   @Setter
   private Protocol.Transaction.Result.ContractResult resultCode;
 
-  /*
-   * for testing runs ,
-   * call/create is not executed
-   * but dummy recorded
-   */
   private List<CallCreate> callCreateList;
-
-  public static ProgramResult createEmpty() {
-    ProgramResult result = new ProgramResult();
-    result.setHReturn(ByteArray.EMPTY_BYTE_ARRAY);
-    return result;
-  }
-
-  public void spendEnergy(long energy) {
-    energyUsed += energy;
-  }
 
   public void setRevert() {
     this.revert = true;
@@ -80,10 +64,6 @@ public class ProgramResult {
 
   public boolean isRevert() {
     return revert;
-  }
-
-  public void refundEnergy(long energy) {
-    energyUsed -= energy;
   }
 
   public byte[] getContractAddress() {
@@ -100,7 +80,6 @@ public class ProgramResult {
 
   public void setHReturn(byte[] hReturn) {
     this.hReturn = hReturn;
-
   }
 
   public List<ContractTrigger> getTriggerList() {
@@ -121,10 +100,6 @@ public class ProgramResult {
 
   public void setException(RuntimeException exception) {
     this.exception = exception;
-  }
-
-  public long getEnergyUsed() {
-    return energyUsed;
   }
 
   public Set<DataWord> getDeleteAccounts() {

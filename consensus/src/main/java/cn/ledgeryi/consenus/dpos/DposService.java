@@ -132,8 +132,9 @@ public class DposService implements ConsensusInterface {
 
   private void updateSolidBlock() {
     List<Long> numbers = consensusDelegate.getActiveMasters().stream()
-        .map(address -> consensusDelegate.getMaster(address.toByteArray()).getLatestBlockNum())
-        .sorted().collect(Collectors.toList());
+            .map(address -> consensusDelegate.getMaster(address.toByteArray()).getLatestBlockNum())
+            .sorted()
+            .collect(Collectors.toList());
     long size = consensusDelegate.getActiveMasters().size();
     int position = (int) (size * (1 - SOLIDIFIED_THRESHOLD * 1.0 / 100));
     long newSolidNum = numbers.get(position);

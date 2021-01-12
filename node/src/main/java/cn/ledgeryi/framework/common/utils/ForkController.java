@@ -57,11 +57,8 @@ public class ForkController extends ForkUtils {
     log.info(
         "*******update hard fork:{}, master size:{}, solt:{}, master:{}, version:{}",
         Streams.zip(masters.stream(), Stream.of(ArrayUtils.toObject(stats)), Maps::immutableEntry)
-            .map(e -> Maps
-                .immutableEntry(DecodeUtil.createReadableString(e.getKey().toByteArray()), e.getValue()))
-            .map(e -> Maps
-                .immutableEntry(StringUtils.substring(e.getKey(), e.getKey().length() - 4),
-                    e.getValue()))
+            .map(e -> Maps.immutableEntry(DecodeUtil.createReadableString(e.getKey().toByteArray()), e.getValue()))
+            .map(e -> Maps.immutableEntry(StringUtils.substring(e.getKey(), e.getKey().length() - 4), e.getValue()))
             .collect(Collectors.toList()),
         masters.size(),
         slot,

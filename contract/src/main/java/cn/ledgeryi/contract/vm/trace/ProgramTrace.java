@@ -17,14 +17,11 @@
  */
 package cn.ledgeryi.contract.vm.trace;
 
-import cn.ledgeryi.common.runtime.vm.DataWord;
 import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.DecodeUtil;
-import cn.ledgeryi.contract.utils.MUtil;
 import cn.ledgeryi.contract.vm.OpCode;
 import cn.ledgeryi.contract.vm.config.VmConfig;
 import cn.ledgeryi.contract.vm.program.invoke.ProgramInvoke;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,12 +87,11 @@ public class ProgramTrace {
     return this;
   }
 
-  public Op addOp(byte code, int pc, int deep, DataWord energy, OpActions actions) {
+  public Op addOp(byte code, int pc, int deep, OpActions actions) {
     Op op = new Op();
     op.setActions(actions);
     op.setCode(OpCode.code(code));
     op.setDeep(deep);
-    op.setEnergy(energy.value());
     op.setPc(pc);
 
     ops.add(op);

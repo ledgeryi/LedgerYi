@@ -76,9 +76,6 @@ public class Constant {
   public static final String NODE_BACKUP_PORT = "node.backup.port";
   public static final String NODE_BACKUP_KEEPALIVE_INTERVAL = "node.backup.keepAliveInterval";
   public static final String NODE_BACKUP_MEMBERS = "node.backup.members";
-
-  public static final String STORAGE_NEEDTO_UPDATE_ASSET = "storage.needToUpdateAsset";
-
   public static final String  TX_REFERENCE_BLOCK = "tx.reference.block";
   public static final String TX_EXPIRATION_TIME_IN_MILLIS_SECONDS = "tx.expiration.timeInMilliseconds";
 

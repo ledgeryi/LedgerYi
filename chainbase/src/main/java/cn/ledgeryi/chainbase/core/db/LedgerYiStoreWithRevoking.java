@@ -35,7 +35,6 @@ import java.util.Objects;
 @Slf4j(topic = "DB")
 public abstract class LedgerYiStoreWithRevoking<T extends ProtoCapsule> implements ILedgerYiBase<T> {
 
-  @Getter // only for unit test
   protected IRevokingDB revokingDB;
   private TypeToken<T> token = new TypeToken<T>(getClass()) {
   };
@@ -73,12 +72,6 @@ public abstract class LedgerYiStoreWithRevoking<T extends ProtoCapsule> implemen
     } else {
       throw new RuntimeException("db version is only 2.(" + dbVersion + ")");
     }
-  }
-
-  // only for test
-  protected LedgerYiStoreWithRevoking(String dbName, RevokingDatabase revokingDatabase) {
-    this.revokingDB = new RevokingDBWithCachingOldValue(dbName,
-        (AbstractRevokingStore) revokingDatabase);
   }
 
   @Override

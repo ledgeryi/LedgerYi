@@ -4,7 +4,6 @@ import cn.ledgeryi.chainbase.actuator.VmActuator;
 import cn.ledgeryi.chainbase.common.runtime.InternalTransaction;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.ContractUtils;
-import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
@@ -236,9 +235,6 @@ public class LedgerYiVmActuator implements VmActuator {
               + DecodeUtil.createReadableString(contractAddress));
     }
     newSmartContract = newSmartContract.toBuilder().setContractAddress(ByteString.copyFrom(contractAddress)).build();
-    long tokenValue = 0;
-    long tokenId = 0;
-
     byte[] callerAddress = contract.getOwnerAddress().toByteArray();
     // create vm to constructor smart contract
     try {
@@ -250,7 +246,7 @@ public class LedgerYiVmActuator implements VmActuator {
       byte[] ops = newSmartContract.getBytecode().toByteArray();
       rootInternalTransaction = new InternalTransaction(tx, txType);
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE, executorType, tx,
-              tokenValue, tokenId, blockCap.getInstance(), repository, 0, 0);
+              blockCap.getInstance(), repository, 0, 0);
       this.vm = new VM();
       this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
@@ -285,13 +281,11 @@ public class LedgerYiVmActuator implements VmActuator {
       log.info("No contract or not a smart contract");
       throw new ContractValidateException("No contract or not a smart contract");
     }
-    long tokenValue = 0;
-    long tokenId = 0;
     byte[] callerAddress = contract.getOwnerAddress().toByteArray();
     byte[] code = repository.getCode(contractAddress);
     if (isNotEmpty(code)) {
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CALL_TYPE,
-              executorType, tx, tokenValue, tokenId, blockCap.getInstance(), repository, 0, 0);
+              executorType, tx, blockCap.getInstance(), repository, 0, 0);
       if (isConstantCall) {
         programInvoke.setConstantCall();
       }
@@ -305,28 +299,6 @@ public class LedgerYiVmActuator implements VmActuator {
       }
     }
     program.getResult().setContractAddress(contractAddress);
-  }
-
-  private double getCpuLimitInUsRatio() {
-    double cpuLimitRatio;
-    if (InternalTransaction.ExecutorType.ET_NORMAL_TYPE == executorType) {
-      // self witness generates block
-      if (this.blockCap != null && blockCap.generatedByMyself &&
-          !this.blockCap.hasMasterSignature()) {
-        cpuLimitRatio = 1.0;
-      } else {
-        // self witness or other witness or fullnode verifies block
-        if (tx.getRet(0).getContractRet() == Protocol.Transaction.Result.ContractResult.OUT_OF_TIME) {
-          cpuLimitRatio = DBConfig.getMinTimeRatio();
-        } else {
-          cpuLimitRatio = DBConfig.getMaxTimeRatio();
-        }
-      }
-    } else {
-      // self witness or other witness or fullnode receives tx
-      cpuLimitRatio = 1.0;
-    }
-    return cpuLimitRatio;
   }
 
   private boolean isCheckTransaction() {
