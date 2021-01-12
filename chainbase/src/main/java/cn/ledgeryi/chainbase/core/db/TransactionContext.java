@@ -10,19 +10,17 @@ import cn.ledgeryi.chainbase.core.store.StoreFactory;
 public class TransactionContext {
 
   private boolean isStatic;
-  private boolean eventPluginLoaded;
   private BlockCapsule blockCap;
   private StoreFactory storeFactory;
   private TransactionCapsule txCap;
   private ProgramResult programResult = new ProgramResult();
 
   public TransactionContext(BlockCapsule blockCap, TransactionCapsule txCap,
-      StoreFactory storeFactory, boolean isStatic, boolean eventPluginLoaded) {
+      StoreFactory storeFactory, boolean isStatic) {
 
     this.txCap = txCap;
     this.isStatic = isStatic;
     this.blockCap = blockCap;
     this.storeFactory = storeFactory;
-    this.eventPluginLoaded = eventPluginLoaded;
   }
 }

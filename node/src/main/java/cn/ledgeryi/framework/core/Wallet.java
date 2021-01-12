@@ -345,7 +345,7 @@ public class Wallet {
 
   public Transaction triggerConstantContract(TriggerSmartContract triggerSmartContract,
                                              TransactionCapsule trxCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
-          throws ContractValidateException, ContractExeException, HeaderNotFound {
+          throws ContractValidateException, HeaderNotFound {
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
     //contractStore.listContract();
@@ -357,7 +357,7 @@ public class Wallet {
   }
 
   public Transaction callConstantContract(TransactionCapsule trxCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
-          throws ContractValidateException, ContractExeException, HeaderNotFound {
+          throws ContractValidateException, HeaderNotFound {
     Block headBlock;
     List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
     if (CollectionUtils.isEmpty(blockCapsuleList)) {
@@ -367,7 +367,7 @@ public class Wallet {
     }
 
     TransactionContext context = new TransactionContext(new BlockCapsule(headBlock),
-            trxCap, StoreFactory.getInstance(), true,false);
+            trxCap, StoreFactory.getInstance(), true);
 
     LedgerYiVmActuator ledgerYiVmActuator = new LedgerYiVmActuator(true);
     ledgerYiVmActuator.validate(context);

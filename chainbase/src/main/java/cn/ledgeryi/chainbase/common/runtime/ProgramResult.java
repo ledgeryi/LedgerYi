@@ -1,20 +1,6 @@
 package cn.ledgeryi.chainbase.common.runtime;
 
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.collections4.CollectionUtils.size;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import cn.ledgeryi.chainbase.common.runtime.CallCreate;
-import cn.ledgeryi.chainbase.common.runtime.InternalTransaction;
 import cn.ledgeryi.chainbase.core.capsule.TransactionResultCapsule;
-import cn.ledgeryi.common.logsfilter.trigger.ContractTrigger;
 import cn.ledgeryi.common.runtime.vm.DataWord;
 import cn.ledgeryi.common.runtime.vm.LogInfo;
 import cn.ledgeryi.common.utils.ByteArray;
@@ -22,6 +8,11 @@ import cn.ledgeryi.common.utils.ByteArraySet;
 import cn.ledgeryi.protos.Protocol;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.*;
+
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.size;
 
 public class ProgramResult {
 
@@ -42,9 +33,6 @@ public class ProgramResult {
   private List<InternalTransaction> internalTransactions;
   private List<LogInfo> logInfoList;
   private TransactionResultCapsule ret = new TransactionResultCapsule();
-
-  @Setter
-  private List<ContractTrigger> triggerList;
 
   @Setter
   @Getter
@@ -78,10 +66,6 @@ public class ProgramResult {
 
   public void setHReturn(byte[] hReturn) {
     this.hReturn = hReturn;
-  }
-
-  public List<ContractTrigger> getTriggerList() {
-    return triggerList != null ? triggerList : new LinkedList<>();
   }
 
   public TransactionResultCapsule getRet() {

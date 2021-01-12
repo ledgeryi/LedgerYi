@@ -85,14 +85,10 @@ public class TransactionTrace {
     return this.txType == TX_CONTRACT_CALL_TYPE || this.txType == TX_CONTRACT_CREATION_TYPE;
   }
 
-  public void init(BlockCapsule blockCap) {
-    init(blockCap, false);
-  }
-
   //pre transaction check
-  public void init(BlockCapsule blockCap, boolean eventPluginLoaded) {
+  public void init(BlockCapsule blockCap) {
     txStartTimeInMs = System.currentTimeMillis();
-    transactionContext = new TransactionContext(blockCap, tx, storeFactory, false, eventPluginLoaded);
+    transactionContext = new TransactionContext(blockCap, tx, storeFactory, false);
   }
 
   public void checkIsConstant() throws ContractValidateException, VMIllegalException {

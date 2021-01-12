@@ -72,7 +72,7 @@ public class ContractTest {
         System.out.println("deploy contract result: " + result);
     }
 
-    private static String contractAddres = "9c4e74e9558d497c71b5d58b84d6e38653763974";
+    private static String contractAddres = "dfefd686acac119714fd41923cdfdd2d3942b2bf";
 
     @Test
     public void getContract(){
@@ -206,8 +206,6 @@ public class ContractTest {
          * contract_address: 合约地址
          * abi:合约所有函数的接口信息
          * bytecode：合约字节码
-         * call_value：随合约调用传入的trx金额
-         * consume_user_resource_percent：开发者设置的调用者的资源扣费百分比
          * name：合约名称
          */
         boolean result = RequestNodeApi.deployContract(ownerAddress, contractName, abiStr, codeStr, feeLimit, value,

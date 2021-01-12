@@ -91,9 +91,6 @@ public class Manager {
   @Autowired
   @Getter
   private StorageRowStore storageRowStore;
-  @Getter
-  @Setter
-  public boolean eventPluginLoaded = false;
   @Setter
   private LedgerYiNetService ledgerYiNetService;
   @Autowired
@@ -561,7 +558,8 @@ public class Manager {
           // exec switch fork
           switchFork(newBlock);
           return;
-        } // end switch fork
+        }
+
         try (ISession tmpSession = revokingStore.buildSession()) {
           //apply block
           applyBlock(newBlock);
@@ -693,7 +691,7 @@ public class Manager {
     TransactionTrace trace = new TransactionTrace(txCap, StoreFactory.getInstance(), new RuntimeImpl(this));
     txCap.setTxTrace(trace);
     trace.checkIsConstant();
-    trace.init(blockCap, eventPluginLoaded);
+    trace.init(blockCap);
 
     trace.exec();
 
@@ -703,7 +701,7 @@ public class Manager {
         if (trace.checkNeedRetry()) {
           String txId = Hex.toHexString(txCap.getTransactionId().getBytes());
           log.info("Retry for tx id: {}", txId);
-          trace.init(blockCap, eventPluginLoaded);
+          trace.init(blockCap);
           trace.exec();
           trace.setResult();
           log.info("Retry result for tx id: {}, tx resultCode in receipt: {}", txId, trace.getReceipt().getResult());

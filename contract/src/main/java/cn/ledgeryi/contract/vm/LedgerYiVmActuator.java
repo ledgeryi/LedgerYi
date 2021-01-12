@@ -8,7 +8,6 @@ import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.ContractCapsule;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
-import cn.ledgeryi.common.logsfilter.trigger.ContractTrigger;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.contract.utils.TransactionUtil;
 import cn.ledgeryi.contract.vm.config.ConfigLoader;
@@ -31,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.List;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
@@ -44,7 +42,6 @@ public class LedgerYiVmActuator implements VmActuator {
   private BlockCapsule blockCap;
   private Repository repository;
   private Protocol.Transaction tx;
-  private LogInfoTriggerParser logInfoTriggerParser;
   private ProgramInvokeFactory programInvokeFactory;
   private VmConfig vmConfig = VmConfig.getInstance();
   private InternalTransaction rootInternalTransaction;
@@ -57,9 +54,6 @@ public class LedgerYiVmActuator implements VmActuator {
   @Getter
   @Setter
   private boolean isConstantCall;
-
-  @Setter
-  private boolean enableEventListener;
 
   public LedgerYiVmActuator(boolean isConstantCall) {
     this.isConstantCall = isConstantCall;
@@ -80,7 +74,6 @@ public class LedgerYiVmActuator implements VmActuator {
     Protocol.Transaction.Contract.ContractType contractType = this.tx.getRawData().getContract().getType();
     //Prepare Repository
     repository = RepositoryImpl.createRoot(context.getStoreFactory());
-    enableEventListener = context.isEventPluginLoaded();
     if (Objects.nonNull(blockCap)) {
       this.executorType = InternalTransaction.ExecutorType.ET_NORMAL_TYPE;
     } else {
@@ -160,10 +153,6 @@ public class LedgerYiVmActuator implements VmActuator {
           }
         } else {
           repository.commit();
-          if (logInfoTriggerParser != null) {
-            List<ContractTrigger> triggers = logInfoTriggerParser.parseLogInfos(program.getResult().getLogInfoList(), repository);
-            program.getResult().setTriggerList(triggers);
-          }
         }
       } else {
         repository.commit();
@@ -234,7 +223,6 @@ public class LedgerYiVmActuator implements VmActuator {
               + DecodeUtil.createReadableString(contractAddress));
     }
     newSmartContract = newSmartContract.toBuilder().setContractAddress(ByteString.copyFrom(contractAddress)).build();
-    byte[] callerAddress = contract.getOwnerAddress().toByteArray();
     // create vm to constructor smart contract
     try {
       long feeLimit = tx.getRawData().getFeeLimit();
@@ -250,9 +238,6 @@ public class LedgerYiVmActuator implements VmActuator {
       this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
       this.program.setRootTransactionId(txId);
-      if (enableEventListener && isCheckTransaction()) {
-        logInfoTriggerParser = new LogInfoTriggerParser(blockCap.getNum(), blockCap.getTimeStamp(), txId, callerAddress);
-      }
     } catch (Exception e) {
       log.info(e.getMessage());
       throw new ContractValidateException(e.getMessage());
@@ -280,7 +265,6 @@ public class LedgerYiVmActuator implements VmActuator {
       log.info("No contract or not a smart contract");
       throw new ContractValidateException("No contract or not a smart contract");
     }
-    byte[] callerAddress = contract.getOwnerAddress().toByteArray();
     byte[] code = repository.getCode(contractAddress);
     if (isNotEmpty(code)) {
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CALL_TYPE,
@@ -293,9 +277,6 @@ public class LedgerYiVmActuator implements VmActuator {
       this.program = new Program(code, programInvoke, rootInternalTransaction, vmConfig);
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
       this.program.setRootTransactionId(txId);
-      if (enableEventListener && isCheckTransaction()) {
-        logInfoTriggerParser = new LogInfoTriggerParser(blockCap.getNum(), blockCap.getTimeStamp(), txId, callerAddress);
-      }
     }
     program.getResult().setContractAddress(contractAddress);
   }
