@@ -17,20 +17,11 @@
  */
 package cn.ledgeryi.contract.vm.trace;
 
-import cn.ledgeryi.common.runtime.vm.DataWord;
-import cn.ledgeryi.contract.vm.OpCode;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import lombok.extern.slf4j.Slf4j;
-import org.spongycastle.util.encoders.Hex;
-
-import java.io.IOException;
 
 @Slf4j(topic = "VM")
 public final class Serializers {
@@ -60,32 +51,5 @@ public final class Serializers {
       mapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
     return mapper;
-  }
-
-  public static class DataWordSerializer extends JsonSerializer<DataWord> {
-
-    @Override
-    public void serialize(DataWord energy, JsonGenerator jgen, SerializerProvider provider)
-        throws IOException, JsonProcessingException {
-      jgen.writeString(energy.value().toString());
-    }
-  }
-
-  public static class ByteArraySerializer extends JsonSerializer<byte[]> {
-
-    @Override
-    public void serialize(byte[] memory, JsonGenerator jgen, SerializerProvider provider)
-        throws IOException, JsonProcessingException {
-      jgen.writeString(Hex.toHexString(memory));
-    }
-  }
-
-  public static class OpCodeSerializer extends JsonSerializer<Byte> {
-
-    @Override
-    public void serialize(Byte op, JsonGenerator jgen, SerializerProvider provider)
-        throws IOException, JsonProcessingException {
-      jgen.writeString(OpCode.code(op).name());
-    }
   }
 }

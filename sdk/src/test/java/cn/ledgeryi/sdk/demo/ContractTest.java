@@ -66,14 +66,13 @@ public class ContractTest {
 
     @Test
     public void deployContract() {
-        String input = address + " Storage [{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}] 608060405234801561001057600080fd5b5060c78061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d146053575b600080fd5b603d607e565b6040518082815260200191505060405180910390f35b607c60048036036020811015606757600080fd5b81019080803590602001909291905050506087565b005b60008054905090565b806000819055505056fea2646970667358221220e0d62b2700e3afba6e87729d482239a5322dc2bdc290f9b75029586f2e2b115864736f6c63430007040033 # # false 100000 75 50000 0 0 #";
+        String input = address + " Storage [{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}] 608060405234801561001057600080fd5b5060c78061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d146053575b600080fd5b603d607e565b6040518082815260200191505060405180910390f35b607c60048036036020811015606757600080fd5b81019080803590602001909291905050506087565b005b60008054905090565b806000819055505056fea2646970667358221220e0d62b2700e3afba6e87729d482239a5322dc2bdc290f9b75029586f2e2b115864736f6c63430007040033 # # false 100000 75 0";
         String[] parameter = input.split(" ");
         boolean result = deployContract(parameter);
         System.out.println("deploy contract result: " + result);
     }
 
-    //todo 合约地址
-    private static String contractAddres = "76fd06c2caa97e1d17a374cc62aa796a8107f4f8";
+    private static String contractAddres = "9c4e74e9558d497c71b5d58b84d6e38653763974";
 
     @Test
     public void getContract(){
@@ -83,8 +82,8 @@ public class ContractTest {
 
     @Test
     public void storage() {
-        String args = "9";
-        String params = address + " " + contractAddres + " store(uint256) " + args + " false 0 0 0 #";
+        String args = "7";
+        String params = address + " " + contractAddres + " store(uint256) " + args + " false 0 0";
         String[] parameters = params.split(" ");
         /**
          * 【1】 constant function和非constant function 函数调用从对链上属性是否有更改可分为两种：constant function 和 非constant function。
@@ -118,7 +117,7 @@ public class ContractTest {
          */
         int index = 0;
         byte[] ownerAddress = null;
-        if (parameters.length == 5 || parameters.length == 9) {
+        if (parameters.length == 5 || parameters.length == 7) {
             ownerAddress = DecodeUtil.decode(parameters[index++]);
             if (ownerAddress == null) {
                 System.out.println("Invalid OwnerAddress.");
@@ -132,26 +131,19 @@ public class ContractTest {
         boolean isHex = Boolean.valueOf(parameters[index++]);
         long feeLimit = 0;
         long callValue = 0;
-        long tokenCallValue = 0;
-        String tokenId = "";
 
         if (!isConstant) {
             feeLimit = Long.valueOf(parameters[index++]);
             callValue = Long.valueOf(parameters[index++]);
-            tokenCallValue = Long.valueOf(parameters[index++]);
-            tokenId = parameters[index++];
         }
         if ("#".equalsIgnoreCase(argsStr)) {
             argsStr = "";
-        }
-        if (tokenId.equalsIgnoreCase("#")) {
-            tokenId = "";
         }
         byte[] input = Hex.decode(AbiUtil.parseMethod(methodStr, argsStr, isHex));
         byte[] contractAddress = DecodeUtil.decode(contractAddrStr);
 
         boolean result = RequestNodeApi.triggerContract(ownerAddress, contractAddress, callValue,
-                input, feeLimit, tokenCallValue, tokenId, isConstant, DecodeUtil.decode(privateKey));
+                input, feeLimit, isConstant, DecodeUtil.decode(privateKey));
         if (!isConstant) {
             if (result) {
                 System.out.println("Broadcast the " + cmdMethodStr + " successful.\n"
@@ -193,13 +185,8 @@ public class ContractTest {
         System.out.println("=======free: " + free);
         long feeLimit = Long.parseLong(free);
         long consumeUserResourcePercent = Long.parseLong(parameters[idx++]);
-        long originEnergyLimit = Long.parseLong(parameters[idx++]);
         if (consumeUserResourcePercent > 100 || consumeUserResourcePercent < 0) {
             System.out.println("consume_user_resource_percent should be >= 0 and <= 100");
-            return false;
-        }
-        if (originEnergyLimit <= 0) {
-            System.out.println("origin_energy_limit must > 0");
             return false;
         }
         if (!constructorStr.equals("#")) {
@@ -213,13 +200,6 @@ public class ContractTest {
         long value;
         value = Long.valueOf(parameters[idx++]);
         System.out.println("=======callValue: " + value);
-        long tokenValue = Long.valueOf(parameters[idx++]);
-        System.out.println("=======tokenValue: " + tokenValue);
-        String tokenId = parameters[idx++];
-        if ("#".equalsIgnoreCase(tokenId)) {
-            tokenId = "";
-        }
-        System.out.println("=======tokenId: " + tokenId);
 
         /**
          * origin_address: 合约创建者地址
@@ -229,10 +209,9 @@ public class ContractTest {
          * call_value：随合约调用传入的trx金额
          * consume_user_resource_percent：开发者设置的调用者的资源扣费百分比
          * name：合约名称
-         * origin_energy_limit: 开发者设置的在一次合约调用过程中自己消耗的energy的上限，必须大于0。
          */
         boolean result = RequestNodeApi.deployContract(ownerAddress, contractName, abiStr, codeStr, feeLimit, value,
-                consumeUserResourcePercent, originEnergyLimit, tokenValue, tokenId, DecodeUtil.decode(privateKey));
+                consumeUserResourcePercent, DecodeUtil.decode(privateKey));
         if (result) {
             System.out.println("Broadcast the createSmartContract successful.\n"
                     + "Please check the given transaction id to confirm deploy status on blockchain using getTransactionInfoById command.");

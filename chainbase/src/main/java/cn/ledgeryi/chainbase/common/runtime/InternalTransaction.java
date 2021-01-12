@@ -26,8 +26,6 @@ public class InternalTransaction {
   /* the amount of tx to transfer (calculated as sun) */
   private long value;
 
-  private Map<String, Long> tokenInfo = new HashMap<>();
-
   /* the address of the destination account (for message)
    * In creation transaction the receive address is - 0 */
   private byte[] receiveAddress;
@@ -71,7 +69,6 @@ public class InternalTransaction {
       this.note = "create";
       this.value = contract.getNewContract().getCallValue();
       this.data = contract.getNewContract().getBytecode().toByteArray();
-      this.tokenInfo.put(String.valueOf(contract.getTokenId()), contract.getCallTokenValue());
     } else if (trxType == TxType.TX_CONTRACT_CALL_TYPE) {
       SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
       if (contract == null) {
@@ -83,7 +80,6 @@ public class InternalTransaction {
       this.note = "call";
       this.value = contract.getCallValue();
       this.data = contract.getData().toByteArray();
-      this.tokenInfo.put(String.valueOf(contract.getTokenId()), contract.getCallTokenValue());
     } else {
       // do nothing, just for running byte code
     }

@@ -25,8 +25,6 @@ import lombok.Setter;
 
 public class ProgramResult {
 
-  private long futureRefund = 0;
-
   @Getter
   @Setter
   private long cpuTimeUsed = 0;
@@ -157,8 +155,8 @@ public class ProgramResult {
     return callCreateList;
   }
 
-  public void addCallCreate(byte[] data, byte[] destination, byte[] energyLimit, byte[] value) {
-    getCallCreateList().add(new CallCreate(data, destination, energyLimit, value));
+  public void addCallCreate(byte[] data, byte[] value) {
+    getCallCreateList().add(new CallCreate(data, value));
   }
 
   public List<InternalTransaction> getInternalTransactions() {
@@ -177,9 +175,6 @@ public class ProgramResult {
     return transaction;
   }
 
-  public void addInternalTransaction(InternalTransaction internalTransaction) {
-    getInternalTransactions().add(internalTransaction);
-  }
 
   public void addInternalTransactions(List<InternalTransaction> internalTransactions) {
     getInternalTransactions().addAll(internalTransactions);
@@ -191,22 +186,9 @@ public class ProgramResult {
     }
   }
 
-  public void addFutureRefund(long energyValue) {
-    futureRefund += energyValue;
-  }
-
-  public long getFutureRefund() {
-    return futureRefund;
-  }
-
-  public void resetFutureRefund() {
-    futureRefund = 0;
-  }
-
   public void reset() {
     getDeleteAccounts().clear();
     getLogInfoList().clear();
-    resetFutureRefund();
   }
 
   public void merge(ProgramResult another) {
@@ -214,7 +196,6 @@ public class ProgramResult {
     if (another.getException() == null && !another.isRevert()) {
       addDeleteAccounts(another.getDeleteAccounts());
       addLogInfos(another.getLogInfoList());
-      addFutureRefund(another.getFutureRefund());
       addTouchAccounts(another.getTouchedAccounts());
     }
   }

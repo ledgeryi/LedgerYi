@@ -16,7 +16,7 @@ public class TransactionTest {
 
     @Test
     public void getBlockByNum(){
-        long num = 0;
+        long num = 6;
         GrpcAPI.BlockExtention block = RequestNodeApi.getBlock(num);
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(block, true)));
     }

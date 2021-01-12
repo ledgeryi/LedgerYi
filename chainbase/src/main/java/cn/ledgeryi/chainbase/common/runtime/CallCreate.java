@@ -24,28 +24,16 @@ package cn.ledgeryi.chainbase.common.runtime;
 public class CallCreate {
 
     private final byte[] data;
-    private final byte[] destination;
-    private final byte[] energyLimit;
     private final byte[] value;
 
 
-    public CallCreate(byte[] data, byte[] destination, byte[] energyLimit, byte[] value) {
+    public CallCreate(byte[] data, byte[] value) {
         this.data = data;
-        this.destination = destination;
-        this.energyLimit = energyLimit;
         this.value = value;
     }
 
     public byte[] getData() {
         return data;
-    }
-
-    public byte[] getDestination() {
-        return destination;
-    }
-
-    public byte[] getEnergyLimit() {
-        return energyLimit;
     }
 
     public byte[] getValue() {

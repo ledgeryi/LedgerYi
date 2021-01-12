@@ -13,9 +13,6 @@ public class VmConfig {
 
     public static final int MAX_FEE_LIMIT = 1_000_000_000;
 
-    @Setter
-    public static boolean ENERGY_LIMIT_HARD_FORK = false;
-
     private VmConfig() {
     }
 

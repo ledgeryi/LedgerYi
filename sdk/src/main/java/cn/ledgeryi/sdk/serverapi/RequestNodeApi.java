@@ -78,8 +78,8 @@ public class RequestNodeApi {
     }
 
     public static boolean triggerContract(byte[] owner, byte[] contractAddress, long callValue, byte[] data,
-                                   long feeLimit, long tokenValue, String tokenId, boolean isConstant, byte[] privateKey) {
-        TriggerSmartContract triggerContract = triggerCallContract(owner, contractAddress, callValue, data, tokenValue, tokenId);
+                                   long feeLimit, boolean isConstant, byte[] privateKey) {
+        TriggerSmartContract triggerContract = triggerCallContract(owner, contractAddress, callValue, data);
         TransactionExtention transactionExtention;
         if (isConstant) {
             transactionExtention = rpcCli.triggerConstantContract(triggerContract);
@@ -122,10 +122,9 @@ public class RequestNodeApi {
     }
 
     public static boolean deployContract( byte[] owner, String contractName, String ABI, String code, long feeLimit,
-                                   long value, long consumeUserResourcePercent, long originEnergyLimit,
-                                   long tokenValue, String tokenId, byte[] privateKey) {
+                                   long value, long consumeUserResourcePercent, byte[] privateKey) {
         CreateSmartContract contractDeployContract = createContractDeployContract(contractName, owner, ABI, code,
-                value, consumeUserResourcePercent, originEnergyLimit, tokenValue, tokenId);
+                value, consumeUserResourcePercent);
         GrpcAPI.TransactionExtention transactionExtention = rpcCli.deployContract(contractDeployContract);
         if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
             System.out.println("RPC create trx failed!");
@@ -140,8 +139,6 @@ public class RequestNodeApi {
         Protocol.Transaction.raw.Builder rawBuilder = transactionExtention.getTransaction().getRawData().toBuilder();
         rawBuilder.setFeeLimit(feeLimit);
         transBuilder.setRawData(rawBuilder);
-        /*ByteString s = transactionExtention.getTransaction().getSignature();
-        transBuilder.setSignature(s);*/
         for (int i = 0; i < transactionExtention.getTransaction().getRetCount(); i++) {
             Protocol.Transaction.Result r = transactionExtention.getTransaction().getRet(i);
             transBuilder.setRet(i, r);
@@ -153,17 +150,12 @@ public class RequestNodeApi {
         return processTransaction(transactionExtention, privateKey);
     }
 
-    private static TriggerSmartContract triggerCallContract( byte[] address, byte[] contractAddress, long callValue,
-                                                      byte[] data, long tokenValue, String tokenId) {
+    private static TriggerSmartContract triggerCallContract( byte[] address, byte[] contractAddress, long callValue, byte[] data) {
         TriggerSmartContract.Builder builder = TriggerSmartContract.newBuilder();
         builder.setOwnerAddress(ByteString.copyFrom(address));
         builder.setContractAddress(ByteString.copyFrom(contractAddress));
         builder.setData(ByteString.copyFrom(data));
         builder.setCallValue(callValue);
-        if (tokenId != null && tokenId != "") {
-            builder.setCallTokenValue(tokenValue);
-            builder.setTokenId(Long.parseLong(tokenId));
-        }
         return builder.build();
     }
 
@@ -206,8 +198,7 @@ public class RequestNodeApi {
     }
 
     private static CreateSmartContract createContractDeployContract(String contractName, byte[] address, String ABI,
-                                                             String code, long value, long consumeUserResourcePercent,
-                                                             long originEnergyLimit, long tokenValue, String tokenId) {
+                                                             String code, long value, long consumeUserResourcePercent) {
         SmartContract.ABI abi = jsonStr2ABI(ABI);
         if (abi == null) {
             System.out.println("abi is null");
@@ -218,7 +209,6 @@ public class RequestNodeApi {
         builder.setOriginAddress(ByteString.copyFrom(address));
         builder.setAbi(abi);
         builder.setConsumeUserResourcePercent(consumeUserResourcePercent);
-        builder.setOriginEnergyLimit(originEnergyLimit);
         if (value != 0) {
             builder.setCallValue(value);
         }
@@ -226,9 +216,6 @@ public class RequestNodeApi {
         builder.setBytecode(ByteString.copyFrom(byteCode));
         CreateSmartContract.Builder createSmartContractBuilder = CreateSmartContract.newBuilder();
         createSmartContractBuilder.setOwnerAddress(ByteString.copyFrom(address)).setNewContract(builder.build());
-        if (tokenId != null && !tokenId.equalsIgnoreCase("") && !tokenId.equalsIgnoreCase("#")) {
-            createSmartContractBuilder.setCallTokenValue(tokenValue).setTokenId(Long.parseLong(tokenId));
-        }
         return createSmartContractBuilder.build();
     }
 

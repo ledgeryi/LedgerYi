@@ -164,7 +164,6 @@ public class PrecompiledContracts {
 
   public static abstract class PrecompiledContract {
 
-    protected static final byte[] DATA_FALSE = new byte[WORD_SIZE];
     private byte[] callerAddress;
     private Repository deposit;
     private ProgramResult result;
@@ -174,8 +173,6 @@ public class PrecompiledContracts {
     @Getter
     @Setter
     private long vmShouldEndInUs;
-
-    public abstract long getEnergyForData(byte[] data);
 
     public abstract Pair<Boolean, byte[]> execute(byte[] data);
 
@@ -226,17 +223,6 @@ public class PrecompiledContracts {
     }
 
     @Override
-    public long getEnergyForData(byte[] data) {
-
-      // energy charge for the execution:
-      // minimum 1 and additional 1 for each 32 bytes word (round  up)
-      if (data == null) {
-        return 15;
-      }
-      return 15L + (data.length + 31) / 32 * 3;
-    }
-
-    @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
       return Pair.of(true, data);
     }
@@ -244,17 +230,6 @@ public class PrecompiledContracts {
 
   public static class Sha256 extends PrecompiledContract {
 
-
-    @Override
-    public long getEnergyForData(byte[] data) {
-
-      // energy charge for the execution:
-      // minimum 50 and additional 50 for each 32 bytes word (round  up)
-      if (data == null) {
-        return 60;
-      }
-      return 60L + (data.length + 31) / 32 * 12;
-    }
 
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
@@ -267,19 +242,6 @@ public class PrecompiledContracts {
   }
 
   public static class Ripempd160 extends PrecompiledContract {
-
-
-    @Override
-    public long getEnergyForData(byte[] data) {
-
-      // TODO #POC9 Replace magic numbers with constants
-      // energy charge for the execution:
-      // minimum 50 and additional 50 for each 32 bytes word (round  up)
-      if (data == null) {
-        return 600;
-      }
-      return 600L + (data.length + 31) / 32 * 120;
-    }
 
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
@@ -302,11 +264,6 @@ public class PrecompiledContracts {
         }
       }
       return true;
-    }
-
-    @Override
-    public long getEnergyForData(byte[] data) {
-      return 3000;
     }
 
     @Override
@@ -353,34 +310,7 @@ public class PrecompiledContracts {
    */
   public static class ModExp extends PrecompiledContract {
 
-    private static final BigInteger GQUAD_DIVISOR = BigInteger.valueOf(20);
-
     private static final int ARGS_OFFSET = 32 * 3; // addresses length part
-
-    @Override
-    public long getEnergyForData(byte[] data) {
-
-      if (data == null) {
-        data = ByteUtil.EMPTY_BYTE_ARRAY;
-      }
-
-      int baseLen = parseLen(data, 0);
-      int expLen = parseLen(data, 1);
-      int modLen = parseLen(data, 2);
-
-      byte[] expHighBytes = ByteUtil.parseBytes(data, addSafely(ARGS_OFFSET, baseLen), Math.min(expLen, 32));
-
-      long multComplexity = getMultComplexity(Math.max(baseLen, modLen));
-      long adjExpLen = getAdjustedExponentLength(expHighBytes, expLen);
-
-      // use big numbers to stay safe in case of overflow
-      BigInteger energy = BigInteger.valueOf(multComplexity)
-          .multiply(BigInteger.valueOf(Math.max(adjExpLen, 1)))
-          .divide(GQUAD_DIVISOR);
-
-      return BIUtil.isLessThan(energy, BigInteger.valueOf(Long.MAX_VALUE)) ? energy.longValueExact()
-          : Long.MAX_VALUE;
-    }
 
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
@@ -417,37 +347,6 @@ public class PrecompiledContracts {
       }
     }
 
-    private long getMultComplexity(long x) {
-
-      long x2 = x * x;
-
-      if (x <= 64) {
-        return x2;
-      }
-      if (x <= 1024) {
-        return x2 / 4 + 96 * x - 3072;
-      }
-
-      return x2 / 16 + 480 * x - 199680;
-    }
-
-    private long getAdjustedExponentLength(byte[] expHighBytes, long expLen) {
-
-      int leadingZeros = numberOfLeadingZeros(expHighBytes);
-      int highestBit = 8 * expHighBytes.length - leadingZeros;
-
-      // set index basement to zero
-      if (highestBit > 0) {
-        highestBit--;
-      }
-
-      if (expLen <= 32) {
-        return highestBit;
-      } else {
-        return 8 * (expLen - 32) + highestBit;
-      }
-    }
-
     private int parseLen(byte[] data, int idx) {
       byte[] bytes = parseBytes(data, 32 * idx, 32);
       return new DataWord(bytes).intValueSafe();
@@ -458,109 +357,4 @@ public class PrecompiledContracts {
       return bytesToBigInteger(bytes);
     }
   }
-
-  public static class BatchValidateSign extends PrecompiledContract {
-
-    private static final ExecutorService workers;
-    private static final int ENGERYPERSIGN = 1500;
-    private static final int MAX_SIZE = 16;
-
-    static {
-      workers = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2);
-    }
-
-    @Override
-    public long getEnergyForData(byte[] data) {
-      int cnt = (data.length / WORD_SIZE - 5) / 6;
-      // one sign 1500, half of ecrecover
-      return (long) (cnt * ENGERYPERSIGN);
-    }
-
-    @Override
-    public Pair<Boolean, byte[]> execute(byte[] data) {
-      try {
-        return doExecute(data);
-      } catch (Throwable t) {
-        return Pair.of(true, new byte[WORD_SIZE]);
-      }
-    }
-
-    private Pair<Boolean, byte[]> doExecute(byte[] data)
-        throws InterruptedException, ExecutionException {
-      DataWord[] words = DataWord.parseArray(data);
-      byte[] hash = words[0].getData();
-      byte[][] signatures = extractBytesArray(
-          words, words[1].intValueSafe() / WORD_SIZE, data);
-      byte[][] addresses = extractBytes32Array(
-          words, words[2].intValueSafe() / WORD_SIZE);
-      int cnt = signatures.length;
-      if (cnt == 0 || cnt > MAX_SIZE || signatures.length != addresses.length) {
-        return Pair.of(true, DATA_FALSE);
-      }
-      byte[] res = new byte[WORD_SIZE];
-      if (isConstantCall()) {
-        //for constant call not use thread pool to avoid potential effect
-        for (int i = 0; i < cnt; i++) {
-          if (DataWord
-              .equalAddressByteArray(addresses[i], recoverAddrBySign(signatures[i], hash))) {
-            res[i] = 1;
-          }
-        }
-      } else {
-        // add check
-        CountDownLatch countDownLatch = new CountDownLatch(cnt);
-        List<Future<RecoverAddrResult>> futures = new ArrayList<>(cnt);
-
-        for (int i = 0; i < cnt; i++) {
-          Future<RecoverAddrResult> future = workers
-              .submit(new RecoverAddrTask(countDownLatch, hash, signatures[i], i));
-          futures.add(future);
-        }
-        boolean withNoTimeout = countDownLatch
-            .await(getCPUTimeLeftInNanoSecond(), TimeUnit.NANOSECONDS);
-
-        if (!withNoTimeout) {
-          log.info("BatchValidateSign timeout");
-          throw Program.Exception.notEnoughTime("call BatchValidateSign precompile method");
-        }
-
-        for (Future<RecoverAddrResult> future : futures) {
-          RecoverAddrResult result = future.get();
-          int index = result.nonce;
-          if (DataWord.equalAddressByteArray(result.addr, addresses[index])) {
-            res[index] = 1;
-          }
-        }
-      }
-      return Pair.of(true, res);
-    }
-
-    @AllArgsConstructor
-    private static class RecoverAddrTask implements Callable<RecoverAddrResult> {
-
-      private CountDownLatch countDownLatch;
-      private byte[] hash;
-      private byte[] signature;
-      private int nonce;
-
-      @Override
-      public RecoverAddrResult call() {
-        try {
-          return new RecoverAddrResult(recoverAddrBySign(this.signature, this.hash), nonce);
-        } finally {
-          countDownLatch.countDown();
-        }
-      }
-    }
-
-    @AllArgsConstructor
-    private static class RecoverAddrResult {
-
-      private byte[] addr;
-      private int nonce;
-    }
-
-
-  }
-
 }

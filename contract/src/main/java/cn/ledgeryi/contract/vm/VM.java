@@ -465,8 +465,8 @@ public class VM {
         }
         break;
         case GASPRICE: {
-          DataWord energyPrice = new DataWord(0);
-          program.stackPush(energyPrice);
+          DataWord gasPrice = new DataWord(0);
+          program.stackPush(gasPrice);
           program.step();
         }
         break;
@@ -506,8 +506,8 @@ public class VM {
         }
         break;
         case GASLIMIT: {
-          DataWord energyLimit = new DataWord(0);
-          program.stackPush(energyLimit);
+          DataWord gasLimit = new DataWord(0);
+          program.stackPush(gasLimit);
           program.step();
         }
         break;
@@ -777,7 +777,7 @@ public class VM {
           DataWord outDataOffs = program.stackPop();
           DataWord outDataSize = program.stackPop();
           program.memoryExpand(outDataOffs, outDataSize);
-          MessageCall msg = new MessageCall(op, null, codeAddress, value, inDataOffs, inDataSize,
+          MessageCall msg = new MessageCall(op,  codeAddress, value, inDataOffs, inDataSize,
               outDataOffs, outDataSize, tokenId);
           PrecompiledContracts.PrecompiledContract contract = PrecompiledContracts.getContractForAddress(codeAddress);
           if (!op.callIsStateless()) {
@@ -821,7 +821,6 @@ public class VM {
       program.setPreviouslyExecutedOp(op.val());
     } catch (RuntimeException e) {
       log.info("VM halted: [{}]", e.getMessage());
-      program.resetFutureRefund();
       program.stop();
       throw e;
     } finally {

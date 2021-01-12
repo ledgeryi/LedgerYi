@@ -30,10 +30,6 @@ public class MessageCall {
   private final OpCode type;
 
   /**
-   * energy to pay for the call, remaining energy will be refunded to the caller
-   */
-  private final DataWord energy;
-  /**
    * address of account which code to call
    */
   private final DataWord codeAddress;
@@ -60,10 +56,9 @@ public class MessageCall {
 
   private DataWord tokenId;
 
-  public MessageCall(OpCode type, DataWord energy, DataWord codeAddress,
+  public MessageCall(OpCode type, DataWord codeAddress,
       DataWord endowment, DataWord inDataOffs, DataWord inDataSize, DataWord tokenId) {
     this.type = type;
-    this.energy = energy;
     this.codeAddress = codeAddress;
     this.endowment = endowment;
     this.inDataOffs = inDataOffs;
@@ -71,20 +66,16 @@ public class MessageCall {
     this.tokenId = tokenId;
   }
 
-  public MessageCall(OpCode type, DataWord energy, DataWord codeAddress,
+  public MessageCall(OpCode type, DataWord codeAddress,
       DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
       DataWord outDataOffs, DataWord outDataSize, DataWord tokenId) {
-    this(type, energy, codeAddress, endowment, inDataOffs, inDataSize, tokenId);
+    this(type, codeAddress, endowment, inDataOffs, inDataSize, tokenId);
     this.outDataOffs = outDataOffs;
     this.outDataSize = outDataSize;
   }
 
   public OpCode getType() {
     return type;
-  }
-
-  public DataWord getEnergy() {
-    return energy;
   }
 
   public DataWord getCodeAddress() {
@@ -109,9 +100,5 @@ public class MessageCall {
 
   public DataWord getOutDataSize() {
     return outDataSize;
-  }
-
-  public DataWord getTokenId() {
-    return tokenId;
   }
 }

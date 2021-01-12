@@ -79,26 +79,12 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
         return this.smartContract.getOriginAddress().toByteArray();
     }
 
-    public long getConsumeUserResourcePercent() {
-        long percent = this.smartContract.getConsumeUserResourcePercent();
-        return max(0, min(percent, Constant.ONE_HUNDRED));
-    }
-
-
     public void clearABI() {
         this.smartContract = this.smartContract.toBuilder().setAbi(SmartContract.ABI.getDefaultInstance()).build();
     }
 
     public byte[] getTrxHash() {
         return this.smartContract.getTrxHash().toByteArray();
-    }
-
-    public long getOriginEnergyLimit() {
-        long originEnergyLimit = this.smartContract.getOriginEnergyLimit();
-        if (originEnergyLimit == Constant.PB_DEFAULT_ENERGY_LIMIT) {
-            originEnergyLimit = Constant.CREATOR_DEFAULT_ENERGY_LIMIT;
-        }
-        return originEnergyLimit;
     }
 }
 

@@ -26,7 +26,6 @@ public class Op {
   private OpCode code;
   private int deep;
   private int pc;
-  private BigInteger energy;
   private OpActions actions;
 
   public OpCode getCode() {
@@ -51,14 +50,6 @@ public class Op {
 
   public void setPc(int pc) {
     this.pc = pc;
-  }
-
-  public BigInteger getEnergy() {
-    return energy;
-  }
-
-  public void setEnergy(BigInteger energy) {
-    this.energy = energy;
   }
 
   public OpActions getActions() {

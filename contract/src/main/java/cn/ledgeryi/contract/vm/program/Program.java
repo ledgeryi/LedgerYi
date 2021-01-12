@@ -530,11 +530,8 @@ public class Program {
         // FETCH THE CODE
         AccountCapsule accountCapsule = getContractState().getAccount(codeAddress);
         byte[] programCode = accountCapsule != null ? getContractState().getCode(codeAddress) : ByteUtil.EMPTY_BYTE_ARRAY;
-        // only for trx, not for token
-        long contextBalance = 0L;
         if (byTestingSuite()) {
-            getResult().addCallCreate(data, contextAddress, msg.getEnergy().getNoLeadZeroesData(),
-                    msg.getEndowment().getNoLeadZeroesData());
+            getResult().addCallCreate(data, msg.getEndowment().getNoLeadZeroesData());
         } else if (!ArrayUtils.isEmpty(senderAddress) && !ArrayUtils.isEmpty(contextAddress)
                 && senderAddress != contextAddress && endowment > 0) {
             try {
@@ -604,10 +601,6 @@ public class Program {
 
     public void increaseNonce() {
         nonce++;
-    }
-
-    public void resetFutureRefund() {
-        getResult().resetFutureRefund();
     }
 
     public void storageSave(DataWord word1, DataWord word2) {
@@ -848,8 +841,6 @@ public class Program {
             log.trace(" -- OPS --     {}", opsString);
             log.trace(" -- STACK --   {}", stackData);
             log.trace(" -- MEMORY --  {}", memoryData);
-            /*log.trace("\n  Spent Drop: [{}]/[{}]\n  Left Energy:  [{}]\n",
-                    getResult().getEnergyUsed(), invoke.getEnergyLimit(), getEnergyLimitLeft().longValue());*/
 
             StringBuilder globalOutput = new StringBuilder("\n");
             if (stackData.length() > 0) {
@@ -874,7 +865,6 @@ public class Program {
             if (!Arrays.equals(txData, ops)) {
                 globalOutput.append("\n  msg.data: ").append(Hex.toHexString(txData));
             }
-            //globalOutput.append("\n\n  Spent Energy: ").append(getResult().getEnergyUsed());
 
             if (listener != null) {
                 listener.output(globalOutput.toString());
@@ -930,35 +920,27 @@ public class Program {
             stackPushZero();
             return;
         }
-        byte[] data = this.memoryChunk(msg.getInDataOffs().intValue(),
-                msg.getInDataSize().intValue());
-        long requiredEnergy = contract.getEnergyForData(data);
-        if (requiredEnergy > msg.getEnergy().longValue()) {
-            // Not need to throw an exception, method caller needn't know that
-            // regard as consumed the energy
-            this.stackPushZero();
+        byte[] data = this.memoryChunk(msg.getInDataOffs().intValue(), msg.getInDataSize().intValue());
+        // Delegate or not. if is delegated, we will use msg sender, otherwise use contract address
+        contract.setCallerAddress(msg.getType().callIsDelegate() ? getCallerAddress().getLast20Bytes() :
+                getContractAddress().getLast20Bytes());
+        // this is the depositImpl, not contractState as above
+        contract.setRepository(deposit);
+        contract.setResult(this.result);
+        contract.setConstantCall(isConstantCall());
+        contract.setVmShouldEndInUs(getVmShouldEndInUs());
+        Pair<Boolean, byte[]> out = contract.execute(data);
+        if (out.getLeft()) { // success
+            this.stackPushOne();
+            returnDataBuffer = out.getRight();
+            deposit.commit();
         } else {
-            // Delegate or not. if is delegated, we will use msg sender, otherwise use contract address
-            contract.setCallerAddress(msg.getType().callIsDelegate() ? getCallerAddress().getLast20Bytes() :
-                    getContractAddress().getLast20Bytes());
-            // this is the depositImpl, not contractState as above
-            contract.setRepository(deposit);
-            contract.setResult(this.result);
-            contract.setConstantCall(isConstantCall());
-            contract.setVmShouldEndInUs(getVmShouldEndInUs());
-            Pair<Boolean, byte[]> out = contract.execute(data);
-            if (out.getLeft()) { // success
-                this.stackPushOne();
-                returnDataBuffer = out.getRight();
-                deposit.commit();
-            } else {
-                this.stackPushZero();
-                if (Objects.nonNull(this.result.getException())) {
-                    throw result.getException();
-                }
+            this.stackPushZero();
+            if (Objects.nonNull(this.result.getException())) {
+                throw result.getException();
             }
-            this.memorySave(msg.getOutDataOffs().intValue(), out.getRight());
         }
+        this.memorySave(msg.getOutDataOffs().intValue(), out.getRight());
     }
 
     public boolean byTestingSuite() {
@@ -1033,13 +1015,6 @@ public class Program {
         }
 
         public BytecodeExecutionException(String message, Object... args) {
-            super(String.format(message, args));
-        }
-    }
-
-    @SuppressWarnings("serial")
-    public static class OutOfEnergyException extends BytecodeExecutionException {
-        public OutOfEnergyException(String message, Object... args) {
             super(String.format(message, args));
         }
     }

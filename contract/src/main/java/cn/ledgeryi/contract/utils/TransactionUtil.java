@@ -103,24 +103,4 @@ public class TransactionUtil {
       return 0L;
     }
   }
-
-  public static long getCallTokenValue(Protocol.Transaction.Contract contract) {
-    try {
-      Any contractParameter = contract.getParameter();
-      switch (contract.getType()) {
-        case TriggerSmartContract:
-          return contractParameter.unpack(SmartContractOuterClass.TriggerSmartContract.class).getCallTokenValue();
-
-        case CreateSmartContract:
-          return contractParameter.unpack(SmartContractOuterClass.CreateSmartContract.class).getCallTokenValue();
-        default:
-          return 0L;
-      }
-    } catch (Exception ex) {
-      log.error(ex.getMessage());
-      return 0L;
-    }
-  }
-
-
 }
