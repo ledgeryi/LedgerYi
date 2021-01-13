@@ -390,7 +390,7 @@ public class Wallet {
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
     SmartContract.ABI abi = contractStore.getABI(contractAddress);
-    if (abi == null) {
+    if (abi == null || abi.getEntrysList().isEmpty()) {
       throw new ContractValidateException("No contract or not a valid smart contract");
     }
     byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());

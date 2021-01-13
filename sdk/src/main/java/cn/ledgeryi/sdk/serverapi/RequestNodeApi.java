@@ -121,9 +121,9 @@ public class RequestNodeApi {
         return processTransaction(transactionExtention, privateKey);
     }
 
-    public static boolean deployContract( byte[] owner, String contractName, String ABI, String code, long feeLimit,
+    public static boolean deployContract( byte[] owner, String contractName, String abi, String code, long feeLimit,
                                    long value, long consumeUserResourcePercent, byte[] privateKey) {
-        CreateSmartContract contractDeployContract = createContractDeployContract(contractName, owner, ABI, code,
+        CreateSmartContract contractDeployContract = createContractDeployContract(contractName, owner, abi, code,
                 value, consumeUserResourcePercent);
         GrpcAPI.TransactionExtention transactionExtention = rpcCli.deployContract(contractDeployContract);
         if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
@@ -182,13 +182,7 @@ public class RequestNodeApi {
             return false;
         }
         System.out.println(Utils.printTransactionExceptId(transactionExtention.getTransaction()));
-        try {
-            transaction = TransactionUtils.sign(transaction, privKeyBytes);
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
-        }
+        transaction = TransactionUtils.sign(transaction, privKeyBytes);
         boolean validTransaction = TransactionUtils.validTransaction(transaction);
         if (!validTransaction) {
             log.error("Verification signature failed！");

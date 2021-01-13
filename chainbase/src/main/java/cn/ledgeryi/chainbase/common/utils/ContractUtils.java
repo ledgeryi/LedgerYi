@@ -45,11 +45,7 @@ public class ContractUtils {
     }
 
     public static boolean isConstant(ABI abi, TriggerSmartContract triggerSmartContract) {
-        boolean constant = isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
-        if (constant && !DBConfig.isSupportConstant()) {
-            return false;
-        }
-        return true;
+        return isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
     }
 
     public static boolean isConstant(ABI abi, byte[] selector) {

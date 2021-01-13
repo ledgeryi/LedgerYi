@@ -103,7 +103,7 @@ public class TransactionTrace {
                 + " is not in contract store");
       }
       SmartContractOuterClass.SmartContract.ABI abi = contract.getInstance().getAbi();
-      if (!ContractUtils.isConstant(abi, triggerContract)) {
+      if (ContractUtils.isConstant(abi, triggerContract)) {
         throw new VMIllegalException("cannot call constant method");
       }
     }

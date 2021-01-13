@@ -72,7 +72,7 @@ public class ContractTest {
         System.out.println("deploy contract result: " + result);
     }
 
-    private static String contractAddres = "dfefd686acac119714fd41923cdfdd2d3942b2bf";
+    private static String contractAddres = "18b5f47a98acfe2538ff7f5bb89d56b83d099ff1";
 
     @Test
     public void getContract(){
@@ -82,7 +82,7 @@ public class ContractTest {
 
     @Test
     public void storage() {
-        String args = "7";
+        String args = "2";
         String params = address + " " + contractAddres + " store(uint256) " + args + " false 0 0";
         String[] parameters = params.split(" ");
         /**
@@ -102,8 +102,12 @@ public class ContractTest {
         triggerContract(parameters,true);
     }
 
+    @Test
+    public void clearContractAbi(){
+        boolean result = RequestNodeApi.clearContractABI(DecodeUtil.decode(address), DecodeUtil.decode(contractAddres), DecodeUtil.decode(privateKey));
+        System.out.println("clear result: " +  result);
+    }
     /**
-     *
      * @param parameters: "TN3zfjYUmMFK3ZsHSsrdJoNRtGkQmZLBLz TQiGeuGLriLFJozjChi3WLznpsop4gtXgz retrieve # false"
      * @param isConstant true:调用常量合约，产生的交易不上链；false：调用非常量合约，产生的交易会上链
      * @throws IOException
