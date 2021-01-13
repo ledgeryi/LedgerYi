@@ -265,12 +265,12 @@ public class Program {
 
     private InternalTransaction addInternalTx(byte[] senderAddress,
                                               byte[] transferAddress,
-                                              long value, byte[] data, String note, long nonce, Map<String, Long> tokenInfo) {
+                                              long value, byte[] data, String note, long nonce) {
 
         InternalTransaction addedInternalTx = null;
         if (internalTransaction != null) {
             addedInternalTx = getResult().addInternalTransaction(internalTransaction.getHash(), getCallDeep(),
-                            senderAddress, transferAddress, value, data, note, nonce, tokenInfo);
+                            senderAddress, transferAddress, value, data, note, nonce);
         }
 
         return addedInternalTx;
@@ -543,8 +543,7 @@ public class Program {
 
         // CREATE CALL INTERNAL TRANSACTION
         increaseNonce();
-        HashMap<String, Long> tokenInfo = new HashMap<>();
-        InternalTransaction internalTx = addInternalTx(senderAddress, contextAddress,0, data, "call", nonce, tokenInfo);
+        InternalTransaction internalTx = addInternalTx(senderAddress, contextAddress,0, data, "call", nonce);
         ProgramResult callResult = null;
         if (isNotEmpty(programCode)) {
             long vmStartInUs = System.nanoTime() / 1000;

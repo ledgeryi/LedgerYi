@@ -30,7 +30,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 public class Utils {
     public static final String PERMISSION_ID = "Permission_id";
-    public static final String TRANSACTION = "transaction";
     public static final String VALUE = "value";
 
     public static String printSmartContract(SmartContractOuterClass.SmartContract smartContract){
@@ -105,7 +104,6 @@ public class Utils {
             contracts.add(jsonContract);
         } catch (InvalidProtocolBufferException e) {
             e.printStackTrace();
-            // System.out.println("InvalidProtocolBufferException: {}", e.getMessage());
         }
 
         JSONObject rawData = JSONObject.parseObject(jsonTransaction.get("raw_data").toString());
@@ -116,24 +114,5 @@ public class Utils {
         String txID = ByteArray.toHexString(Sha256Sm3Hash.hash(transaction.getRawData().toByteArray()));
         jsonTransaction.put("txID", txID);
         return jsonTransaction;
-    }
-
-    public static boolean isNumericString(String str) {
-        for (int i = str.length(); --i >= 0; ) {
-            if (!Character.isDigit(str.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean isHexString(String str) {
-        boolean bRet = false;
-        try {
-            ByteArray.fromHexString(str);
-            bRet = true;
-        } catch (Exception e) {
-        }
-        return bRet;
     }
 }

@@ -20,11 +20,8 @@ import java.util.regex.Pattern;
 
 public class JsonFormat {
 
-  private static final Pattern DIGITS = Pattern.compile(
-      "[0-9]",
-      Pattern.CASE_INSENSITIVE);
-  private static final String WRITING_STRING_BUILDER_EXCEPTION
-          = "Writing to a StringBuilder threw an IOException (should never happen).";
+  private static final Pattern DIGITS = Pattern.compile("[0-9]", Pattern.CASE_INSENSITIVE);
+  private static final String WRITING_STRING_BUILDER_EXCEPTION = "Writing to a StringBuilder threw an IOException (should never happen).";
   /**
    * Outputs a textual representation of the Protocol Message supplied into the parameter output.
    * (This representation is the new version of the classic "ProtocolPrinter" output from the
@@ -35,17 +32,6 @@ public class JsonFormat {
     JsonGenerator generator = new JsonGenerator(output);
     generator.print("{");
     print(message, generator, selfType);
-    generator.print("}");
-  }
-
-  /**
-   * Outputs a textual representation of {@code fields} to {@code output}.
-   */
-  public static void print(UnknownFieldSet fields, Appendable output, boolean selfType)
-      throws IOException {
-    JsonGenerator generator = new JsonGenerator(output);
-    generator.print("{");
-    printUnknownFields(fields, generator, selfType);
     generator.print("}");
   }
 
