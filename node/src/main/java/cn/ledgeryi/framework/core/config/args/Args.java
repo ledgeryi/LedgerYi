@@ -64,7 +64,7 @@ public class Args {
   @Getter
   @Setter
   @Parameter(names = {"-m", "--master"})
-  private boolean master = true;
+  private boolean master = false;
 
   @Getter
   @Setter
