@@ -24,10 +24,8 @@ import cn.ledgeryi.framework.common.utils.ForkController;
 import cn.ledgeryi.framework.common.utils.SessionOptional;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
-import cn.ledgeryi.framework.core.capsule.utils.BlockUtil;
+import cn.ledgeryi.framework.common.utils.BlockUtil;
 import cn.ledgeryi.framework.core.config.args.Args;
-import cn.ledgeryi.framework.core.db.accountstate.TrieService;
-import cn.ledgeryi.framework.core.db.accountstate.callback.AccountStateCallBack;
 import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
 import cn.ledgeryi.protos.Protocol;
@@ -118,10 +116,6 @@ public class Manager {
   @Getter
   @Setter
   private TreeBlockIndexStore merkleTreeIndexStore;
-  @Autowired
-  private AccountStateCallBack accountStateCallBack;
-  @Autowired
-  private TrieService trieService;
   @Getter
   private final List<TransactionCapsule> popedTransactions = Collections.synchronizedList(Lists.newArrayList());
   @Getter
@@ -185,7 +179,6 @@ public class Manager {
     return repushTransactions;
   }
 
-
   public BlockCapsule getHead() throws HeaderNotFound {
     List<BlockCapsule> blocks = getBlockStore().getBlockByLatestNum(1);
     if (CollectionUtils.isNotEmpty(blocks)) {
@@ -235,8 +228,6 @@ public class Manager {
   @PostConstruct
   public void init() {
     Message.setDynamicPropertiesStore(this.getDynamicPropertiesStore());
-    accountStateCallBack.setManager(this);
-    trieService.setManager(this);
     revokingStore.disable();
     revokingStore.check();
     this.pendingTransactions = Collections.synchronizedList(Lists.newArrayList());
@@ -690,9 +681,9 @@ public class Manager {
 
     TransactionTrace trace = new TransactionTrace(txCap, StoreFactory.getInstance(), new RuntimeImpl(this));
     txCap.setTxTrace(trace);
+
     trace.checkIsConstant();
     trace.init(blockCap);
-
     trace.exec();
 
     if (Objects.nonNull(blockCap)) {
@@ -711,13 +702,13 @@ public class Manager {
     }
 
     trace.finalization();
-    if (Objects.nonNull(blockCap) && getDynamicPropertiesStore().supportVM()) {
+    if (Objects.nonNull(blockCap)) {
       // set the result of the transaction execution
       txCap.setResult(trace.getTransactionContext());
     }
 
     TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, blockCap, trace);
-    if (Objects.nonNull(blockCap)){
+    if (Objects.nonNull(blockCap) && !blockCap.getInstance().getBlockHeader().getMasterSignature().isEmpty()){
       this.transactionHistoryStore.put(txCap.getTransactionId().getBytes(), transactionInfo);
     }
 
@@ -745,7 +736,6 @@ public class Manager {
     blockCapsule.generatedByMyself = true;
     session.reset();
     session.setValue(revokingStore.buildSession());
-    accountStateCallBack.preExecute(blockCapsule);
 
     TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule(blockCapsule);
     Iterator<TransactionCapsule> iterator = pendingTransactions.iterator();
@@ -790,9 +780,7 @@ public class Manager {
 
       // process transaction
       try (ISession tmpSession = revokingStore.buildSession()) {
-        accountStateCallBack.preExeTrans();
         Protocol.TransactionInfo result = processTransaction(tx, blockCapsule);
-        accountStateCallBack.exeTransFinish();
         tmpSession.merge();
         if (Objects.nonNull(result)) {
           transactionRetCapsule.addTransactionInfo(result);
@@ -806,7 +794,6 @@ public class Manager {
         }
       }
     } //end while
-    accountStateCallBack.executeGenerateFinish();
     session.reset();
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(miner.getPrivateKey());
@@ -856,24 +843,16 @@ public class Manager {
     }
 
     TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule(block);
-    try {
-      accountStateCallBack.preExecute(block);
-      for (TransactionCapsule transactionCapsule : block.getTransactions()) {
-        transactionCapsule.setBlockNum(block.getNum());
-        if (block.generatedByMyself) {
-          transactionCapsule.setVerified(true);
-        }
-        accountStateCallBack.preExeTrans();
-        Protocol.TransactionInfo result = processTransaction(transactionCapsule, block);
-        transactionStore.put(transactionCapsule.getTransactionId().getBytes(), transactionCapsule);
-        accountStateCallBack.exeTransFinish();
-        if (Objects.nonNull(result)) {
-          transactionRetCapsule.addTransactionInfo(result);
-        }
+    for (TransactionCapsule transactionCapsule : block.getTransactions()) {
+      transactionCapsule.setBlockNum(block.getNum());
+      if (block.generatedByMyself) {
+        transactionCapsule.setVerified(true);
       }
-      accountStateCallBack.executePushFinish();
-    } finally {
-      accountStateCallBack.exceptionFinish();
+      Protocol.TransactionInfo result = processTransaction(transactionCapsule, block);
+      transactionStore.put(transactionCapsule.getTransactionId().getBytes(), transactionCapsule);
+      if (Objects.nonNull(result)) {
+        transactionRetCapsule.addTransactionInfo(result);
+      }
     }
     block.setResult(transactionRetCapsule);
 
