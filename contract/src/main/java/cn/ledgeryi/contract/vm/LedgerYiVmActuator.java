@@ -151,11 +151,9 @@ public class LedgerYiVmActuator implements VmActuator {
           } else {
             result.setRuntimeError("REVERT opcode executed");
           }
-        } else {
+        } else if(isCheckTransaction()) {
           repository.commit();
         }
-      } else {
-        repository.commit();
       }
     } catch (Program.JVMStackOverFlowException e) {
       result = program.getResult();

@@ -23,10 +23,6 @@ public class TransactionRetCapsule implements ProtoCapsule<TransactionRet> {
     transactionRet = build.build();
   }
 
-  // only for test
-  public TransactionRetCapsule() {
-    transactionRet = TransactionRet.newBuilder().build();
-  }
 
   public TransactionRetCapsule(byte[] data) throws BadItemException {
     try {
