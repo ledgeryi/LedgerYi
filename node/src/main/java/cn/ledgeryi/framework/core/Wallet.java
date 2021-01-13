@@ -9,7 +9,6 @@ import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.common.utils.ContractUtils;
 import cn.ledgeryi.chainbase.core.capsule.*;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
-import cn.ledgeryi.chainbase.core.store.AccountIdIndexStore;
 import cn.ledgeryi.chainbase.core.store.AccountStore;
 import cn.ledgeryi.chainbase.core.store.ContractStore;
 import cn.ledgeryi.chainbase.core.store.StoreFactory;
@@ -51,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static cn.ledgeryi.chainbase.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
-
 @Slf4j
 @Component
 public class Wallet {
@@ -92,21 +89,6 @@ public class Wallet {
     if (accountCapsule == null) {
       return null;
     }
-    long genesisTimeStamp = dbManager.getGenesisBlock().getTimeStamp();
-    return accountCapsule.getInstance();
-  }
-
-  public Account getAccountById(Account account) {
-    AccountStore accountStore = dbManager.getAccountStore();
-    AccountIdIndexStore accountIdIndexStore = dbManager.getAccountIdIndexStore();
-    byte[] address = accountIdIndexStore.get(account.getAccountId());
-    if (address == null) {
-      return null;
-    }
-    AccountCapsule accountCapsule = accountStore.get(address);
-    if (accountCapsule == null) {
-      return null;
-    }
     return accountCapsule.getInstance();
   }
 
@@ -120,13 +102,6 @@ public class Wallet {
         act.validate();
       }
     }
-    /*if (contractType == ContractType.CreateSmartContract) {
-      CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx.getInstance());
-      long percent = contract.getNewContract().getConsumeUserResourcePercent();
-      if (percent < 0 || percent > 100) {
-        throw new ContractValidateException("percent must be >= 0 and <= 100");
-      }
-    }*/
     try {
       BlockCapsule.BlockId blockId = dbManager.getHeadBlockId();
       if ("solid".equals(Args.getInstance().getTxReferenceBlock())) {
@@ -411,7 +386,7 @@ public class Wallet {
   public Transaction triggerContract(TriggerSmartContract triggerSmartContract,
                                      TransactionCapsule trxCap, TransactionExtention.Builder builder,
                                      Return.Builder retBuilder)
-          throws ContractValidateException, ContractExeException, HeaderNotFound {
+          throws ContractValidateException, HeaderNotFound {
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
     SmartContract.ABI abi = contractStore.getABI(contractAddress);
@@ -427,14 +402,11 @@ public class Wallet {
   }
 
   private static byte[] getSelector(byte[] data) {
-    if (data == null ||
-            data.length < 4) {
+    if (data == null || data.length < 4) {
       return null;
     }
     byte[] ret = new byte[4];
     System.arraycopy(data, 0, ret, 0, 4);
     return ret;
   }
-
-
 }
