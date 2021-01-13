@@ -30,23 +30,15 @@ public class PeerConnectionCheckService {
   @Autowired
   private SyncPool pool;
 
-  @Autowired
-  private ChannelManager channelManager;
-
-  @Autowired
-  private Manager manager;
-
   private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2,
       r -> new Thread(r, "check-peer-connect"));
 
   @PostConstruct
   public void check() {
     log.info("start the PeerConnectionCheckService");
-    scheduledExecutorService
-        .scheduleWithFixedDelay(new CheckDataTransferTask(), 5, 5, TimeUnit.MINUTES);
+    scheduledExecutorService.scheduleWithFixedDelay(new CheckDataTransferTask(), 5, 5, TimeUnit.MINUTES);
     if (Args.getInstance().isOpenFullTcpDisconnect()) {
-      scheduledExecutorService
-          .scheduleWithFixedDelay(new CheckConnectNumberTask(), 4, 1, TimeUnit.MINUTES);
+      scheduledExecutorService.scheduleWithFixedDelay(new CheckConnectNumberTask(), 4, 1, TimeUnit.MINUTES);
     }
   }
 

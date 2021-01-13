@@ -1,6 +1,5 @@
 package cn.ledgeryi.chainbase.core.capsule;
 
-import cn.ledgeryi.common.core.Constant;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
@@ -8,9 +7,6 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 @Slf4j(topic = "capsule")
 public class ContractCapsule implements ProtoCapsule<SmartContract> {

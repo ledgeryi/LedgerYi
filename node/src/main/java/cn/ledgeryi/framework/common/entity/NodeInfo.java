@@ -10,21 +10,17 @@ import cn.ledgeryi.protos.Protocol;
 
 public class NodeInfo {
 
-  /*block information*/
   private long beginSyncNum;
   private String block;
   private String solidityBlock;
 
-  /*connect information*/
   private int currentConnectCount;
   private int activeConnectCount;
   private int passiveConnectCount;
   private long totalFlow;
   private List<PeerInfo> peerList = new ArrayList<>();
 
-  /*node config information*/
   private ConfigNodeInfo configNodeInfo;
-  /*machine information*/
   private MachineInfo machineInfo;
 
   private Map<String, String> cheatMasterInfoMap = new HashMap<>();

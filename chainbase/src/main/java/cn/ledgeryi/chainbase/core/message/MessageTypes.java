@@ -17,10 +17,8 @@ public enum MessageTypes {
 
   BLOCKHEADERS(0x05),
 
-  // INVENTORY：生成区块或交易时，通知其他节点来同步该区块或交易
   INVENTORY(0x06),
 
-  // FETCH_INV_DATA：同步区块或交易请求
   FETCH_INV_DATA(0x07),
 
   SYNC_BLOCK_CHAIN(0x08),

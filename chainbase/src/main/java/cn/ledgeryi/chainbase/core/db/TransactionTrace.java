@@ -133,7 +133,7 @@ public class TransactionTrace {
     if (!needVM()) {
       return false;
     }
-    return false;
+    return tx.getContractRet() != ContractResult.OUT_OF_TIME && receipt.getResult() == ContractResult.OUT_OF_TIME;
   }
 
   public void check() throws ReceiptCheckErrException {

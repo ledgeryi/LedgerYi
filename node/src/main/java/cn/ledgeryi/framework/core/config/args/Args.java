@@ -348,15 +348,7 @@ public class Args {
 
   @Getter
   @Setter
-  private long allowAccountStateRoot;
-
-  @Getter
-  @Setter
   private int validContractProtoThreadNum;
-
-  @Getter
-  @Setter
-  private int shieldedTransInPendingMaxCounts;
 
   @Getter
   @Setter
@@ -880,7 +872,6 @@ public class Args {
     }
     DBConfig.setOutputDirectoryConfig(cfgArgs.getOutputDirectory());
     DBConfig.setRocksDbSettings(cfgArgs.getRocksDBCustomSettings());
-    DBConfig.setAllowAccountStateRoot(cfgArgs.getAllowAccountStateRoot());
     DBConfig.setValidContractProtoThreadNum(cfgArgs.getValidContractProtoThreadNum());
     DBConfig.setDebug(cfgArgs.isDebug());
     DBConfig.setLongRunningTime(cfgArgs.getLongRunningTime());

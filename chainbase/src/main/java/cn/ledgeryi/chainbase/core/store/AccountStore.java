@@ -1,7 +1,6 @@
 package cn.ledgeryi.chainbase.core.store;
 
 import cn.ledgeryi.chainbase.core.db.LedgerYiStoreWithRevoking;
-import cn.ledgeryi.chainbase.core.db.accountstate.AccountStateCallBackUtils;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import com.typesafe.config.ConfigObject;
 import java.util.HashMap;
@@ -20,8 +19,6 @@ public class AccountStore extends LedgerYiStoreWithRevoking<AccountCapsule> {
 
   private static Map<String, byte[]> assertsAddress = new HashMap<>(); // key = name , value = address
 
-  @Autowired
-  private AccountStateCallBackUtils accountStateCallBackUtils;
 
   @Autowired
   private AccountStore(@Value("account") String dbName) {
@@ -47,7 +44,6 @@ public class AccountStore extends LedgerYiStoreWithRevoking<AccountCapsule> {
   @Override
   public void put(byte[] key, AccountCapsule item) {
     super.put(key, item);
-    accountStateCallBackUtils.accountCallBack(key, item);
   }
 
   /**

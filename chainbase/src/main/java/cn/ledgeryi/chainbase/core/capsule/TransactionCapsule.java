@@ -7,7 +7,6 @@ import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.chainbase.core.db.TransactionTrace;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.common.utils.ReflectUtils;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.SignUtils;

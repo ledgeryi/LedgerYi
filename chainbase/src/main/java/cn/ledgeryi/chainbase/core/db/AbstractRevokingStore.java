@@ -27,7 +27,6 @@ import static cn.ledgeryi.chainbase.core.db2.core.SnapshotManager.simpleDecode;
 
 
 @Slf4j(topic = "DB")
-@Getter // only for unit test
 public abstract class AbstractRevokingStore implements RevokingDatabase {
 
   private static final int DEFAULT_STACK_MAX_SIZE = 256;

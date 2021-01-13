@@ -1,4 +1,4 @@
-package cn.ledgeryi.framework.core.capsule.utils;
+package cn.ledgeryi.framework.common.utils;
 
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.config.args.GenesisBlock;

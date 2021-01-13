@@ -10,14 +10,6 @@ import java.security.SignatureException;
 
 public class SignUtils {
 
-  //for test
-  public static SignInterface getGeneratedRandomSign(boolean isECKeyCryptoEngine) {
-    if (isECKeyCryptoEngine) {
-      return new ECKey();
-    }
-    return new SM2();
-  }
-
   public static SignInterface getGeneratedRandomSign(
       SecureRandom secureRandom, boolean isECKeyCryptoEngine) {
     if (isECKeyCryptoEngine) {

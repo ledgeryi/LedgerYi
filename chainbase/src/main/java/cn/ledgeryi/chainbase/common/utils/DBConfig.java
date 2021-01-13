@@ -46,9 +46,6 @@ public class DBConfig {
   private static String blockTimestamp;
   @Getter
   @Setter
-  private static long allowAccountStateRoot;
-  @Getter
-  @Setter
   private static String dbDirectory;
   @Getter
   @Setter

@@ -37,10 +37,6 @@ public class TransactionInfoCapsule implements ProtoCapsule<Protocol.Transaction
     }
   }
 
-  public TransactionInfoCapsule() {
-    this.transactionInfo = Protocol.TransactionInfo.newBuilder().build();
-  }
-
   public static TransactionInfoCapsule buildInstance(TransactionCapsule txCap, BlockCapsule block, TransactionTrace trace) {
     Protocol.TransactionInfo.Builder builder = Protocol.TransactionInfo.newBuilder();
     ReceiptCapsule traceReceipt = trace.getReceipt();

@@ -13,55 +13,38 @@ import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-public class SM2Signer
-        implements  ECConstants
-{
+public class SM2Signer implements  ECConstants {
     private final DSAKCalculator kCalculator = new RandomDSAKCalculator();
-
     private byte[] userID;
-
     private int curveLength;
     private ECDomainParameters ecParams;
     private ECPoint pubPoint;
     private ECKeyParameters ecKey;
-
     private SecureRandom random;
 
-    public void init(boolean forSigning, CipherParameters param)
-    {
+    public void init(boolean forSigning, CipherParameters param) {
         CipherParameters baseParam;
-
-        if (param instanceof ParametersWithID)
-        {
+        if (param instanceof ParametersWithID) {
             baseParam = ((ParametersWithID)param).getParameters();
             userID = ((ParametersWithID)param).getID();
-        }
-        else
-        {
+        } else {
             baseParam = param;
             userID = new byte[0];
         }
 
-        if (forSigning)
-        {
-            if (baseParam instanceof ParametersWithRandom)
-            {
+        if (forSigning) {
+            if (baseParam instanceof ParametersWithRandom) {
                 ParametersWithRandom rParam = (ParametersWithRandom)baseParam;
-
                 ecKey = (ECKeyParameters)rParam.getParameters();
                 ecParams = ecKey.getParameters();
                 kCalculator.init(ecParams.getN(), rParam.getRandom());
-            }
-            else
-            {
+            } else {
                 ecKey = (ECKeyParameters)baseParam;
                 ecParams = ecKey.getParameters();
                 kCalculator.init(ecParams.getN(), new SecureRandom());
             }
             pubPoint = ecParams.getG().multiply(((ECPrivateKeyParameters)ecKey).getD()).normalize();
-        }
-        else
-        {
+        } else {
             ecKey = (ECKeyParameters)baseParam;
             ecParams = ecKey.getParameters();
             pubPoint = ((ECPublicKeyParameters)ecKey).getQ();
@@ -77,8 +60,7 @@ public class SM2Signer
      * @param message  plaintext
      * @return
      */
-    public BigInteger[] generateSignature(byte[] message)
-    {
+    public BigInteger[] generateSignature(byte[] message) {
         byte[] eHash = generateSM3Hash(message);
         return generateHashSignature(eHash);
     }
@@ -89,18 +71,13 @@ public class SM2Signer
      * @return
      */
 
-    public byte[] generateSM3Hash(byte[] message)
-    {
+    public byte[] generateSM3Hash(byte[] message) {
         //byte[] msg = message.getBytes();
-
         SM3Digest digest = new SM3Digest();
         byte[] z = getZ(digest);
-
         digest.update(z, 0, z.length);
         digest.update(message, 0, message.length);
-
         byte[] eHash = new byte[digest.getDigestSize()];
-
         digest.doFinal(eHash, 0);
         return eHash;
     }
@@ -111,8 +88,7 @@ public class SM2Signer
      * @param hash
      * @return
      */
-    public BigInteger[] generateHashSignature(byte[] hash)
-    {
+    public BigInteger[] generateHashSignature(byte[] hash) {
         if (hash.length != 32) {
             throw new IllegalArgumentException("Expected 32 byte input to " +
                     "ECDSA signature, not " + hash.length);
@@ -120,9 +96,7 @@ public class SM2Signer
         BigInteger n = ecParams.getN();
         BigInteger e = calculateE(hash);
         BigInteger d = ((ECPrivateKeyParameters)ecKey).getD();
-
         BigInteger r, s;
-
         ECMultiplier basePointMultiplier = createBasePointMultiplier();
 
         // 5.2.1 Draft RFC:  SM2 Public Key Algorithms
@@ -138,16 +112,14 @@ public class SM2Signer
 
                 // A5
                 r = e.add(p.getAffineXCoord().toBigInteger()).mod(n);
-            }
-            while (r.equals(ZERO) || r.add(k).equals(n));
+            } while (r.equals(ZERO) || r.add(k).equals(n));
 
             // A6
             BigInteger dPlus1ModN = d.add(ONE).modInverse(n);
 
             s = k.subtract(r.multiply(d)).mod(n);
             s = dPlus1ModN.multiply(s).mod(n);
-        }
-        while (s.equals(ZERO));
+        } while (s.equals(ZERO));
 
         // A7
         return new BigInteger[]{ r, s };
@@ -161,20 +133,17 @@ public class SM2Signer
      * @param s
      * @return
      */
-    public boolean verifySignature(byte[] message, BigInteger r, BigInteger s, @Nullable String userID)
-    {
+    public boolean verifySignature(byte[] message, BigInteger r, BigInteger s, @Nullable String userID) {
         BigInteger n = ecParams.getN();
 
         // 5.3.1 Draft RFC:  SM2 Public Key Algorithms
         // B1
-        if (r.compareTo(ONE) < 0 || r.compareTo(n) >= 0)
-        {
+        if (r.compareTo(ONE) < 0 || r.compareTo(n) >= 0) {
             return false;
         }
 
         // B2
-        if (s.compareTo(ONE) < 0 || s.compareTo(n) >= 0)
-        {
+        if (s.compareTo(ONE) < 0 || s.compareTo(n) >= 0) {
             return false;
         }
 
@@ -190,12 +159,9 @@ public class SM2Signer
 
         // B5
         BigInteger t = r.add(s).mod(n);
-        if (t.equals(ZERO))
-        {
+        if (t.equals(ZERO)) {
             return false;
-        }
-        else
-        {
+        } else {
             // B6
             ECPoint x1y1 = ecParams.getG().multiply(s);
             x1y1 = x1y1.add(q.multiply(t)).normalize();
@@ -213,37 +179,30 @@ public class SM2Signer
      * @param s
      * @return
      */
-    public boolean verifyHashSignature(byte[] hash, BigInteger r, BigInteger s)
-    {
+    public boolean verifyHashSignature(byte[] hash, BigInteger r, BigInteger s) {
         BigInteger n = ecParams.getN();
 
         // 5.3.1 Draft RFC:  SM2 Public Key Algorithms
         // B1
-        if (r.compareTo(ONE) < 0 || r.compareTo(n) >= 0)
-        {
+        if (r.compareTo(ONE) < 0 || r.compareTo(n) >= 0) {
             return false;
         }
 
         // B2
-        if (s.compareTo(ONE) < 0 || s.compareTo(n) >= 0)
-        {
+        if (s.compareTo(ONE) < 0 || s.compareTo(n) >= 0) {
             return false;
         }
 
         ECPoint q = ((ECPublicKeyParameters)ecKey).getQ();
-
 
         // B4
         BigInteger e = calculateE(hash);
 
         // B5
         BigInteger t = r.add(s).mod(n);
-        if (t.equals(ZERO))
-        {
+        if (t.equals(ZERO)) {
             return false;
-        }
-        else
-        {
+        } else {
             // B6
             ECPoint x1y1 = ecParams.getG().multiply(s);
             x1y1 = x1y1.add(q.multiply(t)).normalize();
@@ -253,8 +212,7 @@ public class SM2Signer
         }
     }
 
-    private byte[] getZ(Digest digest)
-    {
+    private byte[] getZ(Digest digest) {
 
         //addUserID(digest, userID);
 
@@ -272,16 +230,14 @@ public class SM2Signer
         return rv;
     }
 
-    private void addUserID(Digest digest, byte[] userID)
-    {
+    private void addUserID(Digest digest, byte[] userID) {
         int len = userID.length * 8;
         digest.update((byte)(len >> 8 & 0xFF));
         digest.update((byte)(len & 0xFF));
         digest.update(userID, 0, userID.length);
     }
 
-    private void addFieldElement(Digest digest, ECFieldElement v)
-    {
+    private void addFieldElement(Digest digest, ECFieldElement v) {
         byte[] p = BigIntegers.asUnsignedByteArray(curveLength, v.toBigInteger());
         digest.update(p, 0, p.length);
     }
