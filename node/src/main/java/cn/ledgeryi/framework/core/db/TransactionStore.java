@@ -28,7 +28,7 @@ public class TransactionStore extends LedgerYiStoreWithRevoking<TransactionCapsu
   private KhaosDatabase khaosDatabase;
 
   @Autowired
-  private TransactionStore(@Value("trans") String dbName) {
+  private TransactionStore(@Value("transactionStore") String dbName) {
     super(dbName);
   }
 
