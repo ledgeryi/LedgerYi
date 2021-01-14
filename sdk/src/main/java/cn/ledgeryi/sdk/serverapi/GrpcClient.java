@@ -4,6 +4,7 @@ import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.WalletGrpc;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Account;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.TransactionInfo;
@@ -14,8 +15,6 @@ import com.typesafe.config.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.apache.commons.lang3.StringUtils;
-
-import java.util.Optional;
 
 public class GrpcClient {
 
@@ -47,6 +46,11 @@ public class GrpcClient {
         ByteString addressBS = ByteString.copyFrom(address);
         Account request = Account.newBuilder().setAddress(addressBS).build();
         return blockingStubFull.getAccount(request);
+    }
+
+    public MastersList queryMasters(){
+        EmptyMessage message = EmptyMessage.newBuilder().build();
+        return blockingStubFull.getMasters(message);
     }
 
     public boolean broadcastTransaction(Transaction signaturedTransaction) {
@@ -128,5 +132,15 @@ public class GrpcClient {
 
     public TransactionExtention clearContractABI(SmartContractOuterClass.ClearABIContract request) {
         return blockingStubFull.clearContractABI(request);
+    }
+
+    public NodeList getConnectNodes(){
+        EmptyMessage message = EmptyMessage.newBuilder().build();
+        return blockingStubFull.getNodes(message);
+    }
+
+    public Protocol.NodeInfo getNodeInfo(){
+        EmptyMessage message = EmptyMessage.newBuilder().build();
+        return blockingStubFull.getNodeInfo(message);
     }
 }

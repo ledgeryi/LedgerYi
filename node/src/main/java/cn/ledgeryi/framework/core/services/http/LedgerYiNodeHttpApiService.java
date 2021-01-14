@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.ConnectionLimit;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.omg.CORBA.PRIVATE_MEMBER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +33,8 @@ public class LedgerYiNodeHttpApiService implements Service {
   private GetBlockByLimitNextServlet getBlockByLimitNextServlet;
   @Autowired
   private GetTransactionByIdServlet getTransactionByIdServlet;
+  @Autowired
+  private GetTransactionInfoByIdServlet getTransactionInfoByIdServlet;
   @Autowired
   private GetTransactionCountByBlockNumServlet getTransactionCountByBlockNumServlet;
   @Autowired
@@ -76,6 +79,8 @@ public class LedgerYiNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(createTransactionServlet),"/createtransaction");
       context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(getTransactionByIdServlet), "/gettransactionbyid");
+      context.addServlet(new ServletHolder(getTransactionInfoByIdServlet), "/gettransactioninfobyid");
+
       context.addServlet(new ServletHolder(getTransactionCountByBlockNumServlet), "/gettransactioncountbyblocknum");
 
       //others

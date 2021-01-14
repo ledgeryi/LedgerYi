@@ -4,35 +4,33 @@ import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.Return;
 import cn.ledgeryi.api.GrpcAPI.TransactionExtention;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Transaction;
-import cn.ledgeryi.protos.contract.BalanceContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
 import cn.ledgeryi.sdk.common.utils.Utils;
-import cn.ledgeryi.sdk.execption.CipherException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
-
-import java.io.IOException;
-import java.security.SignatureException;
-import java.util.Optional;
 
 @Slf4j
 public class RequestNodeApi {
 
     private static GrpcClient rpcCli = GrpcClient.initGrpcClient();
 
-    public static Protocol.Account queryAccount(byte[] address){
-        return rpcCli.queryAccount(address);
+    public static Protocol.Account getAccount(String address){
+        return rpcCli.queryAccount(DecodeUtil.decode(address));
+    }
+
+    public static GrpcAPI.MastersList getMasters(){
+        return rpcCli.queryMasters();
     }
 
     public static GrpcAPI.BlockExtention getNowBlock(){
@@ -57,6 +55,14 @@ public class RequestNodeApi {
 
     public static GrpcAPI.NumberMessage getTransactionCountByBlockNum(long blockNum){
         return rpcCli.getTransactionCountByBlockNum(blockNum);
+    }
+
+    public static GrpcAPI.NodeList getConnectNodes(){
+        return rpcCli.getConnectNodes();
+    }
+
+    public static Protocol.NodeInfo getNodeInfo(){
+        return rpcCli.getNodeInfo();
     }
 
     public static SmartContract getContract(byte[] address) {
