@@ -7,6 +7,7 @@ option go_package = "github.com/tronprotocol/grpc-gateway/core";
 
 import "core/ledger_yi.proto";
 
+// TODO: (he) simplify unused fields
 message SmartContract {
     message ABI {
         message Entry {

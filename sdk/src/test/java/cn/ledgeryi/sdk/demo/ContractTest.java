@@ -9,7 +9,7 @@ import cn.ledgeryi.sdk.common.utils.AbiUtil;
 import cn.ledgeryi.sdk.common.utils.Utils;
 import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.execption.CipherException;
-import cn.ledgeryi.sdk.serverapi.RequestNodeApi;
+import cn.ledgeryi.sdk.serverapi.RequestNodeAPI;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +42,7 @@ public class ContractTest {
     }
 
     @Test
-    public void createAddressAndPrivateKey(){
+    public void createAddressAndPrivateKey() {
         SignInterface signEngine = createSignEngine();
         byte[] address = signEngine.getAddress();
         System.out.println("AddressStr: " + DecodeUtil.createReadableString(address));
@@ -66,7 +66,13 @@ public class ContractTest {
 
     @Test
     public void deployContract() {
-        String input = address + " Storage [{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}] 608060405234801561001057600080fd5b5060c78061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d146053575b600080fd5b603d607e565b6040518082815260200191505060405180910390f35b607c60048036036020811015606757600080fd5b81019080803590602001909291905050506087565b005b60008054905090565b806000819055505056fea2646970667358221220e0d62b2700e3afba6e87729d482239a5322dc2bdc290f9b75029586f2e2b115864736f6c63430007040033 # # false 0";
+        String input = address + " Storage" +
+                " [{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]" +
+                " 608060405234801561001057600080fd5b5060c78061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d146053575b600080fd5b603d607e565b6040518082815260200191505060405180910390f35b607c60048036036020811015606757600080fd5b81019080803590602001909291905050506087565b005b60008054905090565b806000819055505056fea2646970667358221220e0d62b2700e3afba6e87729d482239a5322dc2bdc290f9b75029586f2e2b115864736f6c63430007040033" +
+                " #" +
+                " #" +
+                " false" +
+                " 0";
         String[] parameter = input.split(" ");
         boolean result = deployContract(parameter);
         System.out.println("deploy contract result: " + result);
@@ -76,7 +82,7 @@ public class ContractTest {
 
     @Test
     public void getContract(){
-        SmartContractOuterClass.SmartContract contract = RequestNodeApi.getContract(DecodeUtil.decode(contractAddres));
+        SmartContractOuterClass.SmartContract contract = RequestNodeAPI.getContract(DecodeUtil.decode(contractAddres));
         System.out.println(Utils.printSmartContract(contract));
     }
 
@@ -104,7 +110,7 @@ public class ContractTest {
 
     @Test
     public void clearContractAbi(){
-        boolean result = RequestNodeApi.clearContractABI(DecodeUtil.decode(address), DecodeUtil.decode(contractAddres), DecodeUtil.decode(privateKey));
+        boolean result = RequestNodeAPI.clearContractABI(DecodeUtil.decode(address), DecodeUtil.decode(contractAddres), DecodeUtil.decode(privateKey));
         System.out.println("clear result: " +  result);
     }
     /**
@@ -144,7 +150,7 @@ public class ContractTest {
         byte[] input = Hex.decode(AbiUtil.parseMethod(methodStr, argsStr, isHex));
         byte[] contractAddress = DecodeUtil.decode(contractAddrStr);
 
-        boolean result = RequestNodeApi.triggerContract(ownerAddress, contractAddress, callValue,
+        boolean result = RequestNodeAPI.triggerContract(ownerAddress, contractAddress, callValue,
                 input, isConstant, DecodeUtil.decode(privateKey));
         if (!isConstant) {
             if (result) {
@@ -196,7 +202,7 @@ public class ContractTest {
          * bytecode：合约字节码
          * name：合约名称
          */
-        boolean result = RequestNodeApi.deployContract(ownerAddress, contractName, abiStr, codeStr, value, DecodeUtil.decode(privateKey));
+        boolean result = RequestNodeAPI.deployContract(ownerAddress, contractName, abiStr, codeStr, value, DecodeUtil.decode(privateKey));
         if (result) {
             System.out.println("Broadcast the createSmartContract successful.\n"
                     + "Please check the given transaction id to confirm deploy status on blockchain using getTransactionInfoById command.");
