@@ -115,9 +115,14 @@ message Transaction {
       DEFAULT = 0;
       SUCCESS = 1;
       REVERT = 2;
-      OUT_OF_TIME = 3;
-      UNKNOWN = 13;
-
+      BAD_JUMP_DESTINATION = 3;
+      PRECOMPILED_CONTRACT = 4;
+      STACK_TOO_SMALL = 5;
+      STACK_TOO_LARGE = 6;
+      ILLEGAL_OPERATION = 7;
+      STACK_OVERFLOW = 8;
+      JVM_STACK_OVER_FLOW = 9;
+      UNKNOWN = 10;
     }
     code ret = 2;
     ContractResult contractRet = 3;

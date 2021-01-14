@@ -838,8 +838,6 @@ public class VM {
         this.step(program);
       }
 
-    } catch (Program.JVMStackOverFlowException | Program.OutOfTimeException e) {
-      throw e;
     } catch (RuntimeException e) {
       if (StringUtils.isEmpty(e.getMessage())) {
         log.warn("Unknown Exception occurred, tx id: {}", Hex.toHexString(program.getRootTransactionId()), e);

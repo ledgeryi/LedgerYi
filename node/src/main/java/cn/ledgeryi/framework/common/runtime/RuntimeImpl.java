@@ -8,6 +8,7 @@ import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.common.core.exception.ContractExeException;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.contract.vm.LedgerYiVmActuator;
+import cn.ledgeryi.contract.vm.program.Program;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
@@ -70,6 +71,31 @@ public class RuntimeImpl implements Runtime {
       result.setResultCode(ContractResult.SUCCESS);
       return;
     }
+    if (result.isRevert()) {
+      result.setResultCode(ContractResult.REVERT);
+      return;
+    }
+    if (exception instanceof Program.IllegalOperationException) {
+      result.setResultCode(ContractResult.ILLEGAL_OPERATION);
+      return;
+    }
+    if (exception instanceof Program.BadJumpDestinationException) {
+      result.setResultCode(ContractResult.BAD_JUMP_DESTINATION);
+      return;
+    }
+    if (exception instanceof Program.StackTooSmallException) {
+      result.setResultCode(ContractResult.STACK_TOO_SMALL);
+      return;
+    }
+    if (exception instanceof Program.StackTooLargeException) {
+      result.setResultCode(ContractResult.STACK_TOO_LARGE);
+      return;
+    }
+    if (exception instanceof Program.JVMStackOverFlowException) {
+      result.setResultCode(ContractResult.JVM_STACK_OVER_FLOW);
+      return;
+    }
+    log.info("uncaught exception", exception);
     result.setResultCode(ContractResult.UNKNOWN);
   }
 

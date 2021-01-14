@@ -199,22 +199,6 @@ public class PrecompiledContracts {
     public void setResult(ProgramResult result) {
       this.result = result;
     }
-
-    protected long getCPUTimeLeftInNanoSecond() {
-      long left = getVmShouldEndInUs() * VMConstant.ONE_THOUSAND - System.nanoTime();
-      if (left <= 0) {
-        throw Program.Exception.notEnoughTime("call");
-      } else {
-        return left;
-      }
-    }
-
-    protected byte[] dataOne() {
-      byte[] ret = new byte[WORD_SIZE];
-      ret[31] = 1;
-      return ret;
-    }
-
   }
 
   public static class Identity extends PrecompiledContract {

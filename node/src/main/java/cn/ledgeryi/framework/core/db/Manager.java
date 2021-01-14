@@ -342,7 +342,7 @@ public class Manager {
     }
   }
 
-  void validateCommon(TransactionCapsule transactionCapsule) throws TransactionExpirationException, TooBigTransactionException {
+  void validateCommon(TransactionCapsule transactionCapsule) throws TransactionExpirationException, TooBigTransactionException, ValidateSignatureException {
     if (transactionCapsule.getData().length > Constant.TRANSACTION_MAX_BYTE_SIZE) {
       throw new TooBigTransactionException("too big transaction, the size is " + transactionCapsule.getData().length + " bytes");
     }
@@ -351,6 +351,9 @@ public class Manager {
     if (transactionExpiration <= headBlockTime || transactionExpiration > headBlockTime + Constant.MAXIMUM_TIME_UNTIL_EXPIRATION) {
       throw new TransactionExpirationException("transaction expiration, transaction expiration time is " + transactionExpiration
               + ", but headBlockTime is " + headBlockTime);
+    }
+    if (!transactionCapsule.validateSignature()) {
+      throw new ValidateSignatureException("trans sig validate failed");
     }
   }
 
@@ -675,10 +678,6 @@ public class Manager {
     validateTapos(txCap);
     validateCommon(txCap);
 
-    if (!txCap.validateSignature()) {
-      throw new ValidateSignatureException("trans sig validate failed");
-    }
-
     TransactionTrace trace = new TransactionTrace(txCap, StoreFactory.getInstance(), new RuntimeImpl(this));
     txCap.setTxTrace(trace);
 
@@ -737,7 +736,6 @@ public class Manager {
     session.reset();
     session.setValue(revokingStore.buildSession());
 
-    TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule(blockCapsule);
     Iterator<TransactionCapsule> iterator = pendingTransactions.iterator();
     while (iterator.hasNext() || repushTransactions.size() > 0) {
 
@@ -780,11 +778,8 @@ public class Manager {
 
       // process transaction
       try (ISession tmpSession = revokingStore.buildSession()) {
-        Protocol.TransactionInfo result = processTransaction(tx, blockCapsule);
+        processTransaction(tx, blockCapsule);
         tmpSession.merge();
-        if (Objects.nonNull(result)) {
-          transactionRetCapsule.addTransactionInfo(result);
-        }
         blockCapsule.addTransaction(tx);
       } catch (Exception e) {
         log.debug("Process tx failed when generating block: {}, tx from pending: {}", e.getMessage(), fromPending);

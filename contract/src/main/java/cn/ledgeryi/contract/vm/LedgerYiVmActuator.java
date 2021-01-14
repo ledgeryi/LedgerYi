@@ -107,16 +107,6 @@ public class LedgerYiVmActuator implements VmActuator {
     ProgramResult result = context.getProgramResult();
     try {
       if (vm != null) {
-        if (null != blockCap && blockCap.generatedByMyself && blockCap.hasMasterSignature()
-            && null != TransactionUtil.getContractRet(tx)
-            && Protocol.Transaction.Result.ContractResult.OUT_OF_TIME == TransactionUtil.getContractRet(tx)) {
-          result = program.getResult();
-          Program.OutOfTimeException e = Program.Exception.alreadyTimeOut();
-          result.setRuntimeError(e.getMessage());
-          result.setException(e);
-          throw e;
-        }
-
         vm.play(program);
         result = program.getResult();
 
@@ -136,7 +126,7 @@ public class LedgerYiVmActuator implements VmActuator {
           return;
         }
 
-        if (InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE == txType && !result.isRevert()) {
+        if (InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE == txType && !result.isRevert() && isCheckTransaction()) {
           byte[] code = program.getResult().getHReturn();
           repository.saveCode(program.getContractAddress().getNoLeadZeroesData(), code);
         }
@@ -161,12 +151,6 @@ public class LedgerYiVmActuator implements VmActuator {
       result.rejectInternalTransactions();
       result.setRuntimeError(result.getException().getMessage());
       log.info("jvm stack overflow exception: {}", result.getException().getMessage());
-    } catch (Program.OutOfTimeException e) {
-      result = program.getResult();
-      result.setException(e);
-      result.rejectInternalTransactions();
-      result.setRuntimeError(result.getException().getMessage());
-      log.info("timeout: {}", result.getException().getMessage());
     } catch (Throwable e) {
       result = program.getResult();
       result.rejectInternalTransactions();
@@ -233,7 +217,7 @@ public class LedgerYiVmActuator implements VmActuator {
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE, executorType, tx,
               blockCap.getInstance(), repository, 0, 0);
       this.vm = new VM();
-      this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig);
+      this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig, isCheckTransaction());
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
       this.program.setRootTransactionId(txId);
     } catch (Exception e) {
@@ -241,10 +225,10 @@ public class LedgerYiVmActuator implements VmActuator {
       throw new ContractValidateException(e.getMessage());
     }
     program.getResult().setContractAddress(contractAddress);
-    repository.createAccount(contractAddress, newSmartContract.getName(), Protocol.AccountType.Contract);
-    repository.createContract(contractAddress, new ContractCapsule(newSmartContract));
-    byte[] code = newSmartContract.getBytecode().toByteArray();
-    if (!VmConfig.allowTvmConstantinople()) {
+    if (isCheckTransaction()) {
+      repository.createAccount(contractAddress, newSmartContract.getName(), Protocol.AccountType.Contract);
+      repository.createContract(contractAddress, new ContractCapsule(newSmartContract));
+      byte[] code = newSmartContract.getBytecode().toByteArray();
       repository.saveCode(contractAddress, ProgramPrecompile.getCode(code));
     }
   }
@@ -272,7 +256,7 @@ public class LedgerYiVmActuator implements VmActuator {
       }
       this.vm = new VM();
       rootInternalTransaction = new InternalTransaction(tx, txType);
-      this.program = new Program(code, programInvoke, rootInternalTransaction, vmConfig);
+      this.program = new Program(code, programInvoke, rootInternalTransaction, vmConfig, isCheckTransaction());
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();
       this.program.setRootTransactionId(txId);
     }
