@@ -22,8 +22,6 @@ public class Account implements Serializable {
   @Getter
   private byte[] address;
 
-  private String balance;
-
   /**
    * Account address is a 21-bits hex string.
    */
@@ -33,23 +31,6 @@ public class Account implements Serializable {
           "The address(" + DecodeUtil.createReadableString(address) + ") must be a 21 bytes.");
     }
     this.address = address;
-  }
-
-  public long getBalance() {
-    return Long.parseLong(this.balance);
-  }
-
-  /**
-   * Account balance is a long type.
-   */
-  public void setBalance(final String balance) {
-    try {
-      Long.parseLong(balance);
-    } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("Balance(" + balance + ") must be Long type.");
-    }
-
-    this.balance = balance;
   }
 
   /**
