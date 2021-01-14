@@ -84,7 +84,7 @@ public class RequestNodeApi {
     }
 
     public static boolean triggerContract(byte[] owner, byte[] contractAddress, long callValue, byte[] data,
-                                   long feeLimit, boolean isConstant, byte[] privateKey) {
+                                   boolean isConstant, byte[] privateKey) {
         TriggerSmartContract triggerContract = triggerCallContract(owner, contractAddress, callValue, data);
         TransactionExtention transactionExtention;
         if (isConstant) {
@@ -112,7 +112,6 @@ public class RequestNodeApi {
         TransactionExtention.Builder texBuilder = TransactionExtention.newBuilder();
         Transaction.Builder transBuilder = Transaction.newBuilder();
         Transaction.raw.Builder rawBuilder = transactionExtention.getTransaction().getRawData().toBuilder();
-        rawBuilder.setFeeLimit(feeLimit);
         transBuilder.setRawData(rawBuilder);
         ByteString s = transactionExtention.getTransaction().getSignature();
         transBuilder.setSignature(s);
@@ -127,10 +126,10 @@ public class RequestNodeApi {
         return processTransaction(transactionExtention, privateKey);
     }
 
-    public static boolean deployContract( byte[] owner, String contractName, String abi, String code, long feeLimit,
-                                   long value, long consumeUserResourcePercent, byte[] privateKey) {
+    public static boolean deployContract( byte[] owner, String contractName, String abi, String code, /*long feeLimit,*/
+                                   long value, /*long consumeUserResourcePercent, */byte[] privateKey) {
         CreateSmartContract contractDeployContract = createContractDeployContract(contractName, owner, abi, code,
-                value, consumeUserResourcePercent);
+                value/*, consumeUserResourcePercent*/);
         GrpcAPI.TransactionExtention transactionExtention = rpcCli.deployContract(contractDeployContract);
         if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
             System.out.println("RPC create trx failed!");
@@ -143,7 +142,7 @@ public class RequestNodeApi {
         GrpcAPI.TransactionExtention.Builder texBuilder = GrpcAPI.TransactionExtention.newBuilder();
         Protocol.Transaction.Builder transBuilder = Protocol.Transaction.newBuilder();
         Protocol.Transaction.raw.Builder rawBuilder = transactionExtention.getTransaction().getRawData().toBuilder();
-        rawBuilder.setFeeLimit(feeLimit);
+        /*rawBuilder.setFeeLimit(feeLimit);*/
         transBuilder.setRawData(rawBuilder);
         for (int i = 0; i < transactionExtention.getTransaction().getRetCount(); i++) {
             Protocol.Transaction.Result r = transactionExtention.getTransaction().getRet(i);
@@ -198,7 +197,7 @@ public class RequestNodeApi {
     }
 
     private static CreateSmartContract createContractDeployContract(String contractName, byte[] address, String ABI,
-                                                             String code, long value, long consumeUserResourcePercent) {
+                                                             String code, long value/*, long consumeUserResourcePercent*/) {
         SmartContract.ABI abi = jsonStr2ABI(ABI);
         if (abi == null) {
             System.out.println("abi is null");
@@ -208,7 +207,7 @@ public class RequestNodeApi {
         builder.setName(contractName);
         builder.setOriginAddress(ByteString.copyFrom(address));
         builder.setAbi(abi);
-        builder.setConsumeUserResourcePercent(consumeUserResourcePercent);
+        /*builder.setConsumeUserResourcePercent(consumeUserResourcePercent);*/
         if (value != 0) {
             builder.setCallValue(value);
         }

@@ -122,7 +122,6 @@ message Transaction {
     // scripts not used
     bytes scripts = 12;
     int64 timestamp = 14;
-    int64 fee_limit = 18;
   }
 
   raw raw_data = 1;

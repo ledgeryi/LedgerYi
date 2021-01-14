@@ -194,10 +194,6 @@ public class LedgerYiVmActuator implements VmActuator {
     if (contractName.length > VMConstant.CONTRACT_NAME_LENGTH) {
       throw new ContractValidateException("contractName's length cannot be greater than 32");
     }
-    long percent = contract.getNewContract().getConsumeUserResourcePercent();
-    if (percent < 0 || percent > VMConstant.ONE_HUNDRED) {
-      throw new ContractValidateException("percent must be >= 0 and <= 100");
-    }
     byte[] contractAddress = ContractUtils.generateContractAddress(tx);
     // insure the new contract address haven't exist
     if (repository.getAccount(contractAddress) != null) {
@@ -207,11 +203,6 @@ public class LedgerYiVmActuator implements VmActuator {
     newSmartContract = newSmartContract.toBuilder().setContractAddress(ByteString.copyFrom(contractAddress)).build();
     // create vm to constructor smart contract
     try {
-      long feeLimit = tx.getRawData().getFeeLimit();
-      if (feeLimit < 0 || feeLimit > VmConfig.MAX_FEE_LIMIT) {
-        log.info("invalid feeLimit {}", feeLimit);
-        throw new ContractValidateException("feeLimit must be >= 0 and <= " + VmConfig.MAX_FEE_LIMIT);
-      }
       byte[] ops = newSmartContract.getBytecode().toByteArray();
       rootInternalTransaction = new InternalTransaction(tx, txType);
       ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE, executorType, tx,

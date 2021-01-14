@@ -66,13 +66,13 @@ public class ContractTest {
 
     @Test
     public void deployContract() {
-        String input = address + " Storage [{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}] 608060405234801561001057600080fd5b5060c78061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d146053575b600080fd5b603d607e565b6040518082815260200191505060405180910390f35b607c60048036036020811015606757600080fd5b81019080803590602001909291905050506087565b005b60008054905090565b806000819055505056fea2646970667358221220e0d62b2700e3afba6e87729d482239a5322dc2bdc290f9b75029586f2e2b115864736f6c63430007040033 # # false 100000 75 0";
+        String input = address + " Storage [{\"inputs\":[],\"name\":\"retrieve\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"num\",\"type\":\"uint256\"}],\"name\":\"store\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}] 608060405234801561001057600080fd5b5060c78061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d146053575b600080fd5b603d607e565b6040518082815260200191505060405180910390f35b607c60048036036020811015606757600080fd5b81019080803590602001909291905050506087565b005b60008054905090565b806000819055505056fea2646970667358221220e0d62b2700e3afba6e87729d482239a5322dc2bdc290f9b75029586f2e2b115864736f6c63430007040033 # # false 0";
         String[] parameter = input.split(" ");
         boolean result = deployContract(parameter);
         System.out.println("deploy contract result: " + result);
     }
 
-    private static String contractAddres = "18b5f47a98acfe2538ff7f5bb89d56b83d099ff1";
+    private static String contractAddres = "d8bb12a6264e1628ae7ca17c95ef46a65a628e8b";
 
     @Test
     public void getContract(){
@@ -82,8 +82,8 @@ public class ContractTest {
 
     @Test
     public void storage() {
-        String args = "2";
-        String params = address + " " + contractAddres + " store(uint256) " + args + " false 0 0";
+        String args = "4";
+        String params = address + " " + contractAddres + " store(uint256) " + args + " false 0";
         String[] parameters = params.split(" ");
         /**
          * 【1】 constant function和非constant function 函数调用从对链上属性是否有更改可分为两种：constant function 和 非constant function。
@@ -117,11 +117,11 @@ public class ContractTest {
         String cmdMethodStr = isConstant ? "TriggerConstantContract" : "TriggerContract";
 
         /**
-         * ownerAddress contractAddrStr methodStr argsStr isHex feeLimit callValue tokenCallValue tokenId
+         * ownerAddress contractAddrStr methodStr argsStr isHex callValue tokenCallValue tokenId
          */
         int index = 0;
         byte[] ownerAddress = null;
-        if (parameters.length == 5 || parameters.length == 7) {
+        if (parameters.length == 5 || parameters.length == 6) {
             ownerAddress = DecodeUtil.decode(parameters[index++]);
             if (ownerAddress == null) {
                 System.out.println("Invalid OwnerAddress.");
@@ -133,11 +133,9 @@ public class ContractTest {
         String methodStr = parameters[index++];
         String argsStr = parameters[index++];
         boolean isHex = Boolean.valueOf(parameters[index++]);
-        long feeLimit = 0;
         long callValue = 0;
 
         if (!isConstant) {
-            feeLimit = Long.valueOf(parameters[index++]);
             callValue = Long.valueOf(parameters[index++]);
         }
         if ("#".equalsIgnoreCase(argsStr)) {
@@ -147,7 +145,7 @@ public class ContractTest {
         byte[] contractAddress = DecodeUtil.decode(contractAddrStr);
 
         boolean result = RequestNodeApi.triggerContract(ownerAddress, contractAddress, callValue,
-                input, feeLimit, isConstant, DecodeUtil.decode(privateKey));
+                input, isConstant, DecodeUtil.decode(privateKey));
         if (!isConstant) {
             if (result) {
                 System.out.println("Broadcast the " + cmdMethodStr + " successful.\n"
@@ -159,6 +157,9 @@ public class ContractTest {
         }
     }
 
+    /**
+     * @param parameter: address contractName abiStr codeStr constructorStr argsStr hex callValue
+     */
     private boolean deployContract(String[] parameter) {
         String[] parameters = getParas(parameter);
         if (parameters == null || parameters.length < 11) {
@@ -166,44 +167,27 @@ public class ContractTest {
         }
         int idx = 0;
         String address = parameters[idx];
-        System.out.println("=======address: " + address);
         byte[] ownerAddress = getAddressBytes(address);
         if (ownerAddress != null) {
             idx++;
         }
 
         String contractName = parameters[idx++];
-        System.out.println("=======contractName: " + contractName);
         String abiStr = parameters[idx++];
-        System.out.println("=======abiStr: " + abiStr);
         String codeStr = parameters[idx++];
-        System.out.println("=======codeStr: " + codeStr);
         String constructorStr = parameters[idx++];
-        System.out.println("=======constructorStr: " + constructorStr);
         String argsStr = parameters[idx++];
-        System.out.println("=======argsStr: " + argsStr);
         String hex = parameters[idx++];
-        System.out.println("=======hex: " + hex);
         boolean isHex = Boolean.parseBoolean(hex);
-        String free = parameters[idx++];
-        System.out.println("=======free: " + free);
-        long feeLimit = Long.parseLong(free);
-        long consumeUserResourcePercent = Long.parseLong(parameters[idx++]);
-        if (consumeUserResourcePercent > 100 || consumeUserResourcePercent < 0) {
-            System.out.println("consume_user_resource_percent should be >= 0 and <= 100");
-            return false;
-        }
         if (!constructorStr.equals("#")) {
             if (isHex) {
                 codeStr += argsStr;
             } else {
                 codeStr += Hex.toHexString(AbiUtil.encodeInput(constructorStr, argsStr));
             }
-            System.out.println("=======codeStr: " + codeStr);
         }
         long value;
         value = Long.valueOf(parameters[idx++]);
-        System.out.println("=======callValue: " + value);
 
         /**
          * origin_address: 合约创建者地址
@@ -212,8 +196,7 @@ public class ContractTest {
          * bytecode：合约字节码
          * name：合约名称
          */
-        boolean result = RequestNodeApi.deployContract(ownerAddress, contractName, abiStr, codeStr, feeLimit, value,
-                consumeUserResourcePercent, DecodeUtil.decode(privateKey));
+        boolean result = RequestNodeApi.deployContract(ownerAddress, contractName, abiStr, codeStr, value, DecodeUtil.decode(privateKey));
         if (result) {
             System.out.println("Broadcast the createSmartContract successful.\n"
                     + "Please check the given transaction id to confirm deploy status on blockchain using getTransactionInfoById command.");

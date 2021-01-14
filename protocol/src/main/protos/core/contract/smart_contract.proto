@@ -21,7 +21,6 @@ message SmartContract {
                 bool indexed = 1;
                 string name = 2;
                 string type = 3;
-                // SolidityType type = 3;
             }
             enum StateMutabilityType {
                 UnknownMutabilityType = 0;
@@ -47,10 +46,9 @@ message SmartContract {
     ABI abi = 3;
     bytes bytecode = 4;
     int64 call_value = 5;
-    int64 consume_user_resource_percent = 6;
-    string name = 7;
-    bytes code_hash = 8;
-    bytes trx_hash = 9;
+    string name = 6;
+    bytes code_hash = 7;
+    bytes trx_hash = 8;
 }
 
 message CreateSmartContract {

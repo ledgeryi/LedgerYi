@@ -32,14 +32,14 @@ public class TransactionTest {
 
     @Test
     public void getTransactionById(){
-        String hash = "03aa387f7ed3ab8f84758871d80fb4b050650532b8bda58cfc7cb2549d40e65e";
+        String hash = "a74ccc7a6a920f76db8a0cb702796cb75868c3fc68310f38f0524b4341df0504";
         Protocol.Transaction transaction = RequestNodeApi.getTransactionById(hash);
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(transaction, true)));
     }
 
     @Test
     public void getTransactionInfoById(){
-        String hash = "03aa387f7ed3ab8f84758871d80fb4b050650532b8bda58cfc7cb2549d40e65e";
+        String hash = "a74ccc7a6a920f76db8a0cb702796cb75868c3fc68310f38f0524b4341df0504";
         Protocol.TransactionInfo transactionInfo = RequestNodeApi.getTransactionInfoById(hash);
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(transactionInfo, true)));
     }
