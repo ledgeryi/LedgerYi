@@ -54,13 +54,13 @@ public class DposSlot {
     if (currentSlot < 0) {
       throw new RuntimeException("current slot should be positive.");
     }
-    int size = consensusDelegate.getActiveMasters().size();
+    int size = consensusDelegate.getAllMasters().size();
     if (size <= 0) {
       throw new RuntimeException("active masters is null.");
     }
     int masterIndex = (int) currentSlot % (size * SINGLE_REPEAT);
     masterIndex /= SINGLE_REPEAT;
-    return consensusDelegate.getActiveMasters().get(masterIndex);
+    return consensusDelegate.getAllMasters().get(masterIndex).getAddress();
   }
 
 }

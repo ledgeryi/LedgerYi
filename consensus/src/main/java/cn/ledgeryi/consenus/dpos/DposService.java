@@ -77,8 +77,8 @@ public class DposService implements ConsensusInterface {
     if (consensusDelegate.getLatestBlockHeaderNumber() == 0) {
       List<ByteString> masters = new ArrayList<>();
       consensusDelegate.getAllMasters().forEach(masterCapsule -> masters.add(masterCapsule.getAddress()));
-      List<ByteString> addresses = consensusDelegate.getActiveMasters();
-      addresses.forEach(address -> {
+        updateWitness(masters);
+        masters.forEach(address -> {
         MasterCapsule masterCapsule = consensusDelegate.getMaster(address.toByteArray());
         masterCapsule.setIsJobs(true);
         consensusDelegate.saveMaster(masterCapsule);
@@ -134,7 +134,7 @@ public class DposService implements ConsensusInterface {
             .map(address -> consensusDelegate.getMaster(address.toByteArray()).getLatestBlockNum())
             .sorted()
             .collect(Collectors.toList());
-    long size = consensusDelegate.getActiveMasters().size();
+    long size = consensusDelegate.getAllMasters().size();
     int position = (int) (size * (1 - SOLIDIFIED_THRESHOLD * 1.0 / 100));
     long newSolidNum = numbers.get(position);
     long oldSolidNum = consensusDelegate.getLatestSolidifiedBlockNum();
@@ -144,5 +144,13 @@ public class DposService implements ConsensusInterface {
     }
     consensusDelegate.saveLatestSolidifiedBlockNum(newSolidNum);
     log.info("Update solid block number to {}", newSolidNum);
+  }
+
+  public void updateWitness(List<ByteString> list) {
+    if (list.size() > MAX_ACTIVE_WITNESS_NUM) {
+      consensusDelegate.saveActiveMasters(list.subList(0, MAX_ACTIVE_WITNESS_NUM));
+    } else {
+      consensusDelegate.saveActiveMasters(list);
+    }
   }
 }
