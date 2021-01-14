@@ -54,6 +54,7 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.util.*;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 /**
@@ -70,15 +71,16 @@ public class Program {
     private byte lastOp;
     private Stack stack;
     private Memory memory;
+    private VmConfig config;
     private boolean stopped;
     private long cpuTimeUsed;
     private long storageUsed;
     private ProgramTrace trace;
     private ProgramInvoke invoke;
-    private final VmConfig config;
     private byte[] returnDataBuffer;
     private byte[] rootTransactionId;
     private byte previouslyExecutedOp;
+    private boolean isMasterSignature;
     private ProgramOutListener listener;
     private ContractState contractState;
     private ProgramTraceListener traceListener;
@@ -93,14 +95,11 @@ public class Program {
     private static final int MAX_STACK_SIZE = 1024;
     private static final String VALIDATE_FOR_SMART_CONTRACT_FAILURE = "validateForSmartContract failure:%s";
 
-    public Program(byte[] ops, ProgramInvoke programInvoke) {
-        this(ops, programInvoke, null);
+    public Program(byte[] ops, ProgramInvoke programInvoke, InternalTransaction internalTransaction, VmConfig config,
+                   boolean isMasterSignature) {
+        this(ops,programInvoke,internalTransaction,config);
+        this.isMasterSignature = isMasterSignature;
     }
-
-    public Program(byte[] ops, ProgramInvoke programInvoke, InternalTransaction internalTransaction) {
-        this(ops, programInvoke, internalTransaction, VmConfig.getInstance());
-    }
-
     public Program(byte[] ops, ProgramInvoke programInvoke, InternalTransaction internalTransaction, VmConfig config) {
         this.config = config;
         this.invoke = programInvoke;
@@ -603,6 +602,10 @@ public class Program {
     }
 
     public void storageSave(DataWord word1, DataWord word2) {
+        if (!isMasterSignature){
+            return;
+        }
+
         DataWord keyWord = word1.clone();
         DataWord valWord = word2.clone();
         Repository contractState = getContractState();
@@ -1019,36 +1022,8 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public static class OutOfTimeException extends BytecodeExecutionException {
-        public OutOfTimeException(String message, Object... args) {
-            super(String.format(message, args));
-        }
-    }
-
-    @SuppressWarnings("serial")
     public static class OutOfMemoryException extends BytecodeExecutionException {
         public OutOfMemoryException(String message, Object... args) {
-            super(String.format(message, args));
-        }
-    }
-
-    @SuppressWarnings("serial")
-    public static class OutOfStorageException extends BytecodeExecutionException {
-        public OutOfStorageException(String message, Object... args) {
-            super(String.format(message, args));
-        }
-    }
-
-    @SuppressWarnings("serial")
-    public static class PrecompiledContractException extends BytecodeExecutionException {
-        public PrecompiledContractException(String message, Object... args) {
-            super(String.format(message, args));
-        }
-    }
-
-    @SuppressWarnings("serial")
-    public static class IllegalOperationException extends BytecodeExecutionException {
-        public IllegalOperationException(String message, Object... args) {
             super(String.format(message, args));
         }
     }
@@ -1089,30 +1064,20 @@ public class Program {
         }
     }
 
+    @SuppressWarnings("serial")
+    public static class IllegalOperationException extends BytecodeExecutionException {
+        public IllegalOperationException(String message, Object... args) {
+            super(format(message, args));
+        }
+    }
+
     public static class Exception {
 
         private Exception() {
         }
 
-        public static OutOfTimeException notEnoughTime(String op) {
-            return new OutOfTimeException("CPU timeout for '%s' operation executing", op);
-        }
-
-        public static OutOfTimeException alreadyTimeOut() {
-            return new OutOfTimeException("Already Time Out");
-        }
-
-
         public static OutOfMemoryException memoryOverflow(OpCode op) {
             return new OutOfMemoryException("Out of Memory when '%s' operation executing", op.name());
-        }
-
-        public static PrecompiledContractException contractValidateException(LedgerYiException e) {
-            return new PrecompiledContractException(e.getMessage());
-        }
-
-        public static PrecompiledContractException contractExecuteException(LedgerYiException e) {
-            return new PrecompiledContractException(e.getMessage());
         }
 
         public static IllegalOperationException invalidOpCode(byte... opCode) {
