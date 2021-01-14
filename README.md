@@ -257,6 +257,14 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |参数说明|交易ID|
 |返回值|交易信息|
 
+**(4)gettransactioninfobyid**
+
+|类别|说明|
+|:---|:---|
+|作用|通过ID查询交易信息|
+|示例|curl -X POST  http://127.0.0.1:8090/v1/gettransactioninfobyid -d <br>'{"value": "d5ec749ecc2a615399d8a6c864ea4c74ff9f523c2be0e341ac9be5d47d7c2d62"}'|
+|参数说明|交易ID|
+|返回值|交易信息|
 
 ### RPC API接口
 
@@ -303,7 +311,15 @@ rpc GetTransactionCountByBlockNum (NumberMessage) returns (NumberMessage) {}
 rpc GetTransactionById (BytesMessage) returns (Transaction) {}
 ```
 
-**(3)createTransaction**
+**(3)getTransactionInfoById**
+
+作用：查询指定交易hash的交易
+
+```text
+rpc getTransactionInfoById (BytesMessage) returns (TransactionInfo) {}
+```
+
+**(4)createTransaction**
 
 作用：创建交易
 
@@ -311,7 +327,7 @@ rpc GetTransactionById (BytesMessage) returns (Transaction) {}
 rpc CreateTransaction (SystemContract) returns (TransactionExtention) {}
 ```
 
-**(4)broadcastTransaction**
+**(5)broadcastTransaction**
 
 作用：广播交易
 
