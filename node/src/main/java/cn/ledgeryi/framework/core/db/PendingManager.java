@@ -15,16 +15,9 @@ public class PendingManager implements AutoCloseable {
   @Getter
   private List<TransactionCapsule> tmpTransactions = new ArrayList<>();
   private Manager dbManager;
-  private long timeout = 60_000;
 
   public PendingManager(Manager db, BlockCapsule block) {
     this.dbManager = db;
-    /*db.getPendingTransactions().forEach(transactionCapsule -> {
-      if (System.currentTimeMillis() - transactionCapsule.getTime() < timeout) {
-        tmpTransactions.add(transactionCapsule);
-      }
-    });
-    db.getPendingTransactions().clear();*/
     tmpTransactions.addAll(block.getTransactions());
     db.getSession().reset();
   }
@@ -34,8 +27,7 @@ public class PendingManager implements AutoCloseable {
 
     for (TransactionCapsule tx : tmpTransactions) {
       try {
-        if (tx.getTxTrace() != null &&
-            tx.getTxTrace().getTimeResultType().equals(TransactionTrace.TimeResultType.NORMAL)) {
+        if (tx.getTxTrace() != null) {
           dbManager.getRepushTransactions().put(tx);
         }
       } catch (InterruptedException e) {
@@ -47,8 +39,7 @@ public class PendingManager implements AutoCloseable {
 
     for (TransactionCapsule tx : dbManager.getPoppedTransactions()) {
       try {
-        if (tx.getTxTrace() != null &&
-            tx.getTxTrace().getTimeResultType().equals(TransactionTrace.TimeResultType.NORMAL)) {
+        if (tx.getTxTrace() != null) {
           dbManager.getRepushTransactions().put(tx);
         }
       } catch (InterruptedException e) {

@@ -14,9 +14,6 @@ public class Constant {
   public static final String LOCAL_MASTER = "localMaster";
   public static final String LOCAL_MASTER_ACCOUNT_ADDRESS = "localMasterAccountAddress";
 
-  //vm
-  public static final String VM_LONG_RUNNING_TIME = "vm.longRunningTime";
-
   public static final String ROCKSDB = "ROCKSDB";
 
   public static final String GENESIS_BLOCK = "genesis.block";

@@ -73,11 +73,6 @@ public class Args {
 
   @Getter
   @Setter
-  //@Parameter(names = {"--long-running-time"})
-  private int longRunningTime = 10;
-
-  @Getter
-  @Setter
   //@Parameter(names = {"--max-connect-number"})
   private int maxHttpConnectNumber = 50;
 
@@ -427,10 +422,6 @@ public class Args {
 
     if (config.hasPath(Constant.NODE_HTTP_FULLNODE_ENABLE)) {
       INSTANCE.ledgerYiNodeHttpEnable = config.getBoolean(Constant.NODE_HTTP_FULLNODE_ENABLE);
-    }
-
-    if (config.hasPath(Constant.VM_LONG_RUNNING_TIME)) {
-      INSTANCE.longRunningTime = config.getInt(Constant.VM_LONG_RUNNING_TIME);
     }
 
     INSTANCE.storage = new Storage();
@@ -874,7 +865,6 @@ public class Args {
     DBConfig.setRocksDbSettings(cfgArgs.getRocksDBCustomSettings());
     DBConfig.setValidContractProtoThreadNum(cfgArgs.getValidContractProtoThreadNum());
     DBConfig.setDebug(cfgArgs.isDebug());
-    DBConfig.setLongRunningTime(cfgArgs.getLongRunningTime());
     DBConfig.setActuatorSet(cfgArgs.getActuatorSet());
     DBConfig.setECKeyCryptoEngine(cfgArgs.isEckey());
   }

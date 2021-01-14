@@ -688,14 +688,6 @@ public class Manager {
     if (Objects.nonNull(blockCap)) {
       trace.setResult();
       if (blockCap.hasMasterSignature()) {
-        if (trace.checkNeedRetry()) {
-          String txId = Hex.toHexString(txCap.getTransactionId().getBytes());
-          log.info("Retry for tx id: {}", txId);
-          trace.init(blockCap);
-          trace.exec();
-          trace.setResult();
-          log.info("Retry result for tx id: {}, tx resultCode in receipt: {}", txId, trace.getReceipt().getResult());
-        }
         trace.check();
       }
     }

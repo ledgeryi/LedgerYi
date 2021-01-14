@@ -61,15 +61,10 @@ public class DBConfig {
   private static int validContractProtoThreadNum;
   @Getter
   @Setter
-  private static int longRunningTime;
-  @Getter
-  @Setter
   private static long changedDelegation;
-
   @Getter
   @Setter
   private static Set<String> actuatorSet;
-
   @Getter
   @Setter
   private static boolean isECKeyCryptoEngine = true;
