@@ -17,8 +17,6 @@ public class HttpSelfFormatFieldName {
     //***** ledger_yi.proto *****
     //AccountId
     AddressFieldNameMap.put("protocol.AccountId.address", 1);
-    //Vote
-    AddressFieldNameMap.put("protocol.Vote.vote_address", 1);
     //Proposal
     AddressFieldNameMap.put("protocol.Proposal.proposer_address", 1);
     AddressFieldNameMap.put("protocol.Proposal.approvals", 1);
@@ -33,8 +31,6 @@ public class HttpSelfFormatFieldName {
     AddressFieldNameMap.put("protocol.DelegatedResource.to", 1);
     //Master
     AddressFieldNameMap.put("protocol.Master.address", 1);
-    //Votes
-    AddressFieldNameMap.put("protocol.Votes.address", 1);
     //TransactionInfo
     AddressFieldNameMap.put("protocol.TransactionInfo.Log.address", 1);
     AddressFieldNameMap.put("protocol.TransactionInfo.contract_address", 1);

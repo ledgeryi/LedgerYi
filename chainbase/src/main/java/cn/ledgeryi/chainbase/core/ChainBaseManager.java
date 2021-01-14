@@ -38,9 +38,6 @@ public class ChainBaseManager {
   private MasterScheduleStore masterScheduleStore;
   @Autowired
   @Getter
-  private VotesStore votesStore;
-  @Autowired
-  @Getter
   private CodeStore codeStore;
   @Autowired
   @Getter

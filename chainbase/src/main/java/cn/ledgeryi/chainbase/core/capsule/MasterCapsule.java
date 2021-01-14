@@ -20,8 +20,7 @@ public class MasterCapsule implements ProtoCapsule<Master>, Comparable<MasterCap
     final Master.Builder MasterBuilder = Master.newBuilder();
     this.master = MasterBuilder
         .setPubKey(pubKey)
-        .setAddress(ByteString.copyFrom(Hash.computeAddress(pubKey.toByteArray())))
-        .setUrl(url).build();
+        .setAddress(ByteString.copyFrom(Hash.computeAddress(pubKey.toByteArray()))).build();
   }
 
   public MasterCapsule(final Master master) {
@@ -35,27 +34,12 @@ public class MasterCapsule implements ProtoCapsule<Master>, Comparable<MasterCap
     this.master = cn.ledgeryi.protos.Protocol.Master.newBuilder().setAddress(address).build();
   }
 
-  /**
-   * MasterCapsule constructor with address and voteCount.
-   */
-  public MasterCapsule(final ByteString address, final long voteCount, final String url) {
-    final cn.ledgeryi.protos.Protocol.Master.Builder MasterBuilder = cn.ledgeryi.protos.Protocol.Master.newBuilder();
-    this.master = MasterBuilder
-        .setAddress(address)
-        .setVoteCount(voteCount).setUrl(url).build();
-  }
-
   public MasterCapsule(final byte[] data) {
     try {
       this.master = cn.ledgeryi.protos.Protocol.Master.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
       log.debug(e.getMessage(), e);
     }
-  }
-
-  @Override
-  public int compareTo(MasterCapsule otherObject) {
-    return Long.compare(otherObject.getVoteCount(), this.getVoteCount());
   }
 
   public ByteString getAddress() {
@@ -82,14 +66,6 @@ public class MasterCapsule implements ProtoCapsule<Master>, Comparable<MasterCap
 
   public void setPubKey(final ByteString pubKey) {
     this.master = this.master.toBuilder().setPubKey(pubKey).build();
-  }
-
-  public long getVoteCount() {
-    return this.master.getVoteCount();
-  }
-
-  public void setVoteCount(final long voteCount) {
-    this.master = this.master.toBuilder().setVoteCount(voteCount).build();
   }
 
   public long getTotalProduced() {
@@ -132,11 +108,8 @@ public class MasterCapsule implements ProtoCapsule<Master>, Comparable<MasterCap
     this.master = this.master.toBuilder().setIsJobs(isJobs).build();
   }
 
-  public String getUrl() {
-    return this.master.getUrl();
-  }
-
-  public void setUrl(final String url) {
-    this.master = this.master.toBuilder().setUrl(url).build();
+  @Override
+  public int compareTo(MasterCapsule o) {
+    return 0;
   }
 }

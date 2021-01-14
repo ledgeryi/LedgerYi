@@ -79,8 +79,6 @@ public class Manager {
   @Autowired
   private RecentBlockStore recentBlockStore;
   @Autowired
-  private VotesStore votesStore;
-  @Autowired
   private TransactionHistoryStore transactionHistoryStore;
   @Autowired
   private CodeStore codeStore;
@@ -218,9 +216,6 @@ public class Manager {
     return contractStore;
   }
 
-  public VotesStore getVotesStore() {
-    return this.votesStore;
-  }
   public CodeStore getCodeStore() {
     return codeStore;
   }
@@ -317,7 +312,7 @@ public class Manager {
               accountCapsule.setIsMaster(true);
               this.accountStore.put(keyAddress, accountCapsule);
 
-              final MasterCapsule masterCapsule = new MasterCapsule(address, key.getVoteCount(), key.getUrl());
+              final MasterCapsule masterCapsule = new MasterCapsule(address);
               this.masterStore.put(keyAddress, masterCapsule);
             });
   }
@@ -902,7 +897,6 @@ public class Manager {
     closeOneStore(peersStore);
     closeOneStore(recentBlockStore);
     closeOneStore(transactionHistoryStore);
-    closeOneStore(votesStore);
     closeOneStore(transactionRetStore);
     log.info("******** end to close db ********");
   }

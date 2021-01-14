@@ -112,13 +112,6 @@ public class Value {
 
   }
 
-  public VotesCapsule getVotes() {
-    if (ArrayUtils.isEmpty(any)) {
-      return null;
-    }
-    return new VotesCapsule(any);
-  }
-
   public BytesCapsule getBlockIndex() {
     if (ArrayUtils.isEmpty(any)) {
       return null;

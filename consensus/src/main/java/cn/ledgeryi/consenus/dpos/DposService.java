@@ -77,7 +77,6 @@ public class DposService implements ConsensusInterface {
     if (consensusDelegate.getLatestBlockHeaderNumber() == 0) {
       List<ByteString> masters = new ArrayList<>();
       consensusDelegate.getAllMasters().forEach(masterCapsule -> masters.add(masterCapsule.getAddress()));
-      updateMaster(masters);
       List<ByteString> addresses = consensusDelegate.getActiveMasters();
       addresses.forEach(address -> {
         MasterCapsule masterCapsule = consensusDelegate.getMaster(address.toByteArray());
@@ -146,16 +145,4 @@ public class DposService implements ConsensusInterface {
     consensusDelegate.saveLatestSolidifiedBlockNum(newSolidNum);
     log.info("Update solid block number to {}", newSolidNum);
   }
-
-  public void updateMaster(List<ByteString> list) {
-    list.sort(Comparator.comparingLong((ByteString b) ->
-        consensusDelegate.getMaster(b.toByteArray()).getVoteCount())
-        .reversed().thenComparing(Comparator.comparingInt(ByteString::hashCode).reversed()));
-    if (list.size() > MAX_ACTIVE_WITNESS_NUM) {
-      consensusDelegate.saveActiveMasters(list.subList(0, MAX_ACTIVE_WITNESS_NUM));
-    } else {
-      consensusDelegate.saveActiveMasters(list);
-    }
-  }
-
 }

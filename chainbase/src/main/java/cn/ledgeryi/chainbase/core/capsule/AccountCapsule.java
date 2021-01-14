@@ -1,21 +1,12 @@
 package cn.ledgeryi.chainbase.core.capsule;
 
-import com.google.common.collect.Lists;
+import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.protos.Protocol.Account;
+import cn.ledgeryi.protos.Protocol.AccountType;
+import cn.ledgeryi.protos.contract.AccountContract.AccountCreateContract;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.chainbase.core.store.DynamicPropertiesStore;
-import cn.ledgeryi.protos.Protocol.Account;
-import cn.ledgeryi.protos.Protocol.Account.Builder;
-import cn.ledgeryi.protos.Protocol.AccountType;
-import cn.ledgeryi.protos.Protocol.Key;
-import cn.ledgeryi.protos.Protocol.Permission;
-import cn.ledgeryi.protos.Protocol.Permission.PermissionType;
-import cn.ledgeryi.protos.Protocol.Vote;
-import cn.ledgeryi.protos.contract.AccountContract.AccountCreateContract;
-import cn.ledgeryi.protos.contract.AccountContract.AccountUpdateContract;
 
 @Slf4j(topic = "capsule")
 public class AccountCapsule implements ProtoCapsule<Account>, Comparable<AccountCapsule> {
@@ -160,23 +151,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   @Override
   public String toString() {
     return this.account.toString();
-  }
-
-  public void clearVotes() {
-    this.account = this.account.toBuilder()
-        .clearVotes()
-        .build();
-  }
-
-  /**
-   * get votes.
-   */
-  public List<Vote> getVotesList() {
-    if (this.account.getVotesList() != null) {
-      return this.account.getVotesList();
-    } else {
-      return Lists.newArrayList();
-    }
   }
 
   @Override
