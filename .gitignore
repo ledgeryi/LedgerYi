@@ -29,3 +29,4 @@ out/
 site/
 **/src/*/generated
 protocol/src/main/java/
+output-directory
