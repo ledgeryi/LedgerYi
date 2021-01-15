@@ -647,8 +647,6 @@ public class Args {
   private static Master createMaster(final ConfigObject masterAccount) {
     final Master master = new Master();
     master.setAddress(DecodeUtil.decode(masterAccount.get("address").unwrapped().toString()));
-    master.setUrl(masterAccount.get("url").unwrapped().toString());
-    master.setVoteCount(masterAccount.toConfig().getLong("voteCount"));
     return master;
   }
 
@@ -662,7 +660,6 @@ public class Args {
     account.setAccountName(asset.get("accountName").unwrapped().toString());
     account.setAccountType(asset.get("accountType").unwrapped().toString());
     account.setAddress(DecodeUtil.decode(asset.get("address").unwrapped().toString()));
-    account.setBalance(asset.get("balance").unwrapped().toString());
     return account;
   }
 
