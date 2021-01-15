@@ -51,15 +51,15 @@ public class Storage {
         return Hash.sha3(address);
     }
 
-    private static byte[] addrHash(byte[] address, byte[] trxHash) {
-        if (ByteUtil.isNullOrZeroArray(trxHash)) {
+    private static byte[] addrHash(byte[] address, byte[] txHash) {
+        if (ByteUtil.isNullOrZeroArray(txHash)) {
             return Hash.sha3(address);
         }
-        return Hash.sha3(ByteUtil.merge(address, trxHash));
+        return Hash.sha3(ByteUtil.merge(address, txHash));
     }
 
-    public void generateAddrHash(byte[] trxId) {
-        addrHash = addrHash(address, trxId);
+    public void generateAddrHash(byte[] txId) {
+        addrHash = addrHash(address, txId);
     }
 
     public DataWord getValue(DataWord key) {

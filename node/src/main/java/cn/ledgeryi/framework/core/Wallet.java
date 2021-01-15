@@ -319,7 +319,7 @@ public class Wallet {
   }
 
   public Transaction triggerConstantContract(TriggerSmartContract triggerSmartContract,
-                                             TransactionCapsule trxCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
+                                             TransactionCapsule txCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
           throws ContractValidateException, HeaderNotFound {
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
@@ -328,10 +328,10 @@ public class Wallet {
     if (ArrayUtils.isEmpty(isContractExist)) {
       throw new ContractValidateException("No contract or not a smart contract");
     }
-    return callConstantContract(trxCap, builder, retBuilder);
+    return callConstantContract(txCap, builder, retBuilder);
   }
 
-  public Transaction callConstantContract(TransactionCapsule trxCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
+  public Transaction callConstantContract(TransactionCapsule txCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
           throws ContractValidateException, HeaderNotFound {
     Block headBlock;
     List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
@@ -342,7 +342,7 @@ public class Wallet {
     }
 
     TransactionContext context = new TransactionContext(new BlockCapsule(headBlock),
-            trxCap, StoreFactory.getInstance(), true);
+            txCap, StoreFactory.getInstance(), true);
 
     LedgerYiVmActuator ledgerYiVmActuator = new LedgerYiVmActuator(true);
     ledgerYiVmActuator.validate(context);
@@ -365,8 +365,8 @@ public class Wallet {
       ret.setStatus(Result.code.FAILED);
       retBuilder.setMessage(ByteString.copyFromUtf8("REVERT opcode executed")).build();
     }
-    trxCap.setResult(ret);
-    return trxCap.getInstance();
+    txCap.setResult(ret);
+    return txCap.getInstance();
   }
 
   public SmartContract getContract(GrpcAPI.BytesMessage bytesMessage) {
@@ -384,7 +384,7 @@ public class Wallet {
   }
 
   public Transaction triggerContract(TriggerSmartContract triggerSmartContract,
-                                     TransactionCapsule trxCap, TransactionExtention.Builder builder,
+                                     TransactionCapsule txCap, TransactionExtention.Builder builder,
                                      Return.Builder retBuilder)
           throws ContractValidateException, HeaderNotFound {
     ContractStore contractStore = dbManager.getContractStore();
@@ -395,9 +395,9 @@ public class Wallet {
     }
     byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());
     if (ContractUtils.isConstant(abi, selector)) {
-      return callConstantContract(trxCap, builder, retBuilder);
+      return callConstantContract(txCap, builder, retBuilder);
     } else {
-      return trxCap.getInstance();
+      return txCap.getInstance();
     }
   }
 

@@ -30,7 +30,7 @@ import cn.ledgeryi.protos.Protocol;
  */
 public interface ProgramInvokeFactory {
 
-  ProgramInvoke createProgramInvoke(InternalTransaction.TxType trxType,
+  ProgramInvoke createProgramInvoke(InternalTransaction.TxType txType,
                                     InternalTransaction.ExecutorType executorType,
                                     Protocol.Transaction tx, Protocol.Block block,
                                     Repository deposit, long vmStartInUs, long vmShouldEndInUs) throws ContractValidateException;

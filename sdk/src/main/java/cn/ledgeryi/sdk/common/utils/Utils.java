@@ -45,9 +45,9 @@ public class Utils {
         return JsonFormatUtil.formatJson(jsonObject.toJSONString());
     }
 
-    public static byte[] generateContractAddress(Protocol.Transaction trx, byte[] ownerAddress) {
+    public static byte[] generateContractAddress(Protocol.Transaction tx, byte[] ownerAddress) {
         // get tx hash
-        byte[] txRawDataHash = Sha256Sm3Hash.of(trx.getRawData().toByteArray()).getBytes();
+        byte[] txRawDataHash = Sha256Sm3Hash.of(tx.getRawData().toByteArray()).getBytes();
 
         // combine
         byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];

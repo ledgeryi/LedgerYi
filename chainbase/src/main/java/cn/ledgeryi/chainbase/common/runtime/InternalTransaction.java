@@ -50,15 +50,15 @@ public class InternalTransaction {
   /**
    * Construct a root InternalTransaction
    */
-  public InternalTransaction(Transaction tx, InternalTransaction.TxType trxType) throws ContractValidateException {
+  public InternalTransaction(Transaction tx, InternalTransaction.TxType txType) throws ContractValidateException {
     this.transaction = tx;
-    TransactionCapsule trxCap = new TransactionCapsule(tx);
-    this.protoEncoded = trxCap.getData();
+    TransactionCapsule txCap = new TransactionCapsule(tx);
+    this.protoEncoded = txCap.getData();
     this.nonce = 0;
     // outside transaction should not have deep, so use -1 to mark it is root.
     // It will not count in vm trace. But this deep will be shown in program result.
     this.deep = -1;
-    if (trxType == TxType.TX_CONTRACT_CREATION_TYPE) {
+    if (txType == TxType.TX_CONTRACT_CREATION_TYPE) {
       SmartContractOuterClass.CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);
       if (contract == null) {
         throw new ContractValidateException("Invalid CreateSmartContract Protocol");
@@ -69,7 +69,7 @@ public class InternalTransaction {
       this.note = "create";
       this.value = contract.getNewContract().getCallValue();
       this.data = contract.getNewContract().getBytecode().toByteArray();
-    } else if (trxType == TxType.TX_CONTRACT_CALL_TYPE) {
+    } else if (txType == TxType.TX_CONTRACT_CALL_TYPE) {
       SmartContractOuterClass.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
       if (contract == null) {
         throw new ContractValidateException("Invalid TriggerSmartContract Protocol");
@@ -83,7 +83,7 @@ public class InternalTransaction {
     } else {
       // do nothing, just for running byte code
     }
-    this.hash = trxCap.getTransactionId().getBytes();
+    this.hash = txCap.getTransactionId().getBytes();
   }
 
   /**

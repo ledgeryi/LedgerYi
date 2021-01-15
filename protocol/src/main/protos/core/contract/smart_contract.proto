@@ -49,7 +49,7 @@ message SmartContract {
     int64 call_value = 5;
     string name = 6;
     bytes code_hash = 7;
-    bytes trx_hash = 8;
+    bytes tx_hash = 8;
 }
 
 message CreateSmartContract {

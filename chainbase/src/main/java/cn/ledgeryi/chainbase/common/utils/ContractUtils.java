@@ -21,8 +21,8 @@ public class ContractUtils {
     public static byte[] generateContractAddress(Protocol.Transaction tx) {
         CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);
         byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-        TransactionCapsule trxCap = new TransactionCapsule(tx);
-        byte[] txRawDataHash = trxCap.getTransactionId().getBytes();
+        TransactionCapsule txCap = new TransactionCapsule(tx);
+        byte[] txRawDataHash = txCap.getTransactionId().getBytes();
         byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
         System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
         System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);

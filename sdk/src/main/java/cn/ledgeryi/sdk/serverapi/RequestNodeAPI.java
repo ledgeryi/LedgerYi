@@ -73,7 +73,7 @@ public class RequestNodeAPI {
         ClearABIContract clearABIContract = createClearABIContract(owner, contractAddress);
         TransactionExtention transactionExtention = rpcCli.clearContractABI(clearABIContract);
         if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
-            log.error("RPC create trx failed!");
+            log.error("RPC create tx failed!");
             if (transactionExtention != null) {
                 log.info("Code = " + transactionExtention.getResult().getCode());
                 log.info("Message = " + transactionExtention.getResult().getMessage().toStringUtf8());

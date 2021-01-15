@@ -28,9 +28,9 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
         }
     }
 
-    public static SmartContractOuterClass.CreateSmartContract getSmartContractFromTransaction(Protocol.Transaction trx) {
+    public static SmartContractOuterClass.CreateSmartContract getSmartContractFromTransaction(Protocol.Transaction tx) {
         try {
-            Any any = trx.getRawData().getContract().getParameter();
+            Any any = tx.getRawData().getContract().getParameter();
             SmartContractOuterClass.CreateSmartContract createSmartContract = any.unpack(SmartContractOuterClass.CreateSmartContract.class);
             return createSmartContract;
         } catch (InvalidProtocolBufferException e) {
@@ -38,9 +38,9 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
         }
     }
 
-    public static SmartContractOuterClass.TriggerSmartContract getTriggerContractFromTransaction(Protocol.Transaction trx) {
+    public static SmartContractOuterClass.TriggerSmartContract getTriggerContractFromTransaction(Protocol.Transaction tx) {
         try {
-            Any any = trx.getRawData().getContract().getParameter();
+            Any any = tx.getRawData().getContract().getParameter();
             SmartContractOuterClass.TriggerSmartContract contractTriggerContract = any.unpack(SmartContractOuterClass.TriggerSmartContract.class);
             return contractTriggerContract;
         } catch (InvalidProtocolBufferException e) {
@@ -79,8 +79,8 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
         this.smartContract = this.smartContract.toBuilder().setAbi(SmartContract.ABI.getDefaultInstance()).build();
     }
 
-    public byte[] getTrxHash() {
-        return this.smartContract.getTrxHash().toByteArray();
+    public byte[] getTxHash() {
+        return this.smartContract.getTxHash().toByteArray();
     }
 }
 
