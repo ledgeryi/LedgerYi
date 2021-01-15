@@ -29,12 +29,6 @@ public class ChainBaseManager {
   private BlockIndexStore blockIndexStore;
   @Autowired
   @Getter
-  private AccountIdIndexStore accountIdIndexStore;
-  @Autowired
-  @Getter
-  private AccountIndexStore accountIndexStore;
-  @Autowired
-  @Getter
   private MasterScheduleStore masterScheduleStore;
   @Autowired
   @Getter

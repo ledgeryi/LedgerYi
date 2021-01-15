@@ -71,10 +71,6 @@ public class Manager {
   @Getter
   private TransactionRetStore transactionRetStore;
   @Autowired
-  private AccountIdIndexStore accountIdIndexStore;
-  @Autowired
-  private AccountIndexStore accountIndexStore;
-  @Autowired
   private MasterScheduleStore masterScheduleStore;
   @Autowired
   private RecentBlockStore recentBlockStore;
@@ -110,10 +106,6 @@ public class Manager {
   @Autowired
   @Getter
   private ChainBaseManager chainBaseManager;
-  @Autowired
-  @Getter
-  @Setter
-  private TreeBlockIndexStore merkleTreeIndexStore;
   @Getter
   private final List<TransactionCapsule> popedTransactions = Collections.synchronizedList(Lists.newArrayList());
   @Getter
@@ -878,17 +870,11 @@ public class Manager {
     }
   }
 
-  public AccountIdIndexStore getAccountIdIndexStore() {
-    return this.accountIdIndexStore;
-  }
-
   public void closeAllStore() {
     log.info("******** begin to close db ********");
     closeOneStore(accountStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);
-    closeOneStore(accountIdIndexStore);
-    closeOneStore(accountIndexStore);
     closeOneStore(masterStore);
     closeOneStore(masterScheduleStore);
     closeOneStore(dynamicPropertiesStore);
