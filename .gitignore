@@ -4,8 +4,9 @@
 *~.nib
 *.iml
 *.launch
-*.swp
 *.log
+
+
 .classpath
 .DS_Store
 .externalToolBuilders/
@@ -30,3 +31,5 @@ site/
 **/src/*/generated
 protocol/src/main/java/
 output-directory
+crypto/src/test/java
+sdk/logs

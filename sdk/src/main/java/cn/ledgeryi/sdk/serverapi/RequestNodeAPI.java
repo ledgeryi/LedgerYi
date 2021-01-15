@@ -127,10 +127,12 @@ public class RequestNodeAPI {
     }
 
     // TODO: delete value param
+    // TODO: return should not be boolean
+    // TODO: privateKet should in context, not in param
     public static boolean deployContract( byte[] owner, String contractName, String abi, String code,
                                    long value, byte[] privateKey) {
         CreateSmartContract contractDeployContract = createContractDeployContract(contractName, owner, abi, code,
-                value/*, consumeUserResourcePercent*/);
+                value);
         GrpcAPI.TransactionExtention transactionExtention = rpcCli.deployContract(contractDeployContract);
         if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
             System.out.println("RPC create tx failed!");
