@@ -148,6 +148,8 @@ mvn clean compile -DskipTests
 
 如果需要启动一个共识节点，可手动修改`Args.java`类的字段`private boolean master = true;`,master默认为false。
 
+或者在Run/Debug Configurations的Application选项Program arguments添加参数`--master`。
+
 启动成功后，可查看日志验证是否启动成功，日志路径为`/logs/node.log`。
 
 # API接口说明
