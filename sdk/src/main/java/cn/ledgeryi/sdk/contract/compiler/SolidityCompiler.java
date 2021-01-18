@@ -74,19 +74,6 @@ public class SolidityCompiler {
         }
     }
 
-    private static String readStream(InputStream stream) throws IOException {
-        StringBuilder result = new StringBuilder();
-
-        try (BufferedReader reader =new BufferedReader(new InputStreamReader(stream))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line).append("\n");
-            }
-        }
-
-        return result.toString();
-    }
-
     public static Result compile(byte[] source, boolean combinedJson, Options... options) throws IOException {
         List<String> commandParts = new ArrayList<>();
         commandParts.add(Solc.INSTANCE.getExecutable().getCanonicalPath());

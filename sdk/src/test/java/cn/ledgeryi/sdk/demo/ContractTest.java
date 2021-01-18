@@ -78,7 +78,7 @@ public class ContractTest {
         System.out.println("deploy contract result: " + result);
     }
 
-    private static String contractAddres = "d8bb12a6264e1628ae7ca17c95ef46a65a628e8b";
+    private static String contractAddres = "14263d2d1afbb6d0089ac0a58a81413522f9a91a";
 
     @Test
     public void getContract(){
