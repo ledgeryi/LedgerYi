@@ -72,7 +72,7 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
     }
 
     public byte[] getOriginAddress() {
-        return this.smartContract.getOriginAddress().toByteArray();
+        return this.smartContract.getOwnerAddress().toByteArray();
     }
 
     public void clearABI() {

@@ -16,7 +16,7 @@ public class CodeCapsule implements ProtoCapsule<byte[]> {
   }
 
   public Sha256Hash getCodeHash() {
-    return Sha256Hash.of(DBConfig.isECKeyCryptoEngine(), this.code);
+    return Sha256Hash.of(DBConfig.isEccCryptoEngine(), this.code);
   }
 
   @Override

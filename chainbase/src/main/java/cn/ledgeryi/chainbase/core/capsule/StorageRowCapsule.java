@@ -57,7 +57,7 @@ public class StorageRowCapsule implements ProtoCapsule<byte[]> {
   }
 
   public Sha256Hash getHash() {
-    return Sha256Hash.of(DBConfig.isECKeyCryptoEngine(), this.rowValue);
+    return Sha256Hash.of(DBConfig.isEccCryptoEngine(), this.rowValue);
   }
 
   public byte[] getValue() {

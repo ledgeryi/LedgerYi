@@ -70,7 +70,7 @@ public abstract class Message {
   }
 
   public Sha256Hash getMessageId() {
-    return Sha256Hash.of(DBConfig.isECKeyCryptoEngine(), getData());
+    return Sha256Hash.of(DBConfig.isEccCryptoEngine(), getData());
   }
 
   public byte[] getData() {

@@ -128,7 +128,7 @@ public class RpcApiService implements Service {
     TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
     Return.Builder retBuilder = Return.newBuilder();
     txExtBuilder.setTransaction(transaction);
-    txExtBuilder.setTxid(Sha256Hash.of(DBConfig.isECKeyCryptoEngine(),
+    txExtBuilder.setTxid(Sha256Hash.of(DBConfig.isEccCryptoEngine(),
         transaction.getRawData().toByteArray()).getByteString());
     retBuilder.setResult(true).setCode(response_code.SUCCESS);
     txExtBuilder.setResult(retBuilder);

@@ -67,7 +67,7 @@ public class DBConfig {
   private static Set<String> actuatorSet;
   @Getter
   @Setter
-  private static boolean isECKeyCryptoEngine = true;
+  private static boolean isEccCryptoEngine = true;
 
   public static String getOutputDirectoryByDbName(String dbName) {
     String path = getPathByDbName(dbName);

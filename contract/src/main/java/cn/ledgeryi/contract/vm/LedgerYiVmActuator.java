@@ -186,7 +186,7 @@ public class LedgerYiVmActuator implements VmActuator {
       throw new ContractValidateException("Cannot get CreateSmartContract from transaction");
     }
     SmartContract newSmartContract = contract.getNewContract();
-    if (!contract.getOwnerAddress().equals(newSmartContract.getOriginAddress())) {
+    if (!contract.getOwnerAddress().equals(newSmartContract.getOwnerAddress())) {
       log.info("OwnerAddress not equals OriginAddress");
       throw new ContractValidateException("OwnerAddress is not equals OriginAddress");
     }

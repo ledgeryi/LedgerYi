@@ -127,14 +127,14 @@ public class BlockCapsule implements ProtoCapsule<Block> {
       log.error("sign error, private key is null");
       return;
     }
-    SignInterface ecKeyEngine = SignUtils.fromPrivate(privateKey, DBConfig.isECKeyCryptoEngine());
+    SignInterface ecKeyEngine = SignUtils.fromPrivate(privateKey, DBConfig.isEccCryptoEngine());
     ByteString sig = ByteString.copyFrom(ecKeyEngine.Base64toBytes(ecKeyEngine.signHash(getRawHash().getBytes())));
     BlockHeader blockHeader = this.block.getBlockHeader().toBuilder().setMasterSignature(sig).build();
     this.block = this.block.toBuilder().setBlockHeader(blockHeader).build();
   }
 
   private Sha256Hash getRawHash() {
-    return Sha256Hash.of(DBConfig.isECKeyCryptoEngine(), this.block.getBlockHeader().getRawData().toByteArray());
+    return Sha256Hash.of(DBConfig.isEccCryptoEngine(), this.block.getBlockHeader().getRawData().toByteArray());
   }
 
   public boolean validateSignature(DynamicPropertiesStore dynamicPropertiesStore, AccountStore accountStore)
@@ -142,7 +142,7 @@ public class BlockCapsule implements ProtoCapsule<Block> {
     try {
       byte[] sigAddress = SignUtils.signatureToAddress(getRawHash().getBytes(),
               TransactionCapsule.getBase64FromByteString(block.getBlockHeader().getMasterSignature()),
-              DBConfig.isECKeyCryptoEngine());
+              DBConfig.isEccCryptoEngine());
       byte[] masterAccountAddress = block.getBlockHeader().getRawData().getMasterAddress().toByteArray();
       return Arrays.equals(sigAddress, masterAccountAddress);
     } catch (SignatureException e) {
@@ -152,7 +152,7 @@ public class BlockCapsule implements ProtoCapsule<Block> {
 
   public BlockId getBlockId() {
     if (blockId.equals(Sha256Hash.ZERO_HASH)) {
-      blockId = new BlockId(Sha256Hash.of(DBConfig.isECKeyCryptoEngine(), this.block.getBlockHeader().getRawData().toByteArray()),
+      blockId = new BlockId(Sha256Hash.of(DBConfig.isEccCryptoEngine(), this.block.getBlockHeader().getRawData().toByteArray()),
           getNum());
     }
     return blockId;

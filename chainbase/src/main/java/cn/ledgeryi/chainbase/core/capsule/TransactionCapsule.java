@@ -164,7 +164,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     if (v < 27) {
       v += 27; //revId -> v
     }
-    SignatureInterface signature = SignUtils.fromComponents(r, s, v, DBConfig.isECKeyCryptoEngine());
+    SignatureInterface signature = SignUtils.fromComponents(r, s, v, DBConfig.isEccCryptoEngine());
     return signature.toBase64();
   }
 
@@ -211,16 +211,16 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   public Sha256Hash getMerkleHash() {
     byte[] transBytes = this.transaction.toByteArray();
-    return Sha256Hash.of(DBConfig.isECKeyCryptoEngine(), transBytes);
+    return Sha256Hash.of(DBConfig.isEccCryptoEngine(), transBytes);
   }
 
   private Sha256Hash getRawHash() {
-    return Sha256Hash.of(DBConfig.isECKeyCryptoEngine(),
+    return Sha256Hash.of(DBConfig.isEccCryptoEngine(),
         this.transaction.getRawData().toByteArray());
   }
 
   public void sign(byte[] privateKey) {
-    SignInterface cryptoEngine = SignUtils.fromPrivate(privateKey, DBConfig.isECKeyCryptoEngine());
+    SignInterface cryptoEngine = SignUtils.fromPrivate(privateKey, DBConfig.isEccCryptoEngine());
     ByteString sig = ByteString.copyFrom(cryptoEngine.Base64toBytes(cryptoEngine.signHash(getRawHash().getBytes())));
     this.transaction = this.transaction.toBuilder().setSignature(sig).build();
   }
@@ -237,7 +237,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     try {
       byte[] owner = getOwner(contract);
       byte[] address = SignUtils.signatureToAddress(getRawHash().getBytes(),
-              getBase64FromByteString(this.transaction.getSignature()), DBConfig.isECKeyCryptoEngine());
+              getBase64FromByteString(this.transaction.getSignature()), DBConfig.isEccCryptoEngine());
       if (!Arrays.equals(owner, address)) {
         isVerified = false;
         throw new ValidateSignatureException("sig error");

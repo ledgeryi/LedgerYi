@@ -103,7 +103,7 @@ public class DposTask {
           raw.getNumber(),
           new DateTime(raw.getTimestamp()),
           ByteArray.toHexString(raw.getMasterAddress().toByteArray()),
-          new Sha256Hash(raw.getNumber(), Sha256Hash.of(DBConfig.isECKeyCryptoEngine(), raw.toByteArray())),
+          new Sha256Hash(raw.getNumber(), Sha256Hash.of(DBConfig.isEccCryptoEngine(), raw.toByteArray())),
           ByteArray.toHexString(raw.getParentHash().toByteArray()));
     }
     return State.OK;

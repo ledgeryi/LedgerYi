@@ -124,9 +124,9 @@ public class PrecompiledContracts {
       if (v < 27) {
         v += 27;
       }
-      SignatureInterface signature = SignUtils.fromComponents(r, s, v, DBConfig.isECKeyCryptoEngine());
+      SignatureInterface signature = SignUtils.fromComponents(r, s, v, DBConfig.isEccCryptoEngine());
       if (signature.validateComponents()) {
-        out = SignUtils.signatureToAddress(hash, signature, DBConfig.isECKeyCryptoEngine());
+        out = SignUtils.signatureToAddress(hash, signature, DBConfig.isEccCryptoEngine());
       }
     } catch (Throwable any) {
       log.info("ECRecover error", any.getMessage());
@@ -219,9 +219,9 @@ public class PrecompiledContracts {
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
       if (data == null) {
-        return Pair.of(true, Sha256Hash.hash(DBConfig.isECKeyCryptoEngine(), ByteUtil.EMPTY_BYTE_ARRAY));
+        return Pair.of(true, Sha256Hash.hash(DBConfig.isEccCryptoEngine(), ByteUtil.EMPTY_BYTE_ARRAY));
       }
-      return Pair.of(true, Sha256Hash.hash(DBConfig.isECKeyCryptoEngine(), data));
+      return Pair.of(true, Sha256Hash.hash(DBConfig.isEccCryptoEngine(), data));
     }
   }
 
@@ -233,9 +233,9 @@ public class PrecompiledContracts {
       if (data == null) {
         data = ByteUtil.EMPTY_BYTE_ARRAY;
       }
-      byte[] orig = Sha256Hash.hash(DBConfig.isECKeyCryptoEngine(),data);
+      byte[] orig = Sha256Hash.hash(DBConfig.isEccCryptoEngine(),data);
       System.arraycopy(orig, 0, target, 0, 20);
-      return Pair.of(true, Sha256Hash.hash(DBConfig.isECKeyCryptoEngine(), target));
+      return Pair.of(true, Sha256Hash.hash(DBConfig.isEccCryptoEngine(), target));
     }
   }
 
@@ -268,9 +268,9 @@ public class PrecompiledContracts {
         int sLength = data.length < 128 ? data.length - 96 : 32;
         System.arraycopy(data, 96, s, 0, sLength);
 
-        SignatureInterface signature = SignUtils.fromComponents(r, s, v[31], DBConfig.isECKeyCryptoEngine());
+        SignatureInterface signature = SignUtils.fromComponents(r, s, v[31], DBConfig.isEccCryptoEngine());
         if (validateV(v) && signature.validateComponents()) {
-          out = new DataWord(SignUtils.signatureToAddress(h, signature, DBConfig.isECKeyCryptoEngine()));
+          out = new DataWord(SignUtils.signatureToAddress(h, signature, DBConfig.isEccCryptoEngine()));
         }
       } catch (Throwable any) {
       }

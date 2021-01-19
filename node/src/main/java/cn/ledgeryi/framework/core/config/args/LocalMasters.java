@@ -30,11 +30,11 @@ public class LocalMasters {
     setPrivateKeys(privateKeys);
   }
 
-  public byte[] getMasterAccountAddress(boolean isECKeyCryptoEngine) {
+  public byte[] getMasterAccountAddress(boolean isEccCryptoEngine) {
     if (masterAccountAddress == null) {
       byte[] privateKey = ByteArray.fromHexString(getPrivateKey());
       final SignInterface cryptoEngine = SignUtils
-          .fromPrivate(privateKey, isECKeyCryptoEngine);
+          .fromPrivate(privateKey, isEccCryptoEngine);
       this.masterAccountAddress = cryptoEngine.getAddress();
     }
     return masterAccountAddress;
@@ -44,11 +44,11 @@ public class LocalMasters {
     this.masterAccountAddress = localMasterAccountAddress;
   }
 
-  public void initMasterAccountAddress(boolean isECKeyCryptoEngine) {
+  public void initMasterAccountAddress(boolean isEccCryptoEngine) {
     if (masterAccountAddress == null) {
       byte[] privateKey = ByteArray.fromHexString(getPrivateKey());
       final SignInterface ecKey = SignUtils.fromPrivate(privateKey,
-          isECKeyCryptoEngine);
+          isEccCryptoEngine);
       this.masterAccountAddress = ecKey.getAddress();
     }
   }

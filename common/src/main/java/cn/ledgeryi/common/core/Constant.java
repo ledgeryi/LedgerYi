@@ -77,7 +77,7 @@ public class Constant {
   public static final String RATE_LIMITER = "rate.limiter";
 
   public static final String CRYPTO_ENGINE = "crypto.engine";
-  public static final String ECKey_ENGINE = "ECKey";
+  public static final String ECKey_ENGINE = "ecc";
 
   public static final String BAUDU_URL = "http://www.baidu.com";
 

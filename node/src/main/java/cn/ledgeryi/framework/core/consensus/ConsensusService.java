@@ -41,8 +41,8 @@ public class ConsensusService {
     param.setNeedSyncCheck(args.isNeedSyncCheck());
     List<Param.Miner> miners = new ArrayList<>();
     byte[] privateKey = ByteArray.fromHexString(Args.getInstance().getLocalMasters().getPrivateKey());
-    byte[] privateKeyAddress = SignUtils.fromPrivate(privateKey, Args.getInstance().isECKeyCryptoEngine()).getAddress();
-    byte[] masterAddress = Args.getInstance().getLocalMasters().getMasterAccountAddress(DBConfig.isECKeyCryptoEngine());
+    byte[] privateKeyAddress = SignUtils.fromPrivate(privateKey, Args.getInstance().isEccCryptoEngine()).getAddress();
+    byte[] masterAddress = Args.getInstance().getLocalMasters().getMasterAccountAddress(DBConfig.isEccCryptoEngine());
     MasterCapsule masterCapsule = masterStore.get(masterAddress);
     if (null == masterCapsule) {
       log.warn("Master {} is not in masterStore.", Hex.encodeHexString(masterAddress));

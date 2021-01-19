@@ -333,7 +333,7 @@ public class Args {
 
   @Getter
   @Setter
-  private long txExpirationTimeInMilliseconds; // (ms)
+  private long txExpirationTimeInMilliseconds;
 
   @Getter
   private DbBackupConfig dbBackupConfig;
@@ -359,7 +359,7 @@ public class Args {
 
   @Getter
   @Setter
-  public boolean isEckey=true;
+  public boolean isEcc = true;
 
   /**
    * set parameters.
@@ -372,7 +372,7 @@ public class Args {
     log.info("shell config file name: {}", INSTANCE.shellConfFileName);
 
     if (config.hasPath(Constant.CRYPTO_ENGINE)) {
-      INSTANCE.isEckey = Constant.ECKey_ENGINE.equalsIgnoreCase(config.getString(Constant.CRYPTO_ENGINE));
+      INSTANCE.isEcc = Constant.ECKey_ENGINE.equalsIgnoreCase(config.getString(Constant.CRYPTO_ENGINE));
     }
     if (config.hasPath(Constant.CRYPTO_ENGINE)) {
       INSTANCE.cryptoEngine = config.getString(Constant.CRYPTO_ENGINE);
@@ -391,7 +391,7 @@ public class Args {
           log.warn("The localMasterAccountAddress format is incorrect, ignored");
         }
       }
-      INSTANCE.localMasters.initMasterAccountAddress(DBConfig.isECKeyCryptoEngine());
+      INSTANCE.localMasters.initMasterAccountAddress(DBConfig.isEccCryptoEngine());
       log.debug("Got privateKey from cmd");
     } else if (config.hasPath(Constant.LOCAL_MASTER)) {
       INSTANCE.localMasters = new LocalMasters();
@@ -411,7 +411,7 @@ public class Args {
           log.warn("The localMasterAccountAddress format is incorrect, ignored");
         }
       }
-      INSTANCE.localMasters.initMasterAccountAddress(DBConfig.isECKeyCryptoEngine());
+      INSTANCE.localMasters.initMasterAccountAddress(DBConfig.isEccCryptoEngine());
 
       log.debug("Got privateKey from config.conf");
     }
@@ -843,7 +843,7 @@ public class Args {
   }
 
   public static void initEncryptoEngine(Args cfgArgs) {
-    DBConfig.setECKeyCryptoEngine(cfgArgs.isEckey());
+    DBConfig.setEccCryptoEngine(cfgArgs.isEcc());
   }
 
   public static void initDBConfig(Args cfgArgs) {
@@ -863,7 +863,7 @@ public class Args {
     DBConfig.setValidContractProtoThreadNum(cfgArgs.getValidContractProtoThreadNum());
     DBConfig.setDebug(cfgArgs.isDebug());
     DBConfig.setActuatorSet(cfgArgs.getActuatorSet());
-    DBConfig.setECKeyCryptoEngine(cfgArgs.isEckey());
+    DBConfig.setEccCryptoEngine(cfgArgs.isEcc());
   }
 
   /**
@@ -890,7 +890,7 @@ public class Args {
     return this.outputDirectory;
   }
 
-  public boolean isECKeyCryptoEngine() {
-    return isEckey;
+  public boolean isEccCryptoEngine() {
+    return isEcc;
   }
 }

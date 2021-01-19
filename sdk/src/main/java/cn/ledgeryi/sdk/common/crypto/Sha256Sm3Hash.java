@@ -31,7 +31,7 @@ public class Sha256Sm3Hash implements Serializable, Comparable<Sha256Sm3Hash> {
   public static final Sha256Sm3Hash ZERO_HASH = wrap(new byte[LENGTH]);
 
   private final byte[] bytes;
-  private static boolean isEckey = Configuration.isEckey();
+  private static boolean isEcc = Configuration.isEcc();
 
   public Sha256Sm3Hash(long num, byte[] hash) {
     byte[] rawHashBytes = this.generateBlockId(num, hash);
@@ -165,7 +165,7 @@ public class Sha256Sm3Hash implements Serializable, Comparable<Sha256Sm3Hash> {
    * @return the hash (in big-endian order)
    */
   public static byte[] hash( byte[] input, int offset, int length) {
-    if (isEckey) {
+    if (isEcc) {
       MessageDigest digest = newDigest();
       digest.update(input, offset, length);
       return digest.digest();
@@ -197,7 +197,7 @@ public class Sha256Sm3Hash implements Serializable, Comparable<Sha256Sm3Hash> {
    * @return the double-hash (in big-endian order)
    */
   public static byte[] hashTwice( byte[] input, int offset, int length) {
-    if (isEckey) {
+    if (isEcc) {
       MessageDigest digest = newDigest();
       digest.update(input, offset, length);
       return digest.digest(digest.digest());
@@ -220,7 +220,7 @@ public class Sha256Sm3Hash implements Serializable, Comparable<Sha256Sm3Hash> {
    */
   public static byte[] hashTwice( byte[] input1, int offset1, int length1,
                                  byte[] input2, int offset2, int length2) {
-    if (isEckey) {
+    if (isEcc) {
       MessageDigest digest = newDigest();
       digest.update(input1, offset1, length1);
       digest.update(input2, offset2, length2);

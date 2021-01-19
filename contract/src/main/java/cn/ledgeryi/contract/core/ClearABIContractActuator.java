@@ -82,7 +82,7 @@ public class ClearABIContractActuator extends AbstractActuator {
     if (deployedContract == null) {
       throw new ContractValidateException("Contract not exists");
     }
-    byte[] deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress().toByteArray();
+    byte[] deployedContractOwnerAddress = deployedContract.getInstance().getOwnerAddress().toByteArray();
     if (!Arrays.equals(ownerAddress, deployedContractOwnerAddress)) {
       throw new ContractValidateException("Account[" + readableOwnerAddress + "] is not the owner of the contract");
     }

@@ -1,9 +1,12 @@
 package cn.ledgeryi.sdk.config;
 
+import cn.ledgeryi.sdk.common.AccountYi;
+import cn.ledgeryi.sdk.common.utils.LedgerYiUtils;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,13 +23,37 @@ public class Configuration {
   private static Config config;
 
   @Getter
-  private static boolean isEckey = true;
+  private static String accountyiAddress;
+
+  @Getter
+  private static String accountyiPrivateKey;
+
+  @Getter
+  private static boolean isEcc = true;
+
+  private static final String CRYPTO_ENGINE = "crypto.engine";
+  private static final String ACCOUNTYI_ADDRESS = "accountyi.address";
+  private static final String ACCOUNTYI_PRIVATE_KEY = "accountyi.privateKeyStr";
 
   static {
     Config config = Configuration.getByPath("config.conf");
-    if (config.hasPath("crypto.engine")) {
-      isEckey = config.getString("crypto.engine").equalsIgnoreCase("eckey");
-      log.info("Sha256Sm3Hash getConfig isEckey: " + isEckey);
+    if (config.hasPath(CRYPTO_ENGINE)) {
+      isEcc = config.getString(CRYPTO_ENGINE).equalsIgnoreCase("ecc");
+      log.info("is ecc engine: " + isEcc);
+    }
+
+    if (config.hasPath(ACCOUNTYI_PRIVATE_KEY) && config.hasPath(ACCOUNTYI_ADDRESS)){
+      if (StringUtils.isNotEmpty(config.getString(ACCOUNTYI_PRIVATE_KEY)) && StringUtils.isNotEmpty(config.getString(ACCOUNTYI_ADDRESS))) {
+        log.warn("account's address and privateKey are not empty, it will be use default account");
+        accountyiAddress = config.getString(ACCOUNTYI_ADDRESS);
+        accountyiPrivateKey = config.getString(ACCOUNTYI_PRIVATE_KEY);
+      } else {
+        log.warn("account's address and privateKey are empty, it will be use default account");
+        AccountYi accountYi = LedgerYiUtils.createAccountYi();
+        accountyiAddress = accountYi.getAddress();
+        accountyiPrivateKey = accountYi.getPrivateKeyStr();
+        //todo write address and private key to config file
+      }
     }
   }
 

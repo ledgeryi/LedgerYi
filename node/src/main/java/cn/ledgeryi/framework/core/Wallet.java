@@ -70,7 +70,7 @@ public class Wallet {
    * Creates a new Wallet with a random ECKey.
    */
   public Wallet() {
-    this.cryptoEngine = SignUtils.getGeneratedRandomSign(Utils.getRandom(), Args.getInstance().isECKeyCryptoEngine());
+    this.cryptoEngine = SignUtils.getGeneratedRandomSign(Utils.getRandom(), Args.getInstance().isEccCryptoEngine());
   }
 
 
