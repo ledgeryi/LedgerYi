@@ -1,6 +1,5 @@
-package cn.ledgeryi.sdk.common;
+package cn.ledgeryi.sdk.serverapi.data;
 
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract.ABI;
 import lombok.Builder;
 import lombok.Data;
 

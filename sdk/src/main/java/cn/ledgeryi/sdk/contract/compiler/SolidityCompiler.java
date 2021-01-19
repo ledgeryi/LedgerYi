@@ -87,29 +87,21 @@ public class SolidityCompiler {
                 commandParts.add("-");
             }
         }
-
-        ProcessBuilder processBuilder = new ProcessBuilder(commandParts)
-                .directory(Solc.INSTANCE.getExecutable().getParentFile());
-        processBuilder.environment().put("LD_LIBRARY_PATH",
-                Solc.INSTANCE.getExecutable().getParentFile().getCanonicalPath());
-
+        ProcessBuilder processBuilder = new ProcessBuilder(commandParts).directory(Solc.INSTANCE.getExecutable().getParentFile());
+        processBuilder.environment().put("LD_LIBRARY_PATH", Solc.INSTANCE.getExecutable().getParentFile().getCanonicalPath());
         Process process = processBuilder.start();
-
         try (BufferedOutputStream stream = new BufferedOutputStream(process.getOutputStream())) {
             stream.write(source);
         }
-
         ParallelReader error = new ParallelReader(process.getErrorStream());
         ParallelReader output = new ParallelReader(process.getInputStream());
         error.start();
         output.start();
-
         try {
             process.waitFor();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
         return new Result(error.getContent(), output.getContent());
     }
 }

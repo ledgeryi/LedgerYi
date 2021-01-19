@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.common;
+package cn.ledgeryi.sdk.serverapi.data;
 
 import lombok.Builder;
 import lombok.Data;

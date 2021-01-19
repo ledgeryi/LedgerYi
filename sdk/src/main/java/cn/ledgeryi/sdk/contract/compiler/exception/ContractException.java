@@ -1,6 +1,6 @@
 package cn.ledgeryi.sdk.contract.compiler.exception;
 
-public class ContractException extends RuntimeException {
+public class ContractException extends Exception {
 
     public ContractException(String message) {
         super(message);

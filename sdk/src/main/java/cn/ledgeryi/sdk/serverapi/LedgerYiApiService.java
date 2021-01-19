@@ -11,73 +11,127 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
-import cn.ledgeryi.sdk.common.DeployContractParam;
-import cn.ledgeryi.sdk.common.DeployContractReturn;
-import cn.ledgeryi.sdk.common.TriggerContractParam;
-import cn.ledgeryi.sdk.common.TriggerContractReturn;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
 import cn.ledgeryi.sdk.config.Configuration;
+import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler;
+import cn.ledgeryi.sdk.contract.compiler.entity.CompilationResult;
+import cn.ledgeryi.sdk.contract.compiler.entity.Result;
+import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
+import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
+import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
+import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
+import java.util.Map;
+
 @Slf4j
-public class LedgerYiRequestNodeAPI {
+public class LedgerYiApiService {
 
-    private static GrpcClient rpcCli= GrpcClient.initGrpcClient();
+    private GrpcClient rpcCli;
 
-    public static Protocol.Account getAccount(String address){
+    public LedgerYiApiService() {
+        rpcCli = GrpcClient.initGrpcClient();
+    }
+
+    public Protocol.Account getAccount(String address){
         return rpcCli.queryAccount(DecodeUtil.decode(address));
     }
 
-    public static GrpcAPI.MastersList getMasters(){
+    public GrpcAPI.MastersList getMasters(){
         return rpcCli.queryMasters();
     }
 
-    public static GrpcAPI.BlockExtention getNowBlock(){
+    public GrpcAPI.BlockExtention getNowBlock(){
         return rpcCli.getNowBlock();
     }
 
-    public static GrpcAPI.BlockExtention getBlock(long blockNum) {
+    public GrpcAPI.BlockExtention getBlock(long blockNum) {
         return rpcCli.getBlockByNum(blockNum);
     }
 
-    public static GrpcAPI.BlockListExtention getBlockByLimitNext(long start, long end){
+    public GrpcAPI.BlockListExtention getBlockByLimitNext(long start, long end){
         return rpcCli.getBlockByLimitNext(start,end);
     }
 
-    public static Protocol.Transaction getTransactionById(String hash){
+    public Protocol.Transaction getTransactionById(String hash){
         return rpcCli.getTransactionById(hash);
     }
 
-    public static Protocol.TransactionInfo getTransactionInfoById(String hash) {
+    public Protocol.TransactionInfo getTransactionInfoById(String hash) {
         return rpcCli.getTransactionInfoById(hash);
     }
 
-    public static GrpcAPI.NumberMessage getTransactionCountByBlockNum(long blockNum){
+    public GrpcAPI.NumberMessage getTransactionCountByBlockNum(long blockNum){
         return rpcCli.getTransactionCountByBlockNum(blockNum);
     }
 
-    public static GrpcAPI.NodeList getConnectNodes(){
+    public GrpcAPI.NodeList getConnectNodes(){
         return rpcCli.getConnectNodes();
     }
 
-    public static Protocol.NodeInfo getNodeInfo(){
+    public Protocol.NodeInfo getNodeInfo(){
         return rpcCli.getNodeInfo();
     }
 
-    public static SmartContract getContract(byte[] address) {
+    public DeployContractParam compileSingleContract(String contract) throws ContractException {
+        Result res;
+        try {
+            res = SolidityCompiler.compile(contract.getBytes(), true,
+                    SolidityCompiler.Options.ABI, SolidityCompiler.Options.BIN);
+        } catch (IOException e) {
+            log.error("Compile contract error, io exception: ", e);
+            throw new ContractException("Compilation io exception: " + e.getMessage());
+        }
+        if (!res.errors.isEmpty()) {
+            log.error("Compilation contract error: " + res.errors);
+            throw new ContractException("Compilation error: " + res.errors);
+        }
+        if (res.output.isEmpty()) {
+            log.error("Compilation contract error:  output is empty: " + res.errors);
+            throw new ContractException("compilation error, output is empty: " + res.errors);
+        }
+
+        // read from JSON and assemble request body
+        CompilationResult result;
+        try {
+            result = CompilationResult.parse(res.output);
+        } catch (IOException e) {
+            log.error("Compilation contract error: Parse result error, io exception: ", e);
+            throw new ContractException("parse result error, io exception: " + e.getMessage());
+        }
+        if (result.getContracts().size() == 0) {
+            log.error("Compilation contract error: No Contract found after compile");
+            throw new RuntimeException("Compilation error: No Contract found after compile" + result);
+        }
+        if (result.getContracts().size() > 1) {
+            log.error("Compilation contract error: Multiple Contracts found after compile");
+            throw new RuntimeException("Compilation contract error: Multiple Contracts found after compile" + result);
+        }
+        Map.Entry<String, CompilationResult.ContractMetadata> contractMeta = result.getContracts().entrySet().iterator().next();
+        String contractName = contractMeta.getKey().split(":")[1];
+        String abi = contractMeta.getValue().abi;
+        String opCode = contractMeta.getValue().bin;
+
+        return DeployContractParam.builder()
+                .abi(abi)
+                .contractName(contractName)
+                .contractByteCodes(opCode)
+                .build();
+    }
+
+    public SmartContract getContract(byte[] address) {
         return rpcCli.getContract(address);
     }
 
-    public static boolean clearContractABI(byte[] ownerAddress, byte[] privateKey, byte[] contractAddress) {
+    public boolean clearContractABI(byte[] ownerAddress, byte[] privateKey, byte[] contractAddress) {
         if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
             ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
             privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
@@ -94,7 +148,7 @@ public class LedgerYiRequestNodeAPI {
      * @param param contract  params
      * @return TriggerContractReturn
      */
-    public static TriggerContractReturn triggerContract(byte[] ownerAddress, byte[] privateKey, TriggerContractParam param) {
+    public TriggerContractReturn triggerContract(byte[] ownerAddress, byte[] privateKey, TriggerContractParam param) {
         if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
             ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
             privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
@@ -128,7 +182,6 @@ public class LedgerYiRequestNodeAPI {
         }
     }
 
-
     /**
      * create contract
      *
@@ -138,7 +191,7 @@ public class LedgerYiRequestNodeAPI {
      * @return DeployContractReturn
      * @throws CreateContractExecption abi is null
      */
-    public static DeployContractReturn deployContract( byte[] ownerAddress, byte[] privateKey, DeployContractParam param) throws CreateContractExecption {
+    public DeployContractReturn deployContract(byte[] ownerAddress, byte[] privateKey, DeployContractParam param) throws CreateContractExecption {
         if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
             ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
             privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
@@ -171,7 +224,7 @@ public class LedgerYiRequestNodeAPI {
         }
     }
 
-    private static TriggerSmartContract triggerCallContract( byte[] ownerAddress, byte[] contractAddress, long callValue, byte[] data) {
+    private TriggerSmartContract triggerCallContract( byte[] ownerAddress, byte[] contractAddress, long callValue, byte[] data) {
         TriggerSmartContract.Builder builder = TriggerSmartContract.newBuilder();
         builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         builder.setContractAddress(ByteString.copyFrom(contractAddress));
@@ -180,14 +233,14 @@ public class LedgerYiRequestNodeAPI {
         return builder.build();
     }
 
-    private static ClearABIContract createClearABIContract(byte[] ownerAddress, byte[] contractAddress) {
+    private ClearABIContract createClearABIContract(byte[] ownerAddress, byte[] contractAddress) {
         ClearABIContract.Builder builder = ClearABIContract.newBuilder();
         builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         builder.setContractAddress(ByteString.copyFrom(contractAddress));
         return builder.build();
     }
 
-    private static boolean processTransaction(TransactionExtention transactionExtention, byte[] privateKey) {
+    private boolean processTransaction(TransactionExtention transactionExtention, byte[] privateKey) {
         if (transactionExtention == null) {
             return false;
         }
@@ -207,7 +260,7 @@ public class LedgerYiRequestNodeAPI {
         return rpcCli.broadcastTransaction(transaction);
     }
 
-    private static CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam) throws CreateContractExecption {
+    private CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam) throws CreateContractExecption {
         String contractAbi = contractParam.getAbi();
         if (StringUtils.isEmpty(contractAbi)) {
             log.error("deploy contract, abi is null");
@@ -225,7 +278,7 @@ public class LedgerYiRequestNodeAPI {
         return createSmartContractBuilder.build();
     }
 
-    private static boolean checkOwnerAddressAndPrivateKey(byte[] ownerAddress, byte[] privateKey){
+    private boolean checkOwnerAddressAndPrivateKey(byte[] ownerAddress, byte[] privateKey){
         if (ByteUtil.isNullOrZeroArray(ownerAddress) || ByteUtil.isNullOrZeroArray(privateKey)){
             if (!ByteUtil.isNullOrZeroArray(privateKey) || !ByteUtil.isNullOrZeroArray(ownerAddress)){
                 log.error("Require account's private key and address to be empty");

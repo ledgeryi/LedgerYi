@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.common;
+package cn.ledgeryi.sdk.serverapi.data;
 
 import com.google.protobuf.ByteString;
 import lombok.Builder;
