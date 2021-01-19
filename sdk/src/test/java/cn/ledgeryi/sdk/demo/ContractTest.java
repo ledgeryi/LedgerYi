@@ -31,19 +31,6 @@ public class ContractTest {
     @Before
     public void start(){
         ledgerYiApiService = new LedgerYiApiService();
-        createOwner();
-    }
-
-    private void createOwner(){
-        AccountYi accountYi = LedgerYiUtils.createAccountYi();
-        if (StringUtils.isEmpty(privateKey)){
-            privateKey = accountYi.getPrivateKeyStr();
-            System.out.println("privateKey: " + privateKey);
-        }
-        if (StringUtils.isEmpty(ownerAddress)){
-            ownerAddress = accountYi.getAddress();
-            System.out.println("address: " + ownerAddress);
-        }
     }
 
     /**

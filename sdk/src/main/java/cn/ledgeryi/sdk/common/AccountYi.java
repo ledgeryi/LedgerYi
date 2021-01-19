@@ -1,11 +1,13 @@
 package cn.ledgeryi.sdk.common;
 
 import cn.ledgeryi.protos.Protocol;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AccountYi {
     private String address;
     private String publicKeyStr;

@@ -12,12 +12,6 @@ import org.junit.Test;
 public class CompilerTest {
 
     private LedgerYiApiService ledgerYiApiService;
-
-    @Before
-    public void start(){
-        ledgerYiApiService = new LedgerYiApiService();
-    }
-
     private static String privateKey = "e8b5177d5a69898dcc437d0e96a9343a37bac001cb9bec7a90b660eee66b4587";
     private static String ownerAddress = "ada95a8734256b797efcd862e0b208529283ac56";
 
@@ -38,6 +32,10 @@ public class CompilerTest {
             "    }\n" +
             "}";
 
+    @Before
+    public void start(){
+        ledgerYiApiService = new LedgerYiApiService();
+    }
 
     @Test
     public void compileContractTest() {

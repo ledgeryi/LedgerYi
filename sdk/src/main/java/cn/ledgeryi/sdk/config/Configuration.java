@@ -2,16 +2,14 @@ package cn.ledgeryi.sdk.config;
 
 import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.LedgerYiUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
+import java.io.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -52,7 +50,22 @@ public class Configuration {
         AccountYi accountYi = LedgerYiUtils.createAccountYi();
         accountyiAddress = accountYi.getAddress();
         accountyiPrivateKey = accountYi.getPrivateKeyStr();
-        //todo write address and private key to config file
+        ObjectMapper mapper = new ObjectMapper();
+        File file = new File("accountYi.json");
+        if (file.exists()) {
+          try {
+            AccountYi defaultAccount = mapper.readValue(file, AccountYi.class);
+            accountyiAddress = defaultAccount.getAddress();
+            accountyiPrivateKey = defaultAccount.getPrivateKeyStr();
+          } catch (IOException e) {
+            log.error("read default account error, error: ", e);
+          }
+        }
+        try {
+          mapper.writeValue(file, accountYi);
+        } catch (IOException e) {
+          log.error("write default account error, error: ", e);
+        }
       }
     }
   }

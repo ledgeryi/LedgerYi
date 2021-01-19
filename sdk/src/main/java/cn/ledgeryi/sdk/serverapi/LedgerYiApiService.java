@@ -11,7 +11,9 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
+import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
+import cn.ledgeryi.sdk.common.utils.LedgerYiUtils;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
 import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler;
@@ -36,9 +38,17 @@ import java.util.Map;
 public class LedgerYiApiService {
 
     private GrpcClient rpcCli;
+    private String signerAddress;
+    private String signerPrivateKey;
 
     public LedgerYiApiService() {
         rpcCli = GrpcClient.initGrpcClient();
+        signerAddress = Configuration.getAccountyiAddress();
+        signerPrivateKey = Configuration.getAccountyiPrivateKey();
+    }
+
+    public AccountYi createDefaultAccount(){
+        return LedgerYiUtils.createAccountYi();
     }
 
     public Protocol.Account getAccount(String address){
@@ -133,8 +143,8 @@ public class LedgerYiApiService {
 
     public boolean clearContractABI(byte[] ownerAddress, byte[] privateKey, byte[] contractAddress) {
         if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
-            ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
-            privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
+            ownerAddress = DecodeUtil.decode(signerAddress);
+            privateKey = DecodeUtil.decode(signerPrivateKey);
         }
         ClearABIContract clearABIContract = createClearABIContract(ownerAddress, contractAddress);
         TransactionExtention transactionExtention = rpcCli.clearContractABI(clearABIContract);
@@ -150,8 +160,8 @@ public class LedgerYiApiService {
      */
     public TriggerContractReturn triggerContract(byte[] ownerAddress, byte[] privateKey, TriggerContractParam param) {
         if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
-            ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
-            privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
+            ownerAddress = DecodeUtil.decode(signerAddress);
+            privateKey = DecodeUtil.decode(signerPrivateKey);
         }
         TriggerSmartContract triggerContract = triggerCallContract(ownerAddress,
                 param.getContractAddress(), param.getCallValue(), param.getData());
@@ -193,8 +203,8 @@ public class LedgerYiApiService {
      */
     public DeployContractReturn deployContract(byte[] ownerAddress, byte[] privateKey, DeployContractParam param) throws CreateContractExecption {
         if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
-            ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
-            privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
+            ownerAddress = DecodeUtil.decode(signerAddress);
+            privateKey = DecodeUtil.decode(signerPrivateKey);
         }
         CreateSmartContract createContract = createContract(ownerAddress, param);
         GrpcAPI.TransactionExtention tx = rpcCli.deployContract(createContract);

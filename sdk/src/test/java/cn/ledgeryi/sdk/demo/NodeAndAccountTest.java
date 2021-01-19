@@ -2,6 +2,7 @@ package cn.ledgeryi.sdk.demo;
 
 import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.protos.Protocol;
+import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.JsonFormat;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
@@ -15,6 +16,15 @@ public class NodeAndAccountTest {
     @Before
     public void start(){
         ledgerYiApiService = new LedgerYiApiService();
+    }
+
+    @Test
+    public void createDefaultAccount(){
+        AccountYi defaultAccount = ledgerYiApiService.createDefaultAccount();
+        System.out.println("address: " + defaultAccount.getAddress());
+        System.out.println("privateKey: " + defaultAccount.getPrivateKeyStr());
+        System.out.println("publicKey: " + defaultAccount.getPublicKeyStr());
+        System.out.println("type: " + defaultAccount.getAccountType());
     }
 
     @Test
