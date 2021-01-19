@@ -14,32 +14,31 @@ import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@Slf4j
 public class GrpcClient {
 
-    private ManagedChannel channelFull = null;
     private WalletGrpc.WalletBlockingStub blockingStubFull = null;
-
-    private static GrpcClient instance;
+    private static final int BROADCAST_TRANSACTION_REPEAT_TIMES = 10;
 
     private GrpcClient(String ledgerYiNode) {
         if (!StringUtils.isEmpty(ledgerYiNode)) {
-            channelFull = ManagedChannelBuilder.forTarget(ledgerYiNode).usePlaintext(true).build();
+            ManagedChannel channelFull = ManagedChannelBuilder.forTarget(ledgerYiNode).usePlaintext(true).build();
             blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
         }
     }
 
     public static GrpcClient initGrpcClient() {
-        if (instance == null) {
-            Config config = Configuration.getConfig();
-            String ledgerYiNode = "";
-            if (config.hasPath("ledgernode.ip.list")) {
-                ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
-            }
-            return new GrpcClient(ledgerYiNode);
+        Config config = Configuration.getConfig();
+        String ledgerYiNode;
+        if (config.hasPath("ledgernode.ip.list") && config.getStringList("ledgernode.ip.list").size() != 0) {
+            ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
+        } else {
+            throw new RuntimeException("No connection information is configured!");
         }
-        return instance;
+        return new GrpcClient(ledgerYiNode);
     }
 
     public Account queryAccount(byte[] address) {
@@ -54,12 +53,12 @@ public class GrpcClient {
     }
 
     public boolean broadcastTransaction(Transaction signaturedTransaction) {
-        int i = 10;
+        int repeatTimes = BROADCAST_TRANSACTION_REPEAT_TIMES;
         Return response = blockingStubFull.broadcastTransaction(signaturedTransaction);
-        while (!response.getResult() && response.getCode() == Return.response_code.SERVER_BUSY && i > 0) {
-            i--;
+        while (!response.getResult() && response.getCode() == Return.response_code.SERVER_BUSY && repeatTimes > 0) {
+            repeatTimes--;
             response = blockingStubFull.broadcastTransaction(signaturedTransaction);
-            System.out.println("repeat times = " + (11 - i));
+            log.info("broadcast transaction, repeat times: " + (BROADCAST_TRANSACTION_REPEAT_TIMES - repeatTimes + 1));
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -67,8 +66,8 @@ public class GrpcClient {
             }
         }
         if (!response.getResult()) {
-            System.out.println("Code = " + response.getCode());
-            System.out.println("Message = " + response.getMessage().toStringUtf8());
+            log.error("broadcast transaction, result is false, code: " + response.getCode());
+            log.error("broadcast transaction, result is false, message: " + response.getMessage().toStringUtf8());
         }
         return response.getResult();
     }

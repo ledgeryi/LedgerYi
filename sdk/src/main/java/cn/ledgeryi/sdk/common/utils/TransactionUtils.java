@@ -3,6 +3,7 @@ package cn.ledgeryi.sdk.common.utils;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.SignUtils;
 import cn.ledgeryi.crypto.SignatureInterface;
+import cn.ledgeryi.crypto.utils.Hash;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
@@ -46,7 +47,7 @@ public class TransactionUtils {
     if (v < 27) {
       v += 27;
     }
-    SignatureInterface signature = SignUtils.fromComponents(r, s, v, Configuration.isEckey());
+    SignatureInterface signature = SignUtils.fromComponents(r, s, v, Configuration.isEcc());
     return signature.toBase64();
   }
 
@@ -55,7 +56,7 @@ public class TransactionUtils {
     byte[] hash = Sha256Sm3Hash.hash(signedTransaction.getRawData().toByteArray());
     try {
       byte[] owner = getOwner(contract);
-      byte[] address = SignUtils.signatureToAddress(hash, getBase64FromByteString(signedTransaction.getSignature()), Configuration.isEckey());
+      byte[] address = SignUtils.signatureToAddress(hash, getBase64FromByteString(signedTransaction.getSignature()), Configuration.isEcc());
       if (!Arrays.equals(owner, address)) {
         return false;
       }
@@ -69,11 +70,19 @@ public class TransactionUtils {
   public static Protocol.Transaction sign(Protocol.Transaction transaction, byte[] privKeyBytes) {
     Protocol.Transaction.Builder transactionBuilderSigned = transaction.toBuilder();
     byte[] hash = Sha256Sm3Hash.hash(transaction.getRawData().toByteArray());
-    SignInterface ecKeyEngine = SignUtils.fromPrivate(privKeyBytes, Configuration.isEckey());
+    SignInterface ecKeyEngine = SignUtils.fromPrivate(privKeyBytes, Configuration.isEcc());
     ByteString sig = ByteString.copyFrom(ecKeyEngine.Base64toBytes(ecKeyEngine.signHash(hash)));
     transactionBuilderSigned.setSignature(sig);
     transaction = transactionBuilderSigned.build();
     return transaction;
+  }
+
+  public static byte[] generateContractAddress(Protocol.Transaction tx, byte[] ownerAddress) {
+    byte[] txRawDataHash = Sha256Sm3Hash.of(tx.getRawData().toByteArray()).getBytes();
+    byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
+    System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
+    System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
+    return Hash.sha3omit12(combined);
   }
 
 }

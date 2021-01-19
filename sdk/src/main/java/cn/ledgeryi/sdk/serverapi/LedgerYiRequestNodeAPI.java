@@ -3,7 +3,7 @@ package cn.ledgeryi.sdk.serverapi;
 import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.Return;
 import cn.ledgeryi.api.GrpcAPI.TransactionExtention;
-import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Transaction;
@@ -11,19 +11,27 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
+import cn.ledgeryi.sdk.common.DeployContractParam;
+import cn.ledgeryi.sdk.common.DeployContractReturn;
+import cn.ledgeryi.sdk.common.TriggerContractParam;
+import cn.ledgeryi.sdk.common.TriggerContractReturn;
+import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
-import cn.ledgeryi.sdk.common.utils.Utils;
+import cn.ledgeryi.sdk.config.Configuration;
+import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
 @Slf4j
-public class RequestNodeAPI {
+public class LedgerYiRequestNodeAPI {
 
-    private static GrpcClient rpcCli = GrpcClient.initGrpcClient();
+    private static GrpcClient rpcCli= GrpcClient.initGrpcClient();
 
     public static Protocol.Account getAccount(String address){
         return rpcCli.queryAccount(DecodeUtil.decode(address));
@@ -69,159 +77,155 @@ public class RequestNodeAPI {
         return rpcCli.getContract(address);
     }
 
-    public static boolean clearContractABI(byte[] owner, byte[] contractAddress, byte[] privateKeys) {
-        ClearABIContract clearABIContract = createClearABIContract(owner, contractAddress);
-        TransactionExtention transactionExtention = rpcCli.clearContractABI(clearABIContract);
-        if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
-            log.error("RPC create tx failed!");
-            if (transactionExtention != null) {
-                log.info("Code = " + transactionExtention.getResult().getCode());
-                log.info("Message = " + transactionExtention.getResult().getMessage().toStringUtf8());
-            }
-            return false;
+    public static boolean clearContractABI(byte[] ownerAddress, byte[] privateKey, byte[] contractAddress) {
+        if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
+            ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
+            privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
         }
-        return processTransaction(transactionExtention, privateKeys);
+        ClearABIContract clearABIContract = createClearABIContract(ownerAddress, contractAddress);
+        TransactionExtention transactionExtention = rpcCli.clearContractABI(clearABIContract);
+        return processTransaction(transactionExtention, privateKey);
     }
 
-    public static boolean triggerContract(byte[] owner, byte[] contractAddress, long callValue, byte[] data,
-                                   boolean isConstant, byte[] privateKey) {
-        TriggerSmartContract triggerContract = triggerCallContract(owner, contractAddress, callValue, data);
+    /**
+     * call contract
+     * @param ownerAddress the address of contract owner
+     * @param privateKey the private key of contract owner
+     * @param param contract  params
+     * @return TriggerContractReturn
+     */
+    public static TriggerContractReturn triggerContract(byte[] ownerAddress, byte[] privateKey, TriggerContractParam param) {
+        if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
+            ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
+            privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
+        }
+        TriggerSmartContract triggerContract = triggerCallContract(ownerAddress,
+                param.getContractAddress(), param.getCallValue(), param.getData());
+
         TransactionExtention transactionExtention;
-        if (isConstant) {
+        if (param.isConstant()) {
             transactionExtention = rpcCli.triggerConstantContract(triggerContract);
+            return TriggerContractReturn.builder()
+                    .isConstant(true)
+                    .contractAddress(DecodeUtil.createReadableString(param.getContractAddress()))
+                    .callResult(transactionExtention.getConstantResult(0))
+                    .transactionId(DecodeUtil.createReadableString(transactionExtention.getTxid()))
+                    .build();
         } else {
             transactionExtention = rpcCli.triggerContract(triggerContract);
         }
-        if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
-            log.error("RPC create call tx failed!");
-            log.error("Code = " + transactionExtention.getResult().getCode());
-            log.error("Message = " + transactionExtention.getResult().getMessage().toStringUtf8());
-            return false;
+        boolean result = processTransaction(transactionExtention, privateKey);
+        if (result){
+            return TriggerContractReturn.builder()
+                    .isConstant(false)
+                    .contractAddress(DecodeUtil.createReadableString(param.getContractAddress()))
+                    .callResult(ByteString.EMPTY)
+                    .transactionId(DecodeUtil.createReadableString(transactionExtention.getTxid()))
+                    .build();
+        } else {
+            log.error("call contract failed.");
+            return null;
         }
-
-        Transaction transaction = transactionExtention.getTransaction();
-        // for constant
-        if (isConstant && transaction.getRetCount() != 0 && transactionExtention.getConstantResult(0) != null
-                && transactionExtention.getResult() != null) {
-            byte[] result = transactionExtention.getConstantResult(0).toByteArray();
-            log.info("Message:" + transaction.getRet(0).getRet());
-            log.info(":" + ByteArray.toStr(transactionExtention.getResult().getMessage().toByteArray()));
-            log.info("Result:" + Hex.toHexString(result));
-            return true;
-        }
-        TransactionExtention.Builder texBuilder = TransactionExtention.newBuilder();
-        Transaction.Builder transBuilder = Transaction.newBuilder();
-        Transaction.raw.Builder rawBuilder = transactionExtention.getTransaction().getRawData().toBuilder();
-        transBuilder.setRawData(rawBuilder);
-        ByteString s = transactionExtention.getTransaction().getSignature();
-        transBuilder.setSignature(s);
-        for (int i = 0; i < transactionExtention.getTransaction().getRetCount(); i++) {
-            Transaction.Result r = transactionExtention.getTransaction().getRet(i);
-            transBuilder.setRet(i, r);
-        }
-        texBuilder.setTransaction(transBuilder);
-        texBuilder.setResult(transactionExtention.getResult());
-        texBuilder.setTxid(transactionExtention.getTxid());
-        transactionExtention = texBuilder.build();
-        return processTransaction(transactionExtention, privateKey);
     }
 
-    // TODO: delete value param
-    // TODO: return should not be boolean
-    // TODO: privateKet should in context, not in param
-    public static boolean deployContract( byte[] owner, String contractName, String abi, String code,
-                                   long value, byte[] privateKey) {
-        CreateSmartContract contractDeployContract = createContractDeployContract(contractName, owner, abi, code,
-                value);
-        GrpcAPI.TransactionExtention transactionExtention = rpcCli.deployContract(contractDeployContract);
-        if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
-            System.out.println("RPC create tx failed!");
-            if (transactionExtention != null) {
-                System.out.println("Code = " + transactionExtention.getResult().getCode());
-                System.out.println("Message = " + transactionExtention.getResult().getMessage().toStringUtf8());
+
+    /**
+     * create contract
+     *
+     * @param ownerAddress the address of contract owner
+     * @param privateKey the private key of contract owner
+     * @param param contract  params
+     * @return DeployContractReturn
+     * @throws CreateContractExecption abi is null
+     */
+    public static DeployContractReturn deployContract( byte[] ownerAddress, byte[] privateKey, DeployContractParam param) throws CreateContractExecption {
+        if (!checkOwnerAddressAndPrivateKey(ownerAddress, privateKey)){
+            ownerAddress = DecodeUtil.decode(Configuration.getAccountyiAddress());
+            privateKey = DecodeUtil.decode(Configuration.getAccountyiPrivateKey());
+        }
+        CreateSmartContract createContract = createContract(ownerAddress, param);
+        GrpcAPI.TransactionExtention tx = rpcCli.deployContract(createContract);
+        boolean result = processTransaction(tx, privateKey);
+        if (result) {
+            CreateSmartContract createSmartContract;
+            try {
+                createSmartContract = tx.getTransaction().getRawData().getContract().getParameter().unpack(CreateSmartContract.class);
+            } catch (InvalidProtocolBufferException e) {
+                log.error("deploy contract, parameter parse fail");
+                return null;
             }
-            return false;
+            String contractByteCodes = DecodeUtil.createReadableString(createSmartContract.getNewContract().getBytecode());
+            String contractAddress = DecodeUtil.createReadableString(
+                    TransactionUtils.generateContractAddress(tx.getTransaction(), ownerAddress));
+            return DeployContractReturn.builder()
+                    .transactionId(DecodeUtil.createReadableString(tx.getTxid()))
+                    .contractName(createSmartContract.getNewContract().getName())
+                    .contractByteCodes(contractByteCodes)
+                    .ownerAddress(DecodeUtil.createReadableString(ownerAddress))
+                    .contractAddress(contractAddress)
+                    .contractAbi(createSmartContract.getNewContract().getAbi().toString())
+                    .build();
+        } else {
+            log.error("deploy contract failed.");
+            return null;
         }
-        // TODO: refactor transaction build logic to smart-contract based design for Simplicity
-        GrpcAPI.TransactionExtention.Builder texBuilder = GrpcAPI.TransactionExtention.newBuilder();
-        Protocol.Transaction.Builder transBuilder = Protocol.Transaction.newBuilder();
-        Protocol.Transaction.raw.Builder rawBuilder = transactionExtention.getTransaction().getRawData().toBuilder();
-        transBuilder.setRawData(rawBuilder);
-        for (int i = 0; i < transactionExtention.getTransaction().getRetCount(); i++) {
-            Protocol.Transaction.Result r = transactionExtention.getTransaction().getRet(i);
-            transBuilder.setRet(i, r);
-        }
-        texBuilder.setTransaction(transBuilder);
-        texBuilder.setResult(transactionExtention.getResult());
-        texBuilder.setTxid(transactionExtention.getTxid());
-        transactionExtention = texBuilder.build();
-        return processTransaction(transactionExtention, privateKey);
     }
 
-    private static TriggerSmartContract triggerCallContract( byte[] address, byte[] contractAddress, long callValue, byte[] data) {
+    private static TriggerSmartContract triggerCallContract( byte[] ownerAddress, byte[] contractAddress, long callValue, byte[] data) {
         TriggerSmartContract.Builder builder = TriggerSmartContract.newBuilder();
-        builder.setOwnerAddress(ByteString.copyFrom(address));
+        builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         builder.setContractAddress(ByteString.copyFrom(contractAddress));
         builder.setData(ByteString.copyFrom(data));
         builder.setCallValue(callValue);
         return builder.build();
     }
 
-    private static ClearABIContract createClearABIContract(byte[] owner, byte[] contractAddress) {
+    private static ClearABIContract createClearABIContract(byte[] ownerAddress, byte[] contractAddress) {
         ClearABIContract.Builder builder = ClearABIContract.newBuilder();
-        builder.setOwnerAddress(ByteString.copyFrom(owner));
+        builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         builder.setContractAddress(ByteString.copyFrom(contractAddress));
         return builder.build();
     }
 
-    private static boolean processTransaction(TransactionExtention transactionExtention, byte[] privKeyBytes) {
+    private static boolean processTransaction(TransactionExtention transactionExtention, byte[] privateKey) {
         if (transactionExtention == null) {
             return false;
         }
         Return ret = transactionExtention.getResult();
         if (!ret.getResult()) {
-            log.error("Code = " + ret.getCode());
-            log.error("Message = " + ret.getMessage().toStringUtf8());
+            log.error("result is false, code: " + ret.getCode());
+            log.error("result is false, message: " + ret.getMessage().toStringUtf8());
             return false;
         }
         Transaction transaction = transactionExtention.getTransaction();
         if (transaction == null || transaction.getRawData().getContract() == null) {
-            log.error("Transaction is empty");
+            log.error("transaction or contract is null");
             return false;
         }
-        System.out.println(Utils.printTransactionExceptId(transactionExtention.getTransaction()));
-        transaction = TransactionUtils.sign(transaction, privKeyBytes);
-        boolean validTransaction = TransactionUtils.validTransaction(transaction);
-        if (!validTransaction) {
-            log.error("Verification signature failed！");
-            throw new RuntimeException();
-        }
+        //System.out.println(JsonFormatUtil.printTransactionExceptId(transactionExtention.getTransaction()));
+        transaction = TransactionUtils.sign(transaction, privateKey);
         return rpcCli.broadcastTransaction(transaction);
     }
 
-    private static CreateSmartContract createContractDeployContract(String contractName, byte[] address, String ABI,
-                                                             String code, long value/*, long consumeUserResourcePercent*/) {
-        SmartContract.ABI abi = jsonStr2ABI(ABI);
-        if (abi == null) {
-            System.out.println("abi is null");
-            return null;
+    private static CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam) throws CreateContractExecption {
+        String contractAbi = contractParam.getAbi();
+        if (StringUtils.isEmpty(contractAbi)) {
+            log.error("deploy contract, abi is null");
+            throw new CreateContractExecption("deploy contract, abi is null");
         }
+        SmartContract.ABI abi = jsonStr2ABI(contractAbi);
         SmartContract.Builder builder = SmartContract.newBuilder();
-        builder.setName(contractName);
-        builder.setOriginAddress(ByteString.copyFrom(address));
         builder.setAbi(abi);
-        /*builder.setConsumeUserResourcePercent(consumeUserResourcePercent);*/
-        if (value != 0) {
-            builder.setCallValue(value);
-        }
-        byte[] byteCode = Hex.decode(code);
+        builder.setName(contractParam.getContractName());
+        builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
+        byte[] byteCode = Hex.decode(contractParam.getContractByteCodes());
         builder.setBytecode(ByteString.copyFrom(byteCode));
         CreateSmartContract.Builder createSmartContractBuilder = CreateSmartContract.newBuilder();
-        createSmartContractBuilder.setOwnerAddress(ByteString.copyFrom(address)).setNewContract(builder.build());
+        createSmartContractBuilder.setOwnerAddress(ByteString.copyFrom(ownerAddress)).setNewContract(builder.build());
         return createSmartContractBuilder.build();
     }
 
-    public static SmartContract.ABI jsonStr2ABI(String jsonStr) {
+    private static SmartContract.ABI jsonStr2ABI(String jsonStr) {
         if (jsonStr == null) {
             return null;
         }
@@ -327,7 +331,8 @@ public class RequestNodeAPI {
         }
         return abiBuilder.build();
     }
-    public static SmartContract.ABI.Entry.EntryType getEntryType(String type) {
+
+    private static SmartContract.ABI.Entry.EntryType getEntryType(String type) {
         switch (type) {
             case "constructor":
                 return SmartContract.ABI.Entry.EntryType.Constructor;
@@ -341,8 +346,7 @@ public class RequestNodeAPI {
                 return SmartContract.ABI.Entry.EntryType.UNRECOGNIZED;
         }
     }
-
-    public static SmartContract.ABI.Entry.StateMutabilityType getStateMutability(
+    private static SmartContract.ABI.Entry.StateMutabilityType getStateMutability(
             String stateMutability) {
         switch (stateMutability) {
             case "pure":
@@ -356,5 +360,15 @@ public class RequestNodeAPI {
             default:
                 return SmartContract.ABI.Entry.StateMutabilityType.UNRECOGNIZED;
         }
+    }
+
+    private static boolean checkOwnerAddressAndPrivateKey(byte[] ownerAddress, byte[] privateKey){
+        if (ByteUtil.isNullOrZeroArray(ownerAddress) || ByteUtil.isNullOrZeroArray(privateKey)){
+            if (!ByteUtil.isNullOrZeroArray(privateKey) || !ByteUtil.isNullOrZeroArray(ownerAddress)){
+                log.error("Require account's private key and address to be empty");
+                return false;
+            }
+        }
+        return true;
     }
 }

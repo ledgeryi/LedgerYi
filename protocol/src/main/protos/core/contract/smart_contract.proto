@@ -42,7 +42,7 @@ message SmartContract {
         }
         repeated Entry entrys = 1;
     }
-    bytes origin_address = 1;
+    bytes owner_address = 1;
     bytes contract_address = 2;
     ABI abi = 3;
     bytes bytecode = 4;
