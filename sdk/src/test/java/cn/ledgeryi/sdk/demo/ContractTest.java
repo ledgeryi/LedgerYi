@@ -17,6 +17,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public class ContractTest {
 
     private static String privateKey = "e8b5177d5a69898dcc437d0e96a9343a37bac001cb9bec7a90b660eee66b4587";
@@ -62,12 +66,12 @@ public class ContractTest {
             "    }\n" +
             "}";
 
-
     @Test
     public void compileContractTest() {
         DeployContractParam result = null;
         try {
-            result = ledgerYiApiService.compileSingleContract(testContratSingle);
+            String contract = testContratSingle;
+            result = ledgerYiApiService.compileSingleContract(contract);
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -82,7 +86,8 @@ public class ContractTest {
         DeployContractParam result = null;
         DeployContractReturn deployContract = null;
         try {
-            result = ledgerYiApiService.compileSingleContract(testContratSingle);
+            String contract = testContratSingle;
+            result = ledgerYiApiService.compileSingleContract(contract);
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
             e.printStackTrace();
@@ -94,7 +99,8 @@ public class ContractTest {
         System.out.println("contract address: " + deployContract.getContractAddress());
     }
 
-    private static String contractAddres = "ead5b5850f779622f9cf0c0ec858adb54037ccb2";
+    // Storage address
+    private static String contractAddres = "3d21f860eabb8cf18b9c1c37d4133a9ed15cb7b4";
 
     @Test
     public void getContractFromOnChain(){
@@ -104,13 +110,16 @@ public class ContractTest {
 
     @Test
     public void triggerStorage() {
-        String args = "5";
-        triggerContract("store(uint256)", args,false);
+        List args = Arrays.asList("6");
+        String method = "store(uint256)";
+        triggerContract(method, args,false);
     }
 
     @Test
     public void triggerRetrieve() {
-        triggerContract("retrieve()","", true);
+        List args = Collections.EMPTY_LIST;
+        String method = "retrieve()";
+        triggerContract(method, args, true);
     }
 
     @Test
@@ -120,16 +129,7 @@ public class ContractTest {
         System.out.println("clear result: " +  result);
     }
 
-    /**
-     * [1] constant function和非constant function 函数调用从对链上属性是否有更改可分为两种：constant function 和 非constant function。
-     * Constant function 是指用 view/pure/constant 修饰的函数。会在调用的节点上直接返回结果，并不以一笔交易的形式广播出去。
-     * 非constant function是指需要依托一笔交易的形式被广播的方法调用。函数会改变链上数据的内容，比如转账，改变合约内部变量的值等等。
-     *
-     * [2] 注意: 如果在合约内部使用create指令（CREATE instruction），即使用view/pure/constant来修饰这个动态创建的合约合约方法，
-     * 这个合约方法仍会被当作非constant function，以交易的形式来处理。
-     *
-     */
-    private void triggerContract(String method, String args, boolean isConstant) {
+    private void triggerContract(String method, List<Object> args, boolean isConstant) {
         TriggerContractParam triggerContractParam = new TriggerContractParam()
                 .setContractAddress(DecodeUtil.decode(contractAddres))
                 .setCallValue(0)
