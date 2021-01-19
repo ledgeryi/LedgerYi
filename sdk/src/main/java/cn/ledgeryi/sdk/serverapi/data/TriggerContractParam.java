@@ -5,13 +5,15 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.List;
+
 public class TriggerContractParam {
 
     @NonNull
     private String triggerMethod;
 
     @NonNull
-    private String args;
+    private List<Object> args;
 
     @NonNull
     @Getter
@@ -28,7 +30,7 @@ public class TriggerContractParam {
     private byte[] data;
 
     public byte[] getData() {
-        return Hex.decode(AbiUtil.parseMethod(triggerMethod, args, false));
+        return Hex.decode(AbiUtil.parseMethod(triggerMethod, args));
     }
 
     public TriggerContractParam setTriggerMethod(String triggerMethod) {
@@ -36,7 +38,7 @@ public class TriggerContractParam {
         return this;
     }
 
-    public TriggerContractParam setArgs(String args) {
+    public TriggerContractParam setArgs(List<Object> args) {
         this.args = args;
         return this;
     }
