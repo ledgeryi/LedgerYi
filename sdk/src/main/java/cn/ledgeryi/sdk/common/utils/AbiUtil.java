@@ -23,7 +23,7 @@ public class AbiUtil {
 
   static abstract class Coder {
     boolean dynamic = false;
-    //    DataWord[] encode
+    // DataWord[] encode
     abstract byte[] encode(String value);
     abstract byte[] decode();
   }
@@ -46,8 +46,6 @@ public class AbiUtil {
         return new CoderBool();
       case "bytes":
         return new CoderDynamicBytes();
-      case "trcToken":
-        return new CoderNumber();
     }
     if (paramTypeBytes.matcher(type).find()) {
       return new CoderFixedBytes();

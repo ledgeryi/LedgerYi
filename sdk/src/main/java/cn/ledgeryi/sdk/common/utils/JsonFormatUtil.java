@@ -11,6 +11,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,9 +21,17 @@ public class JsonFormatUtil {
   public static final String VALUE = "value";
 
   public static String printSmartContract(SmartContractOuterClass.SmartContract smartContract){
-    String smartStr = JsonFormat.printToString(smartContract, true);
+    return printMessage(smartContract);
+  }
+
+  public static String printABI(SmartContractOuterClass.SmartContract.ABI abi){
+    return printMessage(abi);
+  }
+
+
+  private static String printMessage(Message message){
+    String smartStr = JsonFormat.printToString(message, true);
     JSONObject smartJsonObject = JSONObject.parseObject(smartStr);
-    JsonFormatUtil.formatJson(smartJsonObject.toJSONString());
     return JsonFormatUtil.formatJson(smartJsonObject.toJSONString());
   }
 

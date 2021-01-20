@@ -21,10 +21,8 @@ import cn.ledgeryi.sdk.contract.compiler.entity.CompilationResult;
 import cn.ledgeryi.sdk.contract.compiler.entity.Result;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
-import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
-import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
-import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
-import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
+import cn.ledgeryi.sdk.parse.event.Log;
+import cn.ledgeryi.sdk.serverapi.data.*;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -73,6 +72,15 @@ public class LedgerYiApiService {
 
     public Protocol.Transaction getTransactionById(String hash){
         return rpcCli.getTransactionById(hash);
+    }
+
+    public TransactionInformation getTransactionInfoReadable(String hash) {
+        Protocol.TransactionInfo infoById = getTransactionInfoById(hash);
+        TransactionInformation information = TransactionInformation.parseTransactionInfo(infoById);
+        SmartContract contract = getContract(infoById.getContractAddress().toByteArray());
+        List<Log> logs = Log.parseLogInfo(infoById.getLogList(), contract.getAbi());
+        information.setLogs(logs);
+        return information;
     }
 
     public Protocol.TransactionInfo getTransactionInfoById(String hash) {
