@@ -11,6 +11,7 @@ import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
+import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -134,6 +135,9 @@ public class Erc20ContractTest {
     public void getContractFromOnChain(){
         SmartContractOuterClass.SmartContract contract = ledgerYiApiService.getContract(DecodeUtil.decode(contractAddres));
         System.out.println(JsonFormatUtil.printSmartContract(contract));
+        JSONObject jsonObject = JSONObject.parseObject(JsonFormatUtil.printABI(contract.getAbi()));
+        String abi = jsonObject.getString("entrys");
+        System.out.println(abi);
     }
 
     @Test

@@ -3,9 +3,7 @@ package cn.ledgeryi.sdk.demo;
 import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
-import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
-import cn.ledgeryi.sdk.common.utils.LedgerYiUtils;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
@@ -13,7 +11,7 @@ import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
-import org.apache.commons.lang3.StringUtils;
+import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -87,12 +85,15 @@ public class ContractTest {
     }
 
     // Storage address
-    private static String contractAddres = "3d21f860eabb8cf18b9c1c37d4133a9ed15cb7b4";
+    private static String contractAddres = "918d712204de0fcb2a6b6de227d359c103b1b3a2";
 
     @Test
     public void getContractFromOnChain(){
         SmartContractOuterClass.SmartContract contract = ledgerYiApiService.getContract(DecodeUtil.decode(contractAddres));
         System.out.println(JsonFormatUtil.printSmartContract(contract));
+        JSONObject jsonObject = JSONObject.parseObject(JsonFormatUtil.printABI(contract.getAbi()));
+        String abi = jsonObject.getString("entrys");
+        System.out.println(abi);
     }
 
     @Test
