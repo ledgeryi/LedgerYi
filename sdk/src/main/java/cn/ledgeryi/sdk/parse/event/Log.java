@@ -9,6 +9,7 @@ import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,16 +18,16 @@ import java.util.List;
 @Setter
 public class Log {
 
-    private String address;
+    private String contractAddress;
     private List<String> topics = new ArrayList<>();
-    private String data;
+    private BigInteger data;
 
     public static List<Log> parseLogInfo(List<TransactionInfo.Log> logList, ABI abi){
         List<Log> logs = new ArrayList<>();
         logList.forEach(log -> {
             Log tmp = new Log();
-            tmp.setAddress(DecodeUtil.createReadableString(log.getAddress()));
-            tmp.setData(DecodeUtil.createReadableString(log.getData()));
+            tmp.setContractAddress(DecodeUtil.createReadableString(log.getAddress()));
+            tmp.setData(DataWord.of(log.getData().toByteArray()).value());
 
             List<String> topics = new ArrayList<>();
             for (int i = 0; i < log.getTopicsCount(); i++){
@@ -34,11 +35,10 @@ public class Log {
                     ByteString topic = log.getTopics(i);
                     String function = function(abi, topic.toByteArray());
                     topics.add(function);
-                    tmp.setTopics(topics);
                     continue;
                 }
-
-                topics.add(DecodeUtil.createReadableString(log.getTopics(i)));
+                //address length is 20 bytes
+                topics.add(DataWord.of(log.getTopics(i).toByteArray()).toHexString().substring(24));
             }
             tmp.setTopics(topics);
 
@@ -54,6 +54,4 @@ public class Log {
         CallTransaction.Function function = contract.getBySignatureHash(hash);
         return function.formatSignature();
     }
-
-
 }
