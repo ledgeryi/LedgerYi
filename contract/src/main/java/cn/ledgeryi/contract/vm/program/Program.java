@@ -609,14 +609,15 @@ public class Program {
         DataWord keyWord = word1.clone();
         DataWord valWord = word2.clone();
         Repository contractState = getContractState();
-        contractState.putStorageValue(getContractAddress().getLast20Bytes(), keyWord, valWord);
 
         //process storage used
         DataWord storageValue = contractState.getStorageValue(getContractAddress().getLast20Bytes(), keyWord);
-        if (storageValue != null && storageValue.longValue() != valWord.longValue()) {
+        if (storageValue == null) {
             long currentStorageUsedTotal = keyWord.getData().length + valWord.getData().length;
             setStorageUsed(currentStorageUsedTotal);
         }
+
+        contractState.putStorageValue(getContractAddress().getLast20Bytes(), keyWord, valWord);
     }
 
     public byte[] getCode() {
