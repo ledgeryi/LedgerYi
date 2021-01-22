@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.demo;
+package cn.ledgeryi.sdk.tests;
 
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;

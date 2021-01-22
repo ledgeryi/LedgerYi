@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.demo;
+package cn.ledgeryi.sdk.tests.contract;
 
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;

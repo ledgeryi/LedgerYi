@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.demo;
+package cn.ledgeryi.sdk.tests.contract;
 
 import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.DecodeUtil;
@@ -32,7 +32,7 @@ public class ContractTest {
     }
 
     /**
-     * single contract demo
+     * single contract tests
      */
     private static String testContratSingle = "// SPDX-License-Identifier: GPL-3.0\n" +
             "\n" +
@@ -85,7 +85,7 @@ public class ContractTest {
     }
 
     // Storage address
-    private static String contractAddres = "918d712204de0fcb2a6b6de227d359c103b1b3a2";
+    private static String contractAddres = "0bc8d3d9edc334bd2c2bef5985983cb9f95676f6";
 
     @Test
     public void getContractFromOnChain(){
