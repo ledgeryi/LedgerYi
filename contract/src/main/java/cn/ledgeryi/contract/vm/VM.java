@@ -836,14 +836,11 @@ public class VM {
           word1.add(word2);
           program.stackPush(word1);
           program.step();
-
         }
         break;
         case MUL: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           word1.mul(word2);
           program.stackPush(word1);
           program.step();
@@ -852,8 +849,6 @@ public class VM {
         case SUB: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           word1.sub(word2);
           program.stackPush(word1);
           program.step();
@@ -862,8 +857,6 @@ public class VM {
         case DIV: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           word1.div(word2);
           program.stackPush(word1);
           program.step();
@@ -872,8 +865,6 @@ public class VM {
         case SDIV: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           word1.sDiv(word2);
           program.stackPush(word1);
           program.step();
@@ -882,8 +873,6 @@ public class VM {
         case MOD: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           word1.mod(word2);
           program.stackPush(word1);
           program.step();
@@ -892,8 +881,6 @@ public class VM {
         case SMOD: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           word1.sMod(word2);
           program.stackPush(word1);
           program.step();
@@ -902,8 +889,6 @@ public class VM {
         case EXP: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           word1.exp(word2);
           program.stackPush(word1);
           program.step();
@@ -912,7 +897,6 @@ public class VM {
         case SIGNEXTEND: {
           DataWord word1 = program.stackPop();
           BigInteger k = word1.value();
-
           if (k.compareTo(_32_) < 0) {
             DataWord word2 = program.stackPop();
             word2.signExtend(k.byteValue());
@@ -924,8 +908,6 @@ public class VM {
         case NOT: {
           DataWord word1 = program.stackPop();
           word1.bnot();
-
-
           program.stackPush(word1);
           program.step();
         }
@@ -934,8 +916,6 @@ public class VM {
           // TODO: can be improved by not using BigInteger
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
           if (word1.value().compareTo(word2.value()) < 0) {
             word1.and(DataWord.ZERO);
             word1.getData()[31] = 1;
@@ -965,9 +945,6 @@ public class VM {
           // TODO: can be improved by not using BigInteger
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
-
           if (word1.sValue().compareTo(word2.sValue()) > 0) {
             word1.and(DataWord.ZERO);
             word1.getData()[31] = 1;
@@ -982,9 +959,6 @@ public class VM {
           // TODO: can be improved by not using BigInteger
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
-
           if (word1.value().compareTo(word2.value()) > 0) {
             word1.and(DataWord.ZERO);
             word1.getData()[31] = 1;
@@ -998,9 +972,6 @@ public class VM {
         case EQ: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
-
           if (word1.xor(word2).isZero()) {
             word1.and(DataWord.ZERO);
             word1.getData()[31] = 1;
@@ -1018,9 +989,6 @@ public class VM {
           } else {
             word1.and(DataWord.ZERO);
           }
-
-
-
           program.stackPush(word1);
           program.step();
         }
@@ -1032,9 +1000,6 @@ public class VM {
         case AND: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
-
           word1.and(word2);
           program.stackPush(word1);
           program.step();
@@ -1043,9 +1008,6 @@ public class VM {
         case OR: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
-
           word1.or(word2);
           program.stackPush(word1);
           program.step();
@@ -1054,9 +1016,6 @@ public class VM {
         case XOR: {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
-
-
-
           word1.xor(word2);
           program.stackPush(word1);
           program.step();
@@ -1074,9 +1033,6 @@ public class VM {
           } else {
             result = new DataWord();
           }
-
-
-
           program.stackPush(result);
           program.step();
         }
@@ -1085,9 +1041,6 @@ public class VM {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
           final DataWord result = word2.shiftLeft(word1);
-
-
-
           program.stackPush(result);
           program.step();
         }
@@ -1096,9 +1049,6 @@ public class VM {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
           final DataWord result = word2.shiftRight(word1);
-
-
-
           program.stackPush(result);
           program.step();
         }
@@ -1107,9 +1057,6 @@ public class VM {
           DataWord word1 = program.stackPop();
           DataWord word2 = program.stackPop();
           final DataWord result = word2.shiftRightSigned(word1);
-
-
-
           program.stackPush(result);
           program.step();
         }
@@ -1139,14 +1086,9 @@ public class VM {
         case SHA3: {
           DataWord memOffsetData = program.stackPop();
           DataWord lengthData = program.stackPop();
-          byte[] buffer = program
-                  .memoryChunk(memOffsetData.intValueSafe(), lengthData.intValueSafe());
-
+          byte[] buffer = program.memoryChunk(memOffsetData.intValueSafe(), lengthData.intValueSafe());
           byte[] encoded = sha3(buffer);
           DataWord word = new DataWord(encoded);
-
-
-
           program.stackPush(word);
           program.step();
         }
@@ -1157,10 +1099,6 @@ public class VM {
          */
         case ADDRESS: {
           DataWord address = program.getContractAddress();
-
-
-
-
           program.stackPush(address);
           program.step();
         }
@@ -1175,7 +1113,6 @@ public class VM {
         case ISCONTRACT: {
           DataWord address = program.stackPop();
           DataWord isContract = program.isContract(address);
-
           program.stackPush(isContract);
           program.step();
         }
@@ -1247,9 +1184,7 @@ public class VM {
           DataWord memOffsetData = program.stackPop();
           DataWord dataOffsetData = program.stackPop();
           DataWord lengthData = program.stackPop();
-
           byte[] msgData = program.getReturnDataBufferData(dataOffsetData, lengthData);
-
           if (msgData == null) {
             throw new Program.ReturnDataCopyIllegalBoundsException(dataOffsetData, lengthData,
                     program.getReturnDataBufferSize().longValueSafe());
@@ -1260,7 +1195,6 @@ public class VM {
         break;
         case CODESIZE:
         case EXTCODESIZE: {
-
           int length;
           if (op == OpCode.CODESIZE) {
             length = program.getCode().length;
@@ -1275,25 +1209,19 @@ public class VM {
         }
         case CODECOPY:
         case EXTCODECOPY: {
-
           byte[] fullCode = EMPTY_BYTE_ARRAY;
           if (op == OpCode.CODECOPY) {
             fullCode = program.getCode();
           }
-
           if (op == OpCode.EXTCODECOPY) {
             DataWord address = program.stackPop();
             fullCode = program.getCodeAt(address);
           }
-
           int memOffset = program.stackPop().intValueSafe();
           int codeOffset = program.stackPop().intValueSafe();
           int lengthData = program.stackPop().intValueSafe();
-
           int sizeToBeCopied = (long) codeOffset + lengthData > fullCode.length ? (fullCode.length < codeOffset ? 0 : fullCode.length - codeOffset) : lengthData;
-
           byte[] codeCopy = new byte[lengthData];
-
           if (codeOffset < fullCode.length) {
             System.arraycopy(fullCode, codeOffset, codeCopy, 0, sizeToBeCopied);
           }
@@ -1319,9 +1247,7 @@ public class VM {
          * Block Information
          */
         case BLOCKHASH: {
-
           int blockIndex = program.stackPop().intValueSafe();
-
           DataWord blockHash = program.getBlockHash(blockIndex);
           program.stackPush(blockHash);
           program.step();
@@ -1379,12 +1305,10 @@ public class VM {
         case DUP14:
         case DUP15:
         case DUP16: {
-
           int n = op.val() - OpCode.DUP1.val() + 1;
           DataWord word_1 = stack.get(stack.size() - n);
           program.stackPush(word_1.clone());
           program.step();
-
           break;
         }
         case SWAP1:
@@ -1403,7 +1327,6 @@ public class VM {
         case SWAP14:
         case SWAP15:
         case SWAP16: {
-
           int n = op.val() - OpCode.SWAP1.val() + 2;
           stack.swap(stack.size() - 1, stack.size() - n);
           program.step();
@@ -1414,29 +1337,20 @@ public class VM {
         case LOG2:
         case LOG3:
         case LOG4: {
-
           if (program.isStaticCall()) {
             throw new Program.StaticCallModificationException();
           }
           DataWord address = program.getContractAddress();
-
           DataWord memStart = stack.pop();
           DataWord memOffset = stack.pop();
-
           int nTopics = op.val() - OpCode.LOG0.val();
-
           List<DataWord> topics = new ArrayList<>();
           for (int i = 0; i < nTopics; ++i) {
             DataWord topic = stack.pop();
             topics.add(topic);
           }
-
           byte[] data = program.memoryChunk(memStart.intValueSafe(), memOffset.intValueSafe());
-
-          LogInfo logInfo =
-                  new LogInfo(address.getLast20Bytes(), topics, data);
-
-
+          LogInfo logInfo = new LogInfo(address.getLast20Bytes(), topics, data);
           program.getResult().addLogInfo(logInfo);
           program.step();
           break;
@@ -1444,7 +1358,6 @@ public class VM {
         case MLOAD: {
           DataWord addr = program.stackPop();
           DataWord data = program.memoryLoad(addr);
-
           program.stackPush(data);
           program.step();
         }
@@ -1470,7 +1383,6 @@ public class VM {
           if (val == null) {
             val = key.and(DataWord.ZERO);
           }
-
           program.stackPush(val);
           program.step();
         }
@@ -1479,11 +1391,8 @@ public class VM {
           if (program.isStaticCall()) {
             throw new Program.StaticCallModificationException();
           }
-
           DataWord addr = program.stackPop();
           DataWord value = program.stackPop();
-
-
           program.storageSave(addr, value);
           program.step();
         }
@@ -1491,7 +1400,6 @@ public class VM {
         case JUMP: {
           DataWord pos = program.stackPop();
           int nextPC = program.verifyJumpDest(pos);
-
           program.setPC(nextPC);
 
         }
@@ -1499,24 +1407,17 @@ public class VM {
         case JUMPI: {
           DataWord pos = program.stackPop();
           DataWord cond = program.stackPop();
-
           if (!cond.isZero()) {
             int nextPC = program.verifyJumpDest(pos);
-
-
-
             program.setPC(nextPC);
           } else {
             program.step();
           }
-
         }
         break;
         case PC: {
           int pc = program.getPC();
           DataWord pcWord = new DataWord(pc);
-
-
           program.stackPush(pcWord);
           program.step();
         }
@@ -1524,9 +1425,6 @@ public class VM {
         case MSIZE: {
           int memSize = program.getMemSize();
           DataWord wordMemSize = new DataWord(memSize);
-
-
-
           program.stackPush(wordMemSize);
           program.step();
         }
@@ -1538,7 +1436,6 @@ public class VM {
           program.step();*/
         }
         break;
-
         case PUSH1:
         case PUSH2:
         case PUSH3:
@@ -1573,10 +1470,7 @@ public class VM {
         case PUSH32: {
           program.step();
           int nPush = op.val() - PUSH1.val() + 1;
-
           byte[] data = program.sweep(nPush);
-
-
           program.stackPush(data);
           break;
         }
@@ -1592,7 +1486,6 @@ public class VM {
           DataWord inOffset = program.stackPop();
           DataWord inSize = program.stackPop();
           program.createContract(value, inOffset, inSize);
-
           program.step();
         }
         break;
@@ -1614,7 +1507,6 @@ public class VM {
           //todo not support
           DataWord tokenBalance = DataWord.ZERO;//program.getTokenBalance(address, tokenId);
           program.stackPush(tokenBalance);
-
           program.step();
         }
         break;
@@ -1625,33 +1517,25 @@ public class VM {
         case STATICCALL: {
           program.stackPop(); // use adjustedCallEnergy instead of requested
           DataWord codeAddress = program.stackPop();
-
           DataWord value;
           if (op.callHasValue()) {
             value = program.stackPop();
           } else {
             value = DataWord.ZERO;
           }
-
           if (program.isStaticCall() && (op == CALL || op == CALLTOKEN) && !value.isZero()) {
             throw new Program.StaticCallModificationException();
           }
-
           DataWord tokenId = new DataWord(0);
           boolean isTokenTransferMsg = false;
           if (op == CALLTOKEN) {
             tokenId = program.stackPop();
           }
-
           DataWord inDataOffs = program.stackPop();
           DataWord inDataSize = program.stackPop();
-
           DataWord outDataOffs = program.stackPop();
           DataWord outDataSize = program.stackPop();
-
-
           program.memoryExpand(outDataOffs, outDataSize);
-
           //todo not support
           /*MessageCall msg = new MessageCall(
                   op, DataWord.ZERO, codeAddress, value, inDataOffs, inDataSize,
@@ -1669,7 +1553,6 @@ public class VM {
           } else {
             program.callToAddress(msg);
           }*/
-
           program.step();
           break;
         }
