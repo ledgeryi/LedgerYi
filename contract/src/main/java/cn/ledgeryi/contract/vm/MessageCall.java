@@ -54,25 +54,19 @@ public class MessageCall {
    */
   private DataWord outDataSize;
 
-  private DataWord tokenId;
 
   public MessageCall(OpCode type, DataWord codeAddress,
-      DataWord endowment, DataWord inDataOffs, DataWord inDataSize, DataWord tokenId) {
+                     DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
+                     DataWord outDataOffs, DataWord outDataSize) {
     this.type = type;
     this.codeAddress = codeAddress;
     this.endowment = endowment;
     this.inDataOffs = inDataOffs;
     this.inDataSize = inDataSize;
-    this.tokenId = tokenId;
-  }
-
-  public MessageCall(OpCode type, DataWord codeAddress,
-      DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
-      DataWord outDataOffs, DataWord outDataSize, DataWord tokenId) {
-    this(type, codeAddress, endowment, inDataOffs, inDataSize, tokenId);
     this.outDataOffs = outDataOffs;
     this.outDataSize = outDataSize;
   }
+
 
   public OpCode getType() {
     return type;
