@@ -12,9 +12,13 @@ import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
+import org.spongycastle.util.Strings;
+import org.spongycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -95,12 +99,36 @@ public class Erc20ContractTest {
             "}";
 
 
+    private static String ownedToken = "// SPDX-License-Identifier: GPL-3.0\n" +
+            "pragma solidity ^0.6.9;\n" +
+            "contract OwnedToken {\n" +
+            "    address owner;\n" +
+            "    bytes32 name;\n" +
+            "    constructor(bytes32 _name) public {\n" +
+            "        owner = msg.sender;\n" +
+            "        name = _name;\n" +
+            "    }\n" +
+            "    function changeName(bytes32 newName) public {\n" +
+            "        if (msg.sender == owner)\n" +
+            "            name = newName;\n" +
+            "    }\n" +
+            "    function getName() public view returns (bytes32) {\n" +
+            "        return name;\n" +
+            "    }\n" +
+            "}";
+
+
     @Test
     public void compileContractTest() {
         DeployContractParam result = null;
         try {
-            String contract = basicft;
+            String contract = ownedToken;
             result = ledgerYiApiService.compileSingleContract(contract);
+            result.setConstructor("constructor(bytes32)");
+            ArrayList<Object> args = Lists.newArrayList();
+            String readableString = Hex.toHexString(("Lili").getBytes());
+            args.add(readableString);
+            result.setArgs(args);
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -115,8 +143,13 @@ public class Erc20ContractTest {
         DeployContractParam result = null;
         DeployContractReturn deployContract = null;
         try {
-            String contract = basicft;
+            String contract = ownedToken;
             result = ledgerYiApiService.compileSingleContract(contract);
+            result.setConstructor("constructor(bytes32)");
+            ArrayList<Object> args = Lists.newArrayList();
+            String readableString = Hex.toHexString(("Lili").getBytes());
+            args.add(readableString);
+            result.setArgs(args);
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
             e.printStackTrace();
@@ -129,7 +162,29 @@ public class Erc20ContractTest {
     }
 
     // BasicFT address
-    private static String contractAddres = "9bd34d14acc715a37bcf77da13322526258bbb2d";
+    //private static String contractAddres = "71355a60f1b22a530e94300ad7809491486eead8";
+    //ownedToken
+    private static String contractAddres = "e8d4cfced6431d457f5d81fff45965c2956a750a";
+
+    @Test
+    public void triggerOwnedTokenContract(){
+        getName();
+        changeName();
+    }
+
+    private void getName(){
+        List args = Collections.EMPTY_LIST;
+        String method = "getName()";
+        triggerContract(method, args,true);
+    }
+
+    private void changeName(){
+        ArrayList<Object> args = Lists.newArrayList();
+        String toHexString = Hex.toHexString(("bob").getBytes());
+        args.add(toHexString);
+        String method = "changeName(bytes32)";
+        triggerContract(method, args,false);
+    }
 
     @Test
     public void getContractFromOnChain(){
@@ -170,7 +225,7 @@ public class Erc20ContractTest {
 
     @Test
     public void transfer() {
-        String receiver = "3d21f860eabb8cf18b9c1c37d4133a9ed15cb7b4";
+        String receiver = contractAddres;
         List args = Arrays.asList(receiver,"4");
         String method = "transfer(address,uint256)";
         triggerContract(method, args, false);
@@ -203,6 +258,7 @@ public class Erc20ContractTest {
             }
         } else {
             System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));
+            System.out.println("trigger contract result: " + Strings.fromByteArray(result.getCallResult().toByteArray()));
         }
     }
 }

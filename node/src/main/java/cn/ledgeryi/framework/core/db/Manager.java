@@ -380,6 +380,8 @@ public class Manager {
           processTransaction(tx, null);
           pendingTransactions.add(tx);
           tmpSession.merge();
+        } catch (Exception e){
+          log.error("process tx error, error: " ,e );
         }
       }
     } finally {

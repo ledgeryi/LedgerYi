@@ -562,6 +562,15 @@ public enum OpCode {
   LOG4(0xa4, 6, 0, OpCode.Tier.SpecialTier),
 
   /**
+   * (0xd0) Message-call into an account with trc10 token
+   */
+  CALLTOKEN(0xd0, 8, 1, OpCode.Tier.SpecialTier, CallFlags.Call, CallFlags.HasValue),
+  TOKENBALANCE(0xd1, 2, 1, OpCode.Tier.ExtTier),
+  CALLTOKENVALUE(0xd2, 0, 1, OpCode.Tier.BaseTier),
+  CALLTOKENID(0xd3, 0, 1, OpCode.Tier.BaseTier),
+  ISCONTRACT(0xd4, 1, 1, OpCode.Tier.ExtTier),
+
+  /**
    * (0xf0) Create a new account with associated code
    */
   // [in_size] [in_offs] [gas_val] CREATE

@@ -327,6 +327,15 @@ public class AbiUtil {
     return Hex.toHexString(selector) + Hex.toHexString(encodedParms);
   }
 
+  public static byte[] parseConstructor(String constructor, List<Object> parameters){
+    List<Coder> coders = new ArrayList<>();
+    for (String s: getTypes(constructor)) {
+      Coder c = getParamCoder(s);
+      coders.add(c);
+    }
+    return pack(coders, parameters);
+  }
+
   public static byte[] encodeInput(String methodSign, String input) {
     ObjectMapper mapper = new ObjectMapper();
     input = "[" + input + "]";
@@ -337,13 +346,11 @@ public class AbiUtil {
       e.printStackTrace();
       return null;
     }
-
     List<Coder> coders = new ArrayList<>();
     for (String s: getTypes(methodSign)) {
       Coder c = getParamCoder(s);
       coders.add(c);
     }
-
     return pack(coders, items);
   }
 
