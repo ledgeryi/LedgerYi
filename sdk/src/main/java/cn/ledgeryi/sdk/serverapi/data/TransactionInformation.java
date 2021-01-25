@@ -23,6 +23,7 @@ public class TransactionInformation {
     private String contractAddress;
     private ResourceReceipt receipt;
     private List<Log> logs;
+    private String resMassage;
 
 
     public static TransactionInformation parseTransactionInfo(TransactionInfo tx){
@@ -32,6 +33,7 @@ public class TransactionInformation {
                 .blockTimeStamp(tx.getBlockTimeStamp())
                 .contractAddress(DecodeUtil.createReadableString(tx.getContractAddress()))
                 .receipt(ResourceReceipt.parseReceipt(tx.getReceipt()))
+                .resMassage(DecodeUtil.createReadableString(tx.getResMessage()))
                 .build();
     }
 

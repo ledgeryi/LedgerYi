@@ -68,24 +68,6 @@ public class TransactionInfoCapsule implements ProtoCapsule<Protocol.Transaction
 
     builder.setReceipt(traceReceipt.getReceipt());
 
-    if (Args.getInstance().isSaveInternalTx() && null != programResult.getInternalTransactions()) {
-      for (InternalTransaction internalTransaction : programResult.getInternalTransactions()) {
-        Protocol.InternalTransaction.Builder internalTxBuilder = Protocol.InternalTransaction.newBuilder();
-        // set hash
-        internalTxBuilder.setHash(ByteString.copyFrom(internalTransaction.getHash()));
-        // set caller
-        internalTxBuilder.setCallerAddress(ByteString.copyFrom(internalTransaction.getSender()));
-        // set TransferTo
-        internalTxBuilder.setTransferToAddress(ByteString.copyFrom(internalTransaction.getTransferToAddress()));
-        Protocol.InternalTransaction.CallValueInfo.Builder callValueInfoBuilder = Protocol.InternalTransaction.CallValueInfo.newBuilder();
-        callValueInfoBuilder.setCallValue(internalTransaction.getValue());
-        internalTxBuilder.addCallValueInfo(callValueInfoBuilder);
-        internalTxBuilder.setNote(ByteString.copyFrom(internalTransaction.getNote().getBytes()));
-        internalTxBuilder.setRejected(internalTransaction.isRejected());
-        builder.addInternalTransactions(internalTxBuilder);
-      }
-    }
-
     return new TransactionInfoCapsule(builder.build());
   }
 
