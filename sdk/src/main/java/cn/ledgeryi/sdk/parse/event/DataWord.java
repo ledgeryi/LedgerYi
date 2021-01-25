@@ -1,8 +1,7 @@
 package cn.ledgeryi.sdk.parse.event;
 
-import cn.ledgeryi.common.core.db.ByteArrayWrapper;
-import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.FastByteComparisons;
+import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.spongycastle.util.Arrays;
@@ -43,10 +42,6 @@ public class DataWord implements Comparable<DataWord> {
   @JsonCreator
   public DataWord(String data) {
     this(Hex.decode(data));
-  }
-
-  public DataWord(ByteArrayWrapper wrappedData) {
-    this(wrappedData.getData());
   }
 
   public DataWord(byte[] data) {

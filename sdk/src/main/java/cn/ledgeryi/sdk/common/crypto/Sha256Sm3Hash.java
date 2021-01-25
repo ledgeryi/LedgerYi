@@ -1,6 +1,6 @@
 package cn.ledgeryi.sdk.common.crypto;
 
-import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.sdk.common.utils.ByteArray;
 import cn.ledgeryi.sdk.config.Configuration;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;

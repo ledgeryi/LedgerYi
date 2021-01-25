@@ -1,6 +1,5 @@
 package cn.ledgeryi.sdk.common.utils;
 
-import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.ecdsa.ECKey;
 import cn.ledgeryi.crypto.sm2.SM2;
