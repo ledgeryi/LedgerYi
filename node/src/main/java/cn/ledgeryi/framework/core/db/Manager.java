@@ -335,9 +335,9 @@ public class Manager {
     }
     long transactionExpiration = transactionCapsule.getExpiration();
     long headBlockTime = getHeadBlockTimeStamp();
-    if (transactionExpiration <= headBlockTime || transactionExpiration > headBlockTime + Constant.MAXIMUM_TIME_UNTIL_EXPIRATION) {
-      throw new TransactionExpirationException("transaction expiration, transaction expiration time is " + transactionExpiration
-              + ", but headBlockTime is " + headBlockTime);
+    if (transactionExpiration < headBlockTime) {
+      throw new TransactionExpirationException("transaction expiration, transaction expiration time is "
+              + transactionExpiration + ", but headBlockTime is " + headBlockTime);
     }
     if (!transactionCapsule.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");

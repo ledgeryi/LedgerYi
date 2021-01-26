@@ -608,7 +608,7 @@ public class Args {
         config.hasPath(Constant.TX_EXPIRATION_TIME_IN_MILLIS_SECONDS)
             && config.getLong(Constant.TX_EXPIRATION_TIME_IN_MILLIS_SECONDS) > 0 ?
             config.getLong(Constant.TX_EXPIRATION_TIME_IN_MILLIS_SECONDS)
-            : Constant.TRANSACTION_DEFAULT_EXPIRATION_TIME;
+            : Constant.MAXIMUM_TIME_UNTIL_EXPIRATION;
 
     INSTANCE.minEffectiveConnection = config.hasPath(Constant.NODE_RPC_MIN_EFFECTIVE_CONNECTION) ?
         config.getInt(Constant.NODE_RPC_MIN_EFFECTIVE_CONNECTION) : 1;

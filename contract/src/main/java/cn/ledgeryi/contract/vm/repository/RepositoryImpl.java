@@ -447,7 +447,6 @@ public class RepositoryImpl implements Repository {
     DataWord storageUsedDataWord;
     if (storageUsed != null){
       storageUsedDataWord = new DataWord(storageUsed.getData());
-      log.debug("==============storageUsed: " + storageUsedDataWord.longValue());
     } else {
       storageUsedDataWord = DataWord.ZERO;
     }
@@ -462,7 +461,6 @@ public class RepositoryImpl implements Repository {
     DataWord cpuTimeUsedDataWord;
     if (cpuTimeUsed != null){
       cpuTimeUsedDataWord = new DataWord(cpuTimeUsed.getData());
-      System.out.println("==============cpuTimeUsed: " + cpuTimeUsedDataWord.longValue());
     } else {
       cpuTimeUsedDataWord = DataWord.ZERO;
     }
