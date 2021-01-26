@@ -1,7 +1,6 @@
 package cn.ledgeryi.consenus.dpos;
 
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
-import cn.ledgeryi.consenus.ConsensusDelegate;
 import cn.ledgeryi.consenus.base.Param;
 import cn.ledgeryi.consenus.base.State;
 import com.google.protobuf.ByteString;

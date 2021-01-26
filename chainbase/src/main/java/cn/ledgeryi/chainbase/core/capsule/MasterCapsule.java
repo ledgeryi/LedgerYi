@@ -1,11 +1,12 @@
 package cn.ledgeryi.chainbase.core.capsule;
 
+import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.DecodeUtil;
+import cn.ledgeryi.crypto.utils.Hash;
 import cn.ledgeryi.protos.Protocol.Master;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.crypto.utils.Hash;
 
 @Slf4j(topic = "capsule")
 public class MasterCapsule implements ProtoCapsule<Master>, Comparable<MasterCapsule> {
@@ -109,7 +110,8 @@ public class MasterCapsule implements ProtoCapsule<Master>, Comparable<MasterCap
   }
 
   @Override
-  public int compareTo(MasterCapsule o) {
-    return 0;
+  public int compareTo(MasterCapsule otherMaster) {
+    String thisMasterAddress = DecodeUtil.createReadableString(this.getAddress());
+    return thisMasterAddress.compareTo(DecodeUtil.createReadableString(otherMaster.getAddress()));
   }
 }
