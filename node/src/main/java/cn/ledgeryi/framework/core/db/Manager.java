@@ -20,11 +20,11 @@ import cn.ledgeryi.consenus.base.Param;
 import cn.ledgeryi.contract.utils.TransactionRegister;
 import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.common.runtime.RuntimeImpl;
+import cn.ledgeryi.framework.common.utils.BlockUtil;
 import cn.ledgeryi.framework.common.utils.ForkController;
 import cn.ledgeryi.framework.common.utils.SessionOptional;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
 import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
-import cn.ledgeryi.framework.common.utils.BlockUtil;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
@@ -113,7 +113,7 @@ public class Manager {
   @Getter
   private final ForkController forkController = ForkController.instance();
   private ExecutorService validateSignService;
-  private boolean isRunRepushThread = false;
+  private boolean isRunRepushThread = true;
   private final Set<String> ownerAddressSet = new HashSet<>();
   private List<TransactionCapsule> pendingTransactions;
   private final BlockingQueue<TransactionCapsule> pushTransactionQueue = new LinkedBlockingQueue<>();
@@ -718,34 +718,19 @@ public class Manager {
     session.setValue(revokingStore.buildSession());
 
     Iterator<TransactionCapsule> iterator = pendingTransactions.iterator();
-    while (iterator.hasNext() || repushTransactions.size() > 0) {
+    while (iterator.hasNext()) {
 
       // check timeout
-      if (System.currentTimeMillis() > timeout) {
+      /*if (System.currentTimeMillis() > timeout) {
         log.warn("Processing transaction time exceeds the producing time.");
         break;
-      }
+      }*/
 
-      // get a transaction from transaction cache, but get it in the pending queue first
-      boolean fromPending = false;
-      TransactionCapsule tx;
-      if (iterator.hasNext()) {
-        fromPending = true;
-        tx = iterator.next();
-      } else {
-        tx = repushTransactions.poll();
-      }
+      TransactionCapsule tx = iterator.next();
 
       // check the block size
       long blockSize = blockCapsule.getInstance().getSerializedSize() + tx.getSerializedSize() + 3;
       if (blockSize > Parameter.ChainConstant.BLOCK_SIZE) {
-        if (!fromPending) {
-          try {
-            repushTransactions.put(tx);
-          } catch (InterruptedException e) {
-            log.error("repush a tx to queue failed.");
-          }
-        }
         log.info("block size is {}, exceed {}", blockSize, Parameter.ChainConstant.BLOCK_SIZE);
         break;
       }
@@ -759,15 +744,25 @@ public class Manager {
 
       // process transaction
       try (ISession tmpSession = revokingStore.buildSession()) {
-        processTransaction(tx, blockCapsule);
-        tmpSession.merge();
-        blockCapsule.addTransaction(tx);
-      } catch (Exception e) {
-        log.debug("Process tx failed when generating block: {}, tx from pending: {}", e.getMessage(), fromPending);
-      } finally {
-        if (fromPending) {
-          iterator.remove();
+        boolean dupTrans = false;
+        String txID = Hex.toHexString(tx.getTransactionId().getBytes());
+        List<Protocol.Transaction> transactions = blockCapsule.getInstance().getTransactionsList();
+        for (Protocol.Transaction transaction : transactions) {
+          TransactionCapsule transactionCapsule = new TransactionCapsule(transaction);
+          if (txID.equals(Hex.toHexString(transactionCapsule.getTransactionId().getBytes()))) {
+            dupTrans = true;
+            break;
+          }
         }
+        if (!dupTrans){
+          processTransaction(tx, blockCapsule);
+          tmpSession.merge();
+          blockCapsule.addTransaction(tx);
+        }
+      } catch (Exception e) {
+        log.debug("Process tx failed when generating block: {}", e.getMessage());
+      } finally {
+        iterator.remove();
       }
     } //end while
     session.reset();

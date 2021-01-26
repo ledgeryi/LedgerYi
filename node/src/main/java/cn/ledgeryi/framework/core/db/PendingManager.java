@@ -1,13 +1,12 @@
 package cn.ledgeryi.framework.core.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
-import cn.ledgeryi.chainbase.core.db.TransactionTrace;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j(topic = "DB")
 public class PendingManager implements AutoCloseable {
@@ -37,7 +36,7 @@ public class PendingManager implements AutoCloseable {
     }
     tmpTransactions.clear();
 
-    for (TransactionCapsule tx : dbManager.getPoppedTransactions()) {
+    /*for (TransactionCapsule tx : dbManager.getPoppedTransactions()) {
       try {
         if (tx.getTxTrace() != null) {
           dbManager.getRepushTransactions().put(tx);
@@ -47,6 +46,6 @@ public class PendingManager implements AutoCloseable {
         Thread.currentThread().interrupt();
       }
     }
-    dbManager.getPoppedTransactions().clear();
+    dbManager.getPoppedTransactions().clear();*/
   }
 }

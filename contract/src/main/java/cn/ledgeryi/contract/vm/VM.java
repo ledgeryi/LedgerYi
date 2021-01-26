@@ -65,7 +65,6 @@ public class VM {
       log.debug("current exec code: " + op.toString());
 
       program.setLastOp(op.val());
-      program.verifyStackSize(op.require());
       program.verifyStackOverflow(op.require(), op.ret());
 
       long currentCpuTimeUsed = op.getTier().asInt();

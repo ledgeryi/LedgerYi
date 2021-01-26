@@ -125,7 +125,7 @@ public class TransactionTrace {
     }
     //Verify that the local execution results are consistent with the received transaction results
     if (!tx.getContractRet().equals(receipt.getResult())) {
-      log.info("this tx id: {}, the resultCode in received block: {}, the resultCode in self: {}",
+      log.info("this tx id: {}, the resultCode in received block: {}, the resultCode in myself: {}",
           Hex.toHexString(tx.getTransactionId().getBytes()), tx.getContractRet(), receipt.getResult());
       throw new ReceiptCheckErrException("Different resultCode");
     }
