@@ -51,7 +51,7 @@ public class DposTask {
             Thread.sleep(time);
             State state = produceBlock();
             if (!State.OK.equals(state)) {
-              log.info("Produce block failed: {}", state);
+              log.debug("Produce block failed: {}", state);
             }
           }
         } catch (Throwable throwable) {

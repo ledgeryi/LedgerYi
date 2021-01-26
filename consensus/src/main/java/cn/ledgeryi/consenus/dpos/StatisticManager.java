@@ -37,7 +37,7 @@ public class StatisticManager {
       wc = consensusDelegate.getMaster(master);
       wc.setTotalMissed(wc.getTotalMissed() + 1);
       consensusDelegate.saveMaster(wc);
-      log.info("Current block: {}, master: {} totalMissed: {}", blockNum, wc.createReadableString(), wc.getTotalMissed());
+      log.debug("Current block: {}, master: {} totalMissed: {}", blockNum, wc.createReadableString(), wc.getTotalMissed());
       consensusDelegate.applyBlock(false);
     }
     consensusDelegate.applyBlock(true);
