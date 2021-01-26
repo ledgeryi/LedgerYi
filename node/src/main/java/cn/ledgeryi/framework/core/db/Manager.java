@@ -575,7 +575,7 @@ public class Manager {
         ownerAddressSet.addAll(result);
       }
     }
-    log.info("pushBlock block number:{}, cost/txs:{}/{}",
+    log.debug("pushBlock block number:{}, cost/txs:{}/{}",
         block.getNum(), System.currentTimeMillis() - start, block.getTransactions().size());
   }
 
@@ -901,7 +901,7 @@ public class Manager {
 
   public void preValidateTransactionSign(BlockCapsule block)
       throws InterruptedException, ValidateSignatureException {
-    log.info("PreValidate Transaction Sign, size:" + block.getTransactions().size() + ",block num:" + block.getNum());
+    log.debug("PreValidate Transaction Sign, size:" + block.getTransactions().size() + ",block num:" + block.getNum());
     int transSize = block.getTransactions().size();
     if (transSize <= 0) {
       return;

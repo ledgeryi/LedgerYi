@@ -184,7 +184,7 @@ public class LedgerYiNetDelegate {
           }
           dbManager.pushBlock(block);
           freshBlockId.add(blockId);
-          log.info("Success process block {}.", blockId.getString());
+          log.debug("Success process block {}.", blockId.getString());
           if (!backupServerStartFlag && System.currentTimeMillis() - block.getTimeStamp() < BLOCK_PRODUCED_INTERVAL) {
             backupServerStartFlag = true;
             backupServer.initServer();

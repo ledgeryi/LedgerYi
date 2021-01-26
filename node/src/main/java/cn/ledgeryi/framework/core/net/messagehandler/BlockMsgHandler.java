@@ -56,7 +56,7 @@ public class BlockMsgHandler implements LedgerYiMsgHandler {
       long now = System.currentTimeMillis();
       long interval = blockId.getNum() - ledgerYiNetDelegate.getHeadBlockId().getNum();
       processBlock(peer, blockMessage.getBlockCapsule());
-      log.info(
+      log.debug(
           "Receive block/interval {}/{} from {} fetch/delay {}/{}ms, txs/process {}/{}ms, master: {}",
           blockId.getNum(),
           interval,
