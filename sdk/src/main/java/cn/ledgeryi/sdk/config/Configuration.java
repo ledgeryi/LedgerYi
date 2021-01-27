@@ -42,11 +42,11 @@ public class Configuration {
 
     if (config.hasPath(ACCOUNTYI_PRIVATE_KEY) && config.hasPath(ACCOUNTYI_ADDRESS)){
       if (StringUtils.isNotEmpty(config.getString(ACCOUNTYI_PRIVATE_KEY)) && StringUtils.isNotEmpty(config.getString(ACCOUNTYI_ADDRESS))) {
-        log.warn("account's address and privateKey are not empty, it will be use default account");
+        log.warn("account's address and privateKey are not empty, it will use default account");
         accountyiAddress = config.getString(ACCOUNTYI_ADDRESS);
         accountyiPrivateKey = config.getString(ACCOUNTYI_PRIVATE_KEY);
       } else {
-        log.warn("account's address and privateKey are empty, it will be use default account");
+        log.warn("account's address and privateKey are empty, it will be create a default account");
         AccountYi accountYi = LedgerYiUtils.createAccountYi();
         accountyiAddress = accountYi.getAddress();
         accountyiPrivateKey = accountYi.getPrivateKeyStr();
