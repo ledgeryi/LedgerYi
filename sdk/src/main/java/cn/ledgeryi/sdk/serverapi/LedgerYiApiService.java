@@ -298,10 +298,8 @@ public class LedgerYiApiService {
 
     private boolean checkOwnerAddressAndPrivateKey(byte[] ownerAddress, byte[] privateKey){
         if (ByteUtil.isNullOrZeroArray(ownerAddress) || ByteUtil.isNullOrZeroArray(privateKey)){
-            if (!ByteUtil.isNullOrZeroArray(privateKey) || !ByteUtil.isNullOrZeroArray(ownerAddress)){
-                log.error("Require account's private key and address to be empty");
-                return false;
-            }
+            log.error("Require account's private key and address to be empty");
+            return false;
         }
         return true;
     }
