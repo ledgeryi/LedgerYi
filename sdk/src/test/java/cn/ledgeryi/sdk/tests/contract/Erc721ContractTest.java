@@ -52,7 +52,7 @@ public class Erc721ContractTest {
             "    uint[] internal tokenIndexes;\n" +
             "    mapping(uint => uint) internal indexTokens;\n" +
             "    mapping(uint => uint) internal tokenTokenIndexes;\n" +
-            "    mapping(address => uint[]) internal ownerTokenIndexes;\n" +
+            "    mapping(address => uint[])  public ownerTokenIndexes;\n" +
             "\n" +
             "    constructor(string memory name_, string memory symbol_, uint _initialSupply) public {\n" +
             "        creator = msg.sender;\n" +
@@ -152,7 +152,12 @@ public class Erc721ContractTest {
             "        tokenIndexes.pop();\n" +
             "        delete indexTokens[_tokenId];\n" +
             "    }\n" +
-            "}\n";
+            "    \n" +
+            "    function tokenIndex(address _owner) public view returns (uint[] memory) {\n" +
+            "        require (_owner == msg.sender);\n" +
+            "        return ownerTokenIndexes[_owner];\n" +
+            "    }\n" +
+            "}";
 
 
     @Test
@@ -195,7 +200,7 @@ public class Erc721ContractTest {
     }
 
     // BasicFT address
-    private static String contractAddres = "66ed9ec7c81bedfa2d1cf79e517dd28ad0e8ab51";
+    private static String contractAddres = "3ab7057e2b5333d50bd25719b6b920d4920f07d0";
 
     @Test
     public void getContractFromOnChain(){
@@ -217,6 +222,20 @@ public class Erc721ContractTest {
     public void balanceOf() {
         List args = Arrays.asList(contractAddres);
         String method = "balanceOf(address)";
+        triggerContract(method, args, true);
+    }
+
+    @Test
+    public void tokenIndexes(){
+        List args = Arrays.asList(contractAddres);
+        String method = "tokenIndex(address)";
+        triggerContract(method, args, true);
+    }
+
+    @Test
+    public void tokenOfOwnerByIndex(){
+        List args = Arrays.asList(contractAddres,"0");
+        String method = "tokenOfOwnerByIndex(address,uint256)";
         triggerContract(method, args, true);
     }
 
