@@ -14,9 +14,9 @@ import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.google.protobuf.ByteString;
 import org.junit.Before;
 import org.junit.Test;
+import org.spongycastle.util.Strings;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -40,8 +40,8 @@ public class Erc721ContractTest {
             "\n" +
             "contract ERC721Enumerable {\n" +
             "\n" +
-            "    string public name;\n" +
-            "    string public symbol;\n" +
+            "    string internal nftName;\n" +
+            "    string internal nftSymbol;\n" +
             "    address internal creator;\n" +
             "\n" +
             "    mapping(uint256 => bool) internal burned;\n" +
@@ -52,12 +52,12 @@ public class Erc721ContractTest {
             "    uint[] internal tokenIndexes;\n" +
             "    mapping(uint => uint) internal indexTokens;\n" +
             "    mapping(uint => uint) internal tokenTokenIndexes;\n" +
-            "    mapping(address => uint[])  public ownerTokenIndexes;\n" +
+            "    mapping(address => uint[]) internal ownerTokenIndexes;\n" +
             "\n" +
             "    constructor(string memory name_, string memory symbol_, uint _initialSupply) public {\n" +
             "        creator = msg.sender;\n" +
-            "        name = name_;\n" +
-            "        symbol = symbol_;\n" +
+            "        nftName = name_;\n" +
+            "        nftSymbol = symbol_;\n" +
             "        maxId = _initialSupply;\n" +
             "        balances[msg.sender] = _initialSupply;\n" +
             "        for(uint i = 0; i < _initialSupply; i++){\n" +
@@ -152,13 +152,15 @@ public class Erc721ContractTest {
             "        tokenIndexes.pop();\n" +
             "        delete indexTokens[_tokenId];\n" +
             "    }\n" +
-            "    \n" +
-            "    function tokenIndex(address _owner) public view returns (uint[] memory) {\n" +
-            "        require (_owner == msg.sender);\n" +
-            "        return ownerTokenIndexes[_owner];\n" +
+            "\n" +
+            "    function name() external view returns (string memory _name) {\n" +
+            "        _name = nftName;\n" +
+            "    }\n" +
+            "\n" +
+            "    function symbol() external view returns (string memory _symbol){\n" +
+            "        _symbol = nftSymbol;\n" +
             "    }\n" +
             "}";
-
 
     @Test
     public void compileContractTest() {
@@ -186,7 +188,7 @@ public class Erc721ContractTest {
             ArrayList<Object> args = Lists.newArrayList();
             args.add("ERC721Basic");
             args.add("BSC");
-            args.add(10);
+            args.add(1000);
             result.setArgs(args);
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
@@ -200,7 +202,7 @@ public class Erc721ContractTest {
     }
 
     // BasicFT address
-    private static String contractAddres = "3ab7057e2b5333d50bd25719b6b920d4920f07d0";
+    private static String contractAddres = "52d08783ff98194356dda20f57f24d49293dc104";
 
     @Test
     public void getContractFromOnChain(){
@@ -213,8 +215,8 @@ public class Erc721ContractTest {
 
     @Test
     public void mint() {
-        List args = Arrays.asList(contractAddres,"5");
-        String method = "mint(address,uint256)";
+        List args = Arrays.asList(5);
+        String method = "issueTokens(uint256)";
         triggerContract(method, args,false);
     }
 
@@ -226,26 +228,31 @@ public class Erc721ContractTest {
     }
 
     @Test
-    public void tokenIndexes(){
-        List args = Arrays.asList(contractAddres);
-        String method = "tokenIndex(address)";
+    public void tokenByIndex(){
+        List args = Arrays.asList(40);
+        String method = "tokenByIndex(uint256)";
+        triggerContract(method, args, true);
+    }
+
+    @Test
+    public void ownerOf(){
+        List args = Arrays.asList(4);
+        String method = "ownerOf(uint256)";
         triggerContract(method, args, true);
     }
 
     @Test
     public void tokenOfOwnerByIndex(){
-        List args = Arrays.asList(contractAddres,"0");
+        List args = Arrays.asList(contractAddres,0);
         String method = "tokenOfOwnerByIndex(address,uint256)";
         triggerContract(method, args, true);
     }
 
     @Test
     public void burn() {
-        for (int i = 0; i < 1; i++) {
-            List args = Arrays.asList(contractAddres,"1");
-            String method = "burn(address,uint256)";
-            triggerContract(method, args, false);
-        }
+        List args = Arrays.asList(4);
+        String method = "burnToken(uint256)";
+        triggerContract(method, args, false);
     }
 
     @Test
@@ -258,19 +265,9 @@ public class Erc721ContractTest {
     @Test
     public void transfer() {
         String receiver = contractAddres;
-        List args = Arrays.asList(ownerAddress,receiver,"4");
+        List args = Arrays.asList(ownerAddress,receiver,4);
         String method = "transferFrom(address,address,uint256)";
         triggerContract(method, args, false);
-    }
-
-    @Test
-    public void bachTransfer() {
-        for (int i = 0; i < 10000; i++) {
-            String receiver = contractAddres;
-            List args = Arrays.asList(receiver,"1");
-            String method = "transfer(address,uint256)";
-            triggerContract(method, args, false);
-        }
     }
 
     @Test
@@ -317,10 +314,7 @@ public class Erc721ContractTest {
         } else {
             System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));
             System.out.println("trigger contract result: " + DecodeUtil.createReadableString(result.getCallResult().toByteArray()));
-
-            byte[] wordData = new byte[32];
-            ByteString bytes = result.getCallResult().substring(64,96);
-            System.out.println(DataWord.of(bytes.toByteArray()).toHexString());
+            System.out.println("trigger contract result: " + Strings.fromByteArray(result.getCallResult().toByteArray()));
         }
     }
 }
