@@ -382,6 +382,7 @@ public class Manager {
           tmpSession.merge();
         } catch (Exception e){
           log.error("process tx error, error: " ,e );
+          throw e;
         }
       }
     } finally {

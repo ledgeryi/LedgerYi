@@ -26,7 +26,6 @@ import cn.ledgeryi.framework.common.overlay.server.ChannelManager;
 import cn.ledgeryi.framework.common.overlay.server.SyncPool;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.BadBlockException;
-import cn.ledgeryi.framework.core.exception.ContractSizeNotEqualToOneException;
 import cn.ledgeryi.framework.core.exception.DupTransactionException;
 import cn.ledgeryi.framework.core.exception.TaposException;
 import cn.ledgeryi.framework.core.exception.TooBigTransactionException;
@@ -214,7 +213,7 @@ public class LedgerYiNetDelegate {
     try {
       tx.setTime(System.currentTimeMillis());
       dbManager.pushTransaction(tx);
-    } catch (ContractSizeNotEqualToOneException e) {
+    } catch (VMIllegalException e) {
       throw new P2pException(TypeEnum.BAD_TX, e);
     } catch (ContractValidateException
         | ValidateSignatureException
@@ -223,8 +222,7 @@ public class LedgerYiNetDelegate {
         | TaposException
         | TooBigTransactionException
         | TransactionExpirationException
-        | ReceiptCheckErrException
-            | VMIllegalException e) {
+        | ReceiptCheckErrException e) {
       throw new P2pException(TypeEnum.TX_EXE_FAILED, e);
     }
   }
