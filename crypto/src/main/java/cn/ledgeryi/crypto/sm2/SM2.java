@@ -1,6 +1,9 @@
 package cn.ledgeryi.crypto.sm2;
 
+import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.crypto.SignInterface;
+import cn.ledgeryi.crypto.SignatureInterface;
+import cn.ledgeryi.crypto.ecdsa.ECKey;
 import cn.ledgeryi.crypto.jce.ECKeyFactory;
 import cn.ledgeryi.crypto.jce.LedgerYiCastleProvider;
 import cn.ledgeryi.crypto.utils.Hash;
@@ -23,9 +26,6 @@ import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.encoders.Hex;
-import cn.ledgeryi.crypto.ecdsa.ECKey;
-import cn.ledgeryi.crypto.SignatureInterface;
-import cn.ledgeryi.common.utils.ByteUtil;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -42,7 +42,6 @@ import java.util.Arrays;
 
 import static cn.ledgeryi.common.utils.BIUtil.isLessThan;
 import static cn.ledgeryi.common.utils.ByteUtil.bigIntegerToBytes;
-import static cn.ledgeryi.crypto.utils.Hash.computeAddress;
 
 /**
  * Implement Chinese Commercial Cryptographic Standard of SM2

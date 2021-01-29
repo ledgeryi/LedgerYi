@@ -1,5 +1,6 @@
 package cn.ledgeryi.consenus.dpos;
 
+import cn.ledgeryi.common.utils.Time;
 import cn.ledgeryi.consenus.ConsensusDelegate;
 import cn.ledgeryi.consenus.base.BlockHandle;
 import cn.ledgeryi.consenus.base.ConsensusInterface;
@@ -8,7 +9,6 @@ import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import cn.ledgeryi.common.utils.ByteArray;
@@ -116,7 +116,7 @@ public class DposService implements ConsensusInterface {
     if (!scheduledMaster.equals(masterAddress)) {
       log.warn("ValidBlock failed: sMaster: {}, bMaster: {}, bTimeStamp: {}, slot: {}",
           ByteArray.toHexString(scheduledMaster.toByteArray()),
-          ByteArray.toHexString(masterAddress.toByteArray()), new DateTime(timeStamp), slot);
+          ByteArray.toHexString(masterAddress.toByteArray()), Time.getTimeString(timeStamp), slot);
       return false;
     }
     return true;

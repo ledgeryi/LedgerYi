@@ -1,12 +1,11 @@
 package cn.ledgeryi.sdk.tests.contract;
 
-import cn.ledgeryi.common.utils.ByteUtil;
-import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.sdk.common.utils.ByteUtil;
+import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
-import cn.ledgeryi.sdk.parse.event.DataWord;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
@@ -188,7 +187,7 @@ public class Erc721ContractTest {
             ArrayList<Object> args = Lists.newArrayList();
             args.add("ERC721Basic");
             args.add("BSC");
-            args.add(1000);
+            args.add(10000);
             result.setArgs(args);
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {

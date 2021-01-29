@@ -1,7 +1,6 @@
 package cn.ledgeryi.framework.common.utils;
 
 import cn.ledgeryi.common.utils.ByteUtil;
-import com.cedarsoftware.util.DeepEquals;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -134,14 +133,6 @@ public class Value {
     return new Value(null);
   }
 
-  /* *****************
-   *      Utility
-   * *****************/
-
-
-  public boolean cmp(Value o) {
-    return DeepEquals.deepEquals(this, o);
-  }
 
   /* *****************
    *      Checks

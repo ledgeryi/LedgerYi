@@ -11,6 +11,15 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sdk</artifactId>
 
+    <properties>
+        <collections4.version>4.0</collections4.version>
+        <fastjson.version>1.2.60</fastjson.version>
+        <jackson.version>2.8.5</jackson.version>
+        <typesafe.version>1.3.2</typesafe.version>
+        <spongycastle.version>1.58.0.0</spongycastle.version>
+    </properties>
+
+
     <dependencies>
         <dependency>
             <groupId>cn.ledgeryi</groupId>
@@ -23,23 +32,28 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.8.5</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
-            <version>1.3.2</version>
+            <version>${typesafe.version}</version>
         </dependency>
         <dependency>
             <groupId>com.madgag.spongycastle</groupId>
             <artifactId>core</artifactId>
-            <version>1.58.0.0</version>
+            <version>${spongycastle.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.60</version>
+            <version>${fastjson.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${collections4.version}</version>
         </dependency>
     </dependencies>
 

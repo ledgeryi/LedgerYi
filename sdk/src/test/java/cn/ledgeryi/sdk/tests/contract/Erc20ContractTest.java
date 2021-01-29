@@ -1,12 +1,11 @@
 package cn.ledgeryi.sdk.tests.contract;
 
-import cn.ledgeryi.common.utils.ByteUtil;
-import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.sdk.common.utils.ByteUtil;
+import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
-import cn.ledgeryi.sdk.parse.event.DataWord;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
@@ -14,11 +13,9 @@ import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.google.protobuf.ByteString;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.Strings;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,12 +1,12 @@
 package cn.ledgeryi.consenus.dpos;
 
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
+import cn.ledgeryi.common.utils.Time;
 import cn.ledgeryi.consenus.base.Param;
 import cn.ledgeryi.consenus.base.State;
 import com.google.protobuf.ByteString;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -100,7 +100,7 @@ public class DposTask {
       BlockHeader.raw raw = blockCapsule.getInstance().getBlockHeader().getRawData();
       log.info("Produce block successfully, num: {}, time: {}, master: {}, ID:{}, parentID:{}",
           raw.getNumber(),
-          new DateTime(raw.getTimestamp()),
+          Time.getTimeString(raw.getTimestamp()),
           ByteArray.toHexString(raw.getMasterAddress().toByteArray()),
           new Sha256Hash(raw.getNumber(), Sha256Hash.of(DBConfig.isEccCryptoEngine(), raw.toByteArray())),
           ByteArray.toHexString(raw.getParentHash().toByteArray()));
