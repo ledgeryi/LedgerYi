@@ -205,8 +205,8 @@ public class LedgerYiVmActuator implements VmActuator {
     try {
       byte[] ops = newSmartContract.getBytecode().toByteArray();
       rootInternalTransaction = new InternalTransaction(tx, txType);
-      ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE, executorType, tx,
-              blockCap.getInstance(), repository, 0, 0);
+      ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(InternalTransaction.TxType.TX_CONTRACT_CREATION_TYPE,
+              executorType, tx, blockCap.getInstance(), repository, 0, 0);
       this.vm = new VM();
       this.program = new Program(ops, programInvoke, rootInternalTransaction, vmConfig, isCheckTransaction());
       byte[] txId = TransactionUtil.getTransactionId(tx).getBytes();

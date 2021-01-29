@@ -51,6 +51,9 @@ public class ProgramInvokeImpl implements ProgramInvoke {
   private boolean isStaticCall = false;
   private boolean isConstantCall = false;
 
+  /**
+   * for contract call contract
+   */
   public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord callValue,
                            byte[] msgData, DataWord lastHash,  DataWord coinbase, DataWord timestamp,
                            DataWord number, Repository deposit,  int callDeep, boolean isStaticCall,
@@ -78,6 +81,9 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     this.vmShouldEndInUs = vmShouldEndInUs;
   }
 
+  /**
+   * contact call and create
+   */
   public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller,long callValue, byte[] msgData, byte[] lastHash,
                            byte[] coinbase, long timestamp, Repository deposit, long number, long vmStartInUs, long vmShouldEndInUs) {
 

@@ -14,9 +14,15 @@
     <properties>
         <lombok.version>1.18.2</lombok.version>
         <commons-lang3.version>3.9</commons-lang3.version>
+        <spongycastle.version>1.58.0.0</spongycastle.version>
+        <jackson.version>2.8.5</jackson.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>cn.ledgeryi</groupId>
+            <artifactId>protocol</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -25,21 +31,17 @@
         <dependency>
             <groupId>com.madgag.spongycastle</groupId>
             <artifactId>core</artifactId>
-            <version>1.58.0.0</version>
+            <version>${spongycastle.version}</version>
         </dependency>
         <dependency>
             <groupId>com.madgag.spongycastle</groupId>
             <artifactId>prov</artifactId>
-            <version>1.58.0.0</version>
+            <version>${spongycastle.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.8.5</version>
-        </dependency>
-        <dependency>
-            <groupId>cn.ledgeryi</groupId>
-            <artifactId>protocol</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 </project>

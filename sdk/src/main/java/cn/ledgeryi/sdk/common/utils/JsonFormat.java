@@ -1,7 +1,5 @@
 package cn.ledgeryi.sdk.common.utils;
 
-import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.crypto.utils.HttpSelfFormatFieldName;
 import com.google.protobuf.*;
 import com.google.protobuf.Descriptors.Descriptor;

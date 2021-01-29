@@ -1,6 +1,5 @@
 package cn.ledgeryi.sdk.parse.event;
 
-import cn.ledgeryi.common.utils.FastByteComparisons;
 import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

@@ -1,6 +1,5 @@
 package cn.ledgeryi.sdk.common.utils;
 
-import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
