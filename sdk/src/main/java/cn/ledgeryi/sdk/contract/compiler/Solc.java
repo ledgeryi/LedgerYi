@@ -14,7 +14,7 @@ import java.util.Scanner;
  */
 public class Solc {
 
-    public static final Solc INSTANCE = new Solc();
+    private static Solc INSTANCE;
 
     private File solc = null;
 
@@ -64,5 +64,12 @@ public class Solc {
 
     public File getExecutable() {
         return solc;
+    }
+
+    public static Solc getInstance(){
+        if (INSTANCE == null) {
+            INSTANCE = new Solc();
+        }
+        return INSTANCE;
     }
 }

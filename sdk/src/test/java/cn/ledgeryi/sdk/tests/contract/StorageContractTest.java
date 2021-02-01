@@ -15,11 +15,13 @@ import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class ContractTest {
+public class StorageContractTest {
 
     private static String privateKey = "e8b5177d5a69898dcc437d0e96a9343a37bac001cb9bec7a90b660eee66b4587";
     private static String ownerAddress = "ada95a8734256b797efcd862e0b208529283ac56";
@@ -31,32 +33,12 @@ public class ContractTest {
         ledgerYiApiService = new LedgerYiApiService();
     }
 
-    /**
-     * single contract tests
-     */
-    private static String testContratSingle = "// SPDX-License-Identifier: GPL-3.0\n" +
-            "\n" +
-            "pragma solidity ^0.6.9;\n" +
-            "\n" +
-            "contract Storage {\n" +
-            "\n" +
-            "    uint256 number;\n" +
-            "\n" +
-            "    function store(uint256 num) public {\n" +
-            "        number = num;\n" +
-            "    }\n" +
-            "\n" +
-            "    function retrieve() public view returns (uint256){\n" +
-            "        return number;\n" +
-            "    }\n" +
-            "}";
-
     @Test
     public void compileContractTest() {
         DeployContractParam result = null;
         try {
-            String contract = testContratSingle;
-            result = ledgerYiApiService.compileSingleContract(contract);
+            Path source = Paths.get("src","test","resources","Storage.sol");
+            result = ledgerYiApiService.compileContractFromFile(source, true);
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -71,8 +53,8 @@ public class ContractTest {
         DeployContractParam result = null;
         DeployContractReturn deployContract = null;
         try {
-            String contract = testContratSingle;
-            result = ledgerYiApiService.compileSingleContract(contract);
+            Path source = Paths.get("src","test","resources","Storage.sol");
+            result = ledgerYiApiService.compileContractFromFile(source, true);
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
             e.printStackTrace();
@@ -85,7 +67,7 @@ public class ContractTest {
     }
 
     // Storage address
-    private static String contractAddres = "0bc8d3d9edc334bd2c2bef5985983cb9f95676f6";
+    private static String contractAddres = "fb700010dec717aa3600fea7ea43fccb24aebdb7";
 
     @Test
     public void getContractFromOnChain(){

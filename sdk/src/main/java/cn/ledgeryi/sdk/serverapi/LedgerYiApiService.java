@@ -13,6 +13,7 @@ import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.*;
 import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler;
+import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler.Options;
 import cn.ledgeryi.sdk.contract.compiler.entity.CompilationResult;
 import cn.ledgeryi.sdk.contract.compiler.entity.Result;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
@@ -26,6 +27,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +98,73 @@ public class LedgerYiApiService {
         return rpcCli.getNodeInfo();
     }
 
-    public DeployContractParam compileSingleContract(String contract) throws ContractException {
+    /**
+     * compile contract from a file of type 'sol'
+     * @param source contract file path
+     * @param isSingle single contract(true)
+     */
+    public DeployContractParam compileContractFromFile(Path source, boolean isSingle) throws ContractException {
+        Result res;
+        try {
+            res = SolidityCompiler.compileSrc(source.toFile(), true,
+                    Options.ABI, Options.BIN, Options.INTERFACE, Options.METADATA);
+        } catch (IOException e) {
+            log.error("Compile contract error, io exception: ", e);
+            throw new ContractException("Compilation io exception: " + e.getMessage());
+        }
+        if (!res.errors.isEmpty()) {
+            log.error("Compilation contract error: " + res.errors);
+            throw new ContractException("Compilation error: " + res.errors);
+        }
+        if (res.output.isEmpty()) {
+            log.error("Compilation contract error:  output is empty: " + res.errors);
+            throw new ContractException("compilation error, output is empty: " + res.errors);
+        }
+
+        // read from JSON and assemble request body
+        CompilationResult result;
+        try {
+            result = CompilationResult.parse(res.output);
+        } catch (IOException e) {
+            log.error("Compilation contract error: Parse result error, io exception: ", e);
+            throw new ContractException("parse result error, io exception: " + e.getMessage());
+        }
+        int contractSize = result.getContracts().size();
+        if (contractSize == 0) {
+            log.error("Compilation contract error: No Contract found after compile");
+            throw new RuntimeException("Compilation error: No Contract found after compile" + result);
+        }
+        if (isSingle && result.getContracts().size() > 1) {
+            log.error("Compilation contract error: Multiple Contracts found after compile");
+            throw new RuntimeException("Compilation contract error: Multiple Contracts found after compile" + result);
+        }
+
+        Iterator<Map.Entry<String, CompilationResult.ContractMetadata>> iterator = result.getContracts().entrySet().iterator();
+        Map.Entry<String, CompilationResult.ContractMetadata> contractMeta = iterator.next();
+        int i = 0;
+        while (iterator.hasNext() && i < contractSize) {
+            contractMeta = iterator.next();
+            i++;
+        }
+        String[] split = contractMeta.getKey().split(":");
+        String contractName = split[split.length - 1];
+        String abi = contractMeta.getValue().abi;
+        String opCode = contractMeta.getValue().bin;
+
+        return DeployContractParam.builder()
+                .abi(abi)
+                .contractName(contractName)
+                .contractByteCodes(opCode)
+                .build();
+    }
+
+    /**
+     * compile single contract from a file of type 'sol'
+     * @param contract contract content
+     * @return
+     * @throws ContractException
+     */
+    public DeployContractParam compileSingleContractFromContent(String contract) throws ContractException {
         Result res;
         try {
             res = SolidityCompiler.compile(contract.getBytes(), true,
@@ -130,7 +199,8 @@ public class LedgerYiApiService {
             throw new RuntimeException("Compilation contract error: Multiple Contracts found after compile" + result);
         }
         Map.Entry<String, CompilationResult.ContractMetadata> contractMeta = result.getContracts().entrySet().iterator().next();
-        String contractName = contractMeta.getKey().split(":")[1];
+        String[] split = contractMeta.getKey().split(":");
+        String contractName = split[split.length - 1];
         String abi = contractMeta.getValue().abi;
         String opCode = contractMeta.getValue().bin;
 
