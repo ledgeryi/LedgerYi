@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -34,6 +35,9 @@ public class Log {
                 if (i == 0){
                     ByteString topic = log.getTopics(i);
                     String function = function(abi, topic.toByteArray());
+                    if (StringUtils.isEmpty(function)) {
+                        continue;
+                    }
                     topics.add(function);
                     continue;
                 }
@@ -52,6 +56,6 @@ public class Log {
         String abiJson = jsonObject.getString("entrys");
         CallTransaction.Contract contract = new CallTransaction.Contract(abiJson.replaceAll("'", "\""));
         CallTransaction.Function function = contract.getBySignatureHash(hash);
-        return function.formatSignature();
+        return function!=null ? function.formatSignature():"";
     }
 }
