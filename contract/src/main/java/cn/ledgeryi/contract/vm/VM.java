@@ -350,14 +350,13 @@ public class VM {
           program.step();
         }
         break;
-        case BALANCE:
-          log.error("Opcode BALANCE is not supported in the current version");
-          throw Program.Exception.invalidOpCode(BALANCE.val());
-        case ISCONTRACT: {
-          DataWord address = program.stackPop();
-          DataWord isContract = program.isContract(address);
-          program.stackPush(isContract);
-          program.step();
+        case BALANCE:{
+            log.error("Opcode BALANCE is not supported in the current version");
+            DataWord address = program.stackPop();
+            //Warn: balance of account has been deleted in current version.
+            DataWord balance = program.getBalance(address);
+            program.stackPush(balance);
+            program.step();
         }
         break;
         case ORIGIN: {
@@ -379,12 +378,6 @@ public class VM {
           program.step();
         }
         break;
-        case CALLTOKENVALUE:
-          log.error("Opcode CALLTOKENVALUE is not supported in the current version");
-          throw Program.Exception.invalidOpCode(CALLTOKENVALUE.val());
-        case CALLTOKENID:
-          log.error("Opcode CALLTOKENID is not supported in the current version");
-          throw Program.Exception.invalidOpCode(CALLTOKENID.val());
         case CALLDATALOAD: {
           DataWord dataOffs = program.stackPop();
           DataWord value = program.getDataValue(dataOffs);
@@ -671,9 +664,12 @@ public class VM {
           program.step();
         }
         break;
-        case GAS:
-          log.error("Opcode GAS is not supported in the current version");
-          throw Program.Exception.invalidOpCode(GAS.val());
+        case GAS:{
+          DataWord energyPrice = new DataWord(0);
+          program.stackPush(energyPrice);
+          program.step();
+        }
+        break;
         case PUSH1:
         case PUSH2:
         case PUSH3:
@@ -741,19 +737,10 @@ public class VM {
           program.step();
         }
         break;
-        case TOKENBALANCE:
-          log.error("Opcode TOKENBALANCE is not supported in the current version");
-          throw Program.Exception.invalidOpCode(TOKENBALANCE.val());
         case CALL:
         case CALLCODE:
-        case CALLTOKEN:
         case DELEGATECALL:
         case STATICCALL: {
-          if (op == CALLTOKEN) {
-            log.error("opcode CALLTOKEN is not supported in the current version");
-            throw Program.Exception.invalidOpCode(CALLTOKEN.val());
-          }
-
           int opOff = op.callHasValue() ? 4 : 3;
           BigInteger in = memNeeded(stack.get(stack.size() - opOff), stack.get(stack.size() - opOff - 1)); // in offset+size
           BigInteger out = memNeeded(stack.get(stack.size() - opOff - 2), stack.get(stack.size() - opOff - 3)); // out offset+size
@@ -767,7 +754,7 @@ public class VM {
           } else {
             value = DataWord.ZERO;
           }
-          if (program.isStaticCall() && (op == CALL || op == CALLTOKEN) && !value.isZero()) {
+          if (program.isStaticCall() && (op == CALL) && !value.isZero()) {
             throw new Program.StaticCallModificationException();
           }
 
@@ -776,11 +763,13 @@ public class VM {
           DataWord outDataOffs = program.stackPop();
           DataWord outDataSize = program.stackPop();
           program.memoryExpand(outDataOffs, outDataSize);
-          MessageCall msg = new MessageCall(op, codeAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
+
           PrecompiledContracts.PrecompiledContract contract = PrecompiledContracts.getContractForAddress(codeAddress);
+
           if (!op.callIsStateless()) {
             program.getResult().addTouchAccount(codeAddress.getLast20Bytes());
           }
+          MessageCall msg = new MessageCall(op, codeAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
           if (contract != null) {
             program.callToPrecompiledAddress(msg, contract);
           } else {

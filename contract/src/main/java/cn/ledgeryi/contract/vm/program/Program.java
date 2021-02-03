@@ -555,7 +555,7 @@ public class Program {
                 programInvoke.setConstantCall();
             }
             VM vm = new VM(config);
-            Program program = new Program(programCode, programInvoke, internalTx, config);
+            Program program = new Program(programCode, programInvoke, internalTx, config, isMasterSignature);
             program.setRootTransactionId(this.rootTransactionId);
             vm.play(program);
             callResult = program.getResult();
@@ -959,6 +959,11 @@ public class Program {
 
     private boolean isContractExist(AccountCapsule existingAddr, Repository deposit) {
         return deposit.getContract(existingAddr.getAddress().toByteArray()) != null;
+    }
+
+    public DataWord getBalance(DataWord address) {
+        //long balance = getContractState().getBalance(address.getLast20Bytes());
+        return DataWord.ZERO();
     }
 
     public interface ProgramOutListener {
