@@ -38,7 +38,7 @@ public class StorageContractTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","Storage.sol");
-            result = ledgerYiApiService.compileContractFromFile(source, "Storage",true);
+            result = ledgerYiApiService.compileContractFromFile(source, "Storage");
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -54,7 +54,7 @@ public class StorageContractTest {
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","test","resources","Storage.sol");
-            result = ledgerYiApiService.compileContractFromFile(source, "Storage",true);
+            result = ledgerYiApiService.compileContractFromFile(source, "Storage");
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
             e.printStackTrace();

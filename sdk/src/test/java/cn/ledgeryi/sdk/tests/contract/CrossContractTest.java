@@ -39,7 +39,7 @@ public class CrossContractTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","KhaExchange.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,"KhaExchange",false);
+            result = ledgerYiApiService.compileContractFromFile(source,"KhaExchange");
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -55,7 +55,7 @@ public class CrossContractTest {
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","test","resources","KhaExchange.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,"KhaExchange", false);
+            result = ledgerYiApiService.compileContractFromFile(source,"KhaExchange");
             result.setConstructor("constructor(address)");
             ArrayList<Object> args = Lists.newArrayList();
             args.add("f70b04ce5854def4031bce8fc8282fcb88d6f67b");

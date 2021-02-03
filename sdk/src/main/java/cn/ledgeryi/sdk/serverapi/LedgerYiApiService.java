@@ -102,9 +102,8 @@ public class LedgerYiApiService {
      * compile contract from a file of type 'sol'
      * @param source contract file path
      * @param contractName contract name
-     * @param isSingle single contract(true)
      */
-    public DeployContractParam compileContractFromFile(Path source, String contractName, boolean isSingle) throws ContractException {
+    public DeployContractParam compileContractFromFile(Path source, String contractName) throws ContractException {
         Result res;
         try {
             res = SolidityCompiler.compileSrc(source.toFile(), true,
@@ -134,10 +133,6 @@ public class LedgerYiApiService {
         if (contractSize == 0) {
             log.error("Compilation contract error: No Contract found after compile");
             throw new RuntimeException("Compilation error: No Contract found after compile" + result);
-        }
-        if (isSingle && result.getContracts().size() > 1) {
-            log.error("Compilation contract error: Multiple Contracts found after compile");
-            throw new RuntimeException("Compilation contract error: Multiple Contracts found after compile" + result);
         }
 
         Iterator<Map.Entry<String, CompilationResult.ContractMetadata>> iterator = result.getContracts().entrySet().iterator();

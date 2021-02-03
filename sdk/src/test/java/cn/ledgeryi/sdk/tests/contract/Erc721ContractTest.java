@@ -41,7 +41,7 @@ public class Erc721ContractTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","ERC721NFT.sol");
-            result = ledgerYiApiService.compileContractFromFile(source, "ERC721NFT",true);
+            result = ledgerYiApiService.compileContractFromFile(source, "ERC721NFT");
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -57,7 +57,7 @@ public class Erc721ContractTest {
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","test","resources","ERC721NFT.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,"ERC721NFT",true);
+            result = ledgerYiApiService.compileContractFromFile(source,"ERC721NFT");
             result.setConstructor("constructor(string,string,uint256)");
             ArrayList<Object> args = Lists.newArrayList();
             args.add("ERC721Basic");

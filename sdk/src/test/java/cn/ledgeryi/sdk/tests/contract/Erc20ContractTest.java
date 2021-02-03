@@ -41,7 +41,7 @@ public class Erc20ContractTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","erc20.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,"Erc20",false);
+            result = ledgerYiApiService.compileContractFromFile(source,"Erc20");
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -57,7 +57,7 @@ public class Erc20ContractTest {
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","test","resources","erc20.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,"Erc20",false);
+            result = ledgerYiApiService.compileContractFromFile(source,"Erc20");
             result.setConstructor("constructor(string,string,uint256)");
             ArrayList<Object> args = Lists.newArrayList();
             args.add("ERC20Basic");
