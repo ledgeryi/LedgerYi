@@ -45,4 +45,12 @@ contract Erc20 is Utils{
         emit Transfer(msg.sender, receiver, numTokens);
         return true;
     }
+
+    function transferFrom(address from, address receiver, uint numTokens) public validAddress(receiver) returns (bool) {
+        require(numTokens <= balances[from]);
+        balances[from] = safeSub(balances[from] , numTokens);
+        balances[receiver] = safeAdd(balances[receiver], numTokens);
+        emit Transfer(from, receiver, numTokens);
+        return true;
+    }
 }

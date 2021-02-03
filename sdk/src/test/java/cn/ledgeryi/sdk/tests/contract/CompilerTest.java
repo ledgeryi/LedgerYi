@@ -65,10 +65,25 @@ public class CompilerTest {
     }
 
     @Test
-    public void compileMultipleContractsFromFile(){
+    public void compileMultipleContractsFromMultiFile(){
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","erc20.sol");
+            result = ledgerYiApiService.compileContractFromFile(source, false);
+        } catch (ContractException e) {
+            e.printStackTrace();
+            System.out.println("contract compile error: " + e.getMessage());
+        }
+        System.out.println("name: " + result.getContractName());
+        System.out.println("abi: " + result.getAbi());
+        System.out.println("code: " + result.getContractByteCodes());
+    }
+
+    @Test
+    public void compileMultipleContractsFromSingleFile(){
+        DeployContractParam result = null;
+        try {
+            Path source = Paths.get("src","test","resources", "MultiContractDemo.sol");
             result = ledgerYiApiService.compileContractFromFile(source, false);
         } catch (ContractException e) {
             e.printStackTrace();

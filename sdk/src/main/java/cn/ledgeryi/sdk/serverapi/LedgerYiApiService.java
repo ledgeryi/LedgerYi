@@ -243,10 +243,12 @@ public class LedgerYiApiService {
         TransactionExtention transactionExtention;
         if (param.isConstant()) {
             transactionExtention = rpcCli.triggerConstantContract(triggerContract);
+            int constantResultCount = transactionExtention.getConstantResultCount();
+            ByteString result = constantResultCount > 0 ? transactionExtention.getConstantResult(0) : null;
             return TriggerContractReturn.builder()
                     .isConstant(true)
                     .contractAddress(DecodeUtil.createReadableString(param.getContractAddress()))
-                    .callResult(transactionExtention.getConstantResult(0))
+                    .callResult(result)
                     .transactionId(DecodeUtil.createReadableString(transactionExtention.getTxid()))
                     .build();
         } else {

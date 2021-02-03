@@ -15,19 +15,17 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
-import org.spongycastle.util.Strings;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-public class Erc20ContractTest {
+public class CrossContractTest {
 
-    private static String privateKey = "e8b5177d5a69898dcc437d0e96a9343a37bac001cb9bec7a90b660eee66b4587";
-    private static String ownerAddress = "ada95a8734256b797efcd862e0b208529283ac56";
+    private static String privateKey = "b0344a228c7ce48a99b02e0d81b3b9198416dd6319698e247719a7fef227463b";
+    private static String ownerAddress = "bb8d66327f7bf0e91e7b7c118aebeca4f730de64";
 
     private LedgerYiApiService ledgerYiApiService;
 
@@ -37,32 +35,16 @@ public class Erc20ContractTest {
     }
 
     @Test
-    public void compileContractTest() {
-        DeployContractParam result = null;
-        try {
-            Path source = Paths.get("src","test","resources","erc20.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,false);
-        } catch (ContractException e) {
-            e.printStackTrace();
-            System.out.println("contract compile error: " + e.getMessage());
-        }
-        System.out.println("name: " + result.getContractName());
-        System.out.println("abi: " + result.getAbi());
-        System.out.println("code: " + result.getContractByteCodes());
-    }
-
-    @Test
     public void compileAndDeployContract(){
         DeployContractParam result = null;
         DeployContractReturn deployContract = null;
         try {
-            Path source = Paths.get("src","test","resources","erc20.sol");
+            Path source = Paths.get("src","test","resources","KhaExchange.sol");
             result = ledgerYiApiService.compileContractFromFile(source,false);
-            result.setConstructor("constructor(string,string,uint256)");
+            result.setConstructor("constructor(address,address)");
             ArrayList<Object> args = Lists.newArrayList();
-            args.add("ERC20Basic");
-            args.add("BSC");
-            args.add(1000000000);
+            args.add("f70b04ce5854def4031bce8fc8282fcb88d6f67b");
+            args.add(ownerAddress);
             result.setArgs(args);
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
@@ -76,8 +58,7 @@ public class Erc20ContractTest {
     }
 
     // contract address
-    //private static String contractAddress = "5e529c4efc79361eacfc4fb0e4605cc3eee97113";
-    private static String contractAddress = "e0742221ed9f60898e6953cb8829b4795600d884";
+    private static String contractAddress = "b64fd5676cad66cb4deb6201d42a9feb6be9a987";
 
     @Test
     public void getContractFromOnChain(){
@@ -88,77 +69,21 @@ public class Erc20ContractTest {
         System.out.println(abi);
     }
 
-    @Test
-    public void mint() {
-        List args = Arrays.asList(contractAddress,"5");
-        String method = "mint(address,uint256)";
-        triggerContract(method, args,false);
-    }
+    private String otherContract = "e0742221ed9f60898e6953cb8829b4795600d884";
 
     @Test
     public void balanceOf() {
-        List args = Arrays.asList("bb8d66327f7bf0e91e7b7c118aebeca4f730de64");
-        String method = "balanceOf(address)";
+        List args = Arrays.asList(otherContract, "bb8d66327f7bf0e91e7b7c118aebeca4f730de64");
+        String method = "balanceOfOwner(address,address)";
         TriggerContractReturn result = triggerContract(method, args, true);
         System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));
     }
 
     @Test
-    public void burn() {
-        for (int i = 0; i < 1; i++) {
-            List args = Arrays.asList(contractAddress,"1");
-            String method = "burn(address,uint256)";
-            triggerContract(method, args, false);
-        }
-    }
-
-    @Test
-    public void totalSupply() {
-        List args = Collections.EMPTY_LIST;
-        String method = "totalSupply()";
-        TriggerContractReturn result = triggerContract(method, args, true);
-        System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));
-    }
-
-    @Test
-    public void name() {
-        List args = Collections.EMPTY_LIST;
-        String method = "name()";
-        TriggerContractReturn result = triggerContract(method, args, true);
-        System.out.println("trigger contract result: " + Strings.fromByteArray(result.getCallResult().toByteArray()).trim());
-    }
-
-    @Test
-    public void symbol() {
-        List args = Collections.EMPTY_LIST;
-        String method = "symbol()";
-        TriggerContractReturn result = triggerContract(method, args, true);
-        System.out.println("trigger contract result: " + Strings.fromByteArray(result.getCallResult().toByteArray()).trim());
-    }
-
-    @Test
-    public void transfer() {
-        String receiver = "bb8d66327f7bf0e91e7b7c118aebeca4f730de64";
-        List args = Arrays.asList(receiver,"500");
-        String method = "transfer(address,uint256)";
+    public void depositEth(){
+        List args = Arrays.asList(otherContract, 3);
+        String method = "depositEth(address,uint256)";
         triggerContract(method, args, false);
-    }
-
-    @Test
-    public void bachTransfer() {
-        for (int i = 0; i < 10000; i++) {
-            String receiver = contractAddress;
-            List args = Arrays.asList(receiver,"1");
-            String method = "transfer(address,uint256)";
-            triggerContract(method, args, false);
-        }
-    }
-
-    @Test
-    public void clearContractAbi(){
-        boolean result = ledgerYiApiService.clearContractABI(DecodeUtil.decode(ownerAddress),
-                DecodeUtil.decode(privateKey), DecodeUtil.decode(contractAddress));
-        System.out.println("clear result: " +  result);
     }
 
     private TriggerContractReturn triggerContract(String method, List<Object> args, boolean isConstant) {

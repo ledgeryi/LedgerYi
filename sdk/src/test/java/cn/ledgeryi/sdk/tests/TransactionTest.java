@@ -26,7 +26,7 @@ public class TransactionTest {
 
     @Test
     public void getBlockByNum(){
-        long num = 6;
+        long num = 49;
         GrpcAPI.BlockExtention block = ledgerYiApiService.getBlock(num);
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(block, true)));
     }
@@ -49,14 +49,14 @@ public class TransactionTest {
 
     @Test
     public void getTransactionInfoById(){
-        String hash = "c1b6130b22fafae1f713a968e323143b79221007b7b7017b5d6e1e640ca086fe";
+        String hash = "01170b8dd0aae11b3706958bb0bdf95155aecde4fdc229c62825e8a546f2994e";
         Protocol.TransactionInfo transactionInfo = ledgerYiApiService.getTransactionInfoById(hash);
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(transactionInfo, true)));
     }
 
     @Test
     public void getTransactionInfoReadableById(){
-        String hash = "c1b6130b22fafae1f713a968e323143b79221007b7b7017b5d6e1e640ca086fe";
+        String hash = "f7c3ea49ca37eccdadc2413eff0653e6c84a2a3c0efe2a9d60c447ece5cc52ba";
         TransactionInformation infoReadable = ledgerYiApiService.getTransactionInfoReadable(hash);
         Object obj = JSONArray.toJSON(infoReadable);
         String json = obj.toString();
