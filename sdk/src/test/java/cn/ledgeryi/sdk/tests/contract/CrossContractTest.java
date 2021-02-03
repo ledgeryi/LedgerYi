@@ -35,12 +35,27 @@ public class CrossContractTest {
     }
 
     @Test
+    public void compileContract(){
+        DeployContractParam result = null;
+        try {
+            Path source = Paths.get("src","test","resources","KhaExchange.sol");
+            result = ledgerYiApiService.compileContractFromFile(source,"KhaExchange",false);
+        } catch (ContractException e) {
+            e.printStackTrace();
+            System.out.println("contract compile error: " + e.getMessage());
+        }
+        System.out.println("name: " + result.getContractName());
+        System.out.println("abi: " + result.getAbi());
+        System.out.println("code: " + result.getContractByteCodes());
+    }
+
+    @Test
     public void compileAndDeployContract(){
         DeployContractParam result = null;
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","test","resources","KhaExchange.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,false);
+            result = ledgerYiApiService.compileContractFromFile(source,"KhaExchange", false);
             result.setConstructor("constructor(address)");
             ArrayList<Object> args = Lists.newArrayList();
             args.add("f70b04ce5854def4031bce8fc8282fcb88d6f67b");
@@ -57,7 +72,7 @@ public class CrossContractTest {
     }
 
     // contract address
-    private static String contractAddress = "b64fd5676cad66cb4deb6201d42a9feb6be9a987";
+    private static String contractAddress = "d3d1fbc8813fd14ceabd041252f51484da704494";
 
     @Test
     public void getContractFromOnChain(){
@@ -68,11 +83,11 @@ public class CrossContractTest {
         System.out.println(abi);
     }
 
-    private String otherContract = "e0742221ed9f60898e6953cb8829b4795600d884";
+    private String otherContract = "ffdfafc401d7815452bcac04a2aa58263fc3a4b8";
 
     @Test
     public void balanceOf() {
-        List args = Arrays.asList(otherContract, "bb8d66327f7bf0e91e7b7c118aebeca4f730de64");
+        List args = Arrays.asList(otherContract, "f70b04ce5854def4031bce8fc8282fcb88d6f67b");
         String method = "balanceOfOwner(address,address)";
         TriggerContractReturn result = triggerContract(method, args, true);
         System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));

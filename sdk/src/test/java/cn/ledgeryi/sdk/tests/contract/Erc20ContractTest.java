@@ -41,7 +41,7 @@ public class Erc20ContractTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","erc20.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,false);
+            result = ledgerYiApiService.compileContractFromFile(source,"Erc20",false);
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -57,7 +57,7 @@ public class Erc20ContractTest {
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","test","resources","erc20.sol");
-            result = ledgerYiApiService.compileContractFromFile(source,false);
+            result = ledgerYiApiService.compileContractFromFile(source,"Erc20",false);
             result.setConstructor("constructor(string,string,uint256)");
             ArrayList<Object> args = Lists.newArrayList();
             args.add("ERC20Basic");
@@ -76,7 +76,7 @@ public class Erc20ContractTest {
     }
 
     // contract address
-    private static String contractAddress = "e0742221ed9f60898e6953cb8829b4795600d884";
+    private static String contractAddress = "ffdfafc401d7815452bcac04a2aa58263fc3a4b8";
 
     @Test
     public void getContractFromOnChain(){
@@ -145,7 +145,7 @@ public class Erc20ContractTest {
 
     @Test
     public void bachTransfer() {
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 10; i++) {
             String receiver = contractAddress;
             List args = Arrays.asList(receiver,"1");
             String method = "transfer(address,uint256)";

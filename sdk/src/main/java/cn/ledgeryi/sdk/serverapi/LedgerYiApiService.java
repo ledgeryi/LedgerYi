@@ -101,9 +101,10 @@ public class LedgerYiApiService {
     /**
      * compile contract from a file of type 'sol'
      * @param source contract file path
+     * @param contractName contract name
      * @param isSingle single contract(true)
      */
-    public DeployContractParam compileContractFromFile(Path source, boolean isSingle) throws ContractException {
+    public DeployContractParam compileContractFromFile(Path source, String contractName, boolean isSingle) throws ContractException {
         Result res;
         try {
             res = SolidityCompiler.compileSrc(source.toFile(), true,
@@ -140,17 +141,22 @@ public class LedgerYiApiService {
         }
 
         Iterator<Map.Entry<String, CompilationResult.ContractMetadata>> iterator = result.getContracts().entrySet().iterator();
-        Map.Entry<String, CompilationResult.ContractMetadata> contractMeta = iterator.next();
-        int i = 0;
-        while (iterator.hasNext() && i < contractSize) {
-            contractMeta = iterator.next();
-            i++;
+        Map.Entry<String, CompilationResult.ContractMetadata> contractMeta = null;
+        while (iterator.hasNext()) {
+            Map.Entry<String, CompilationResult.ContractMetadata> next = iterator.next();
+            String[] split = next.getKey().split(":");
+            String contractNameOfParse = split[split.length - 1];
+            if (contractName.equals(contractNameOfParse)){
+                contractMeta = next;
+                break;
+            }
         }
-        String[] split = contractMeta.getKey().split(":");
-        String contractName = split[split.length - 1];
+        if (contractMeta == null) {
+            log.error("Compilation contract error: The contract names are inconsistent, input: {}", contractName);
+            throw new ContractException("compilation error, The contract names are inconsistent");
+        }
         String abi = contractMeta.getValue().abi;
         String opCode = contractMeta.getValue().bin;
-
         return DeployContractParam.builder()
                 .abi(abi)
                 .contractName(contractName)

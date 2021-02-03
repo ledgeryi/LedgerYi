@@ -18,6 +18,13 @@ contract Utils {
         _;
     }
 
+    // validates two addresses - currently only checks that it isn't null
+    modifier validAddresses(address _address, address _address_) {
+        require(_address != address(0));
+        require(_address_ != address(0));
+        _;
+    }
+
     // verifies that the address is different than this contract address
     modifier notThis(address _address) {
         require(_address != address(this));

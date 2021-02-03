@@ -46,7 +46,7 @@ contract Erc20 is Utils{
         return true;
     }
 
-    function transferFrom(address from, address receiver, uint numTokens) public validAddress(receiver) returns (bool) {
+    function transferFrom(address from, address receiver, uint numTokens) public validAddresses(from, receiver) returns (bool) {
         require(numTokens <= balances[from]);
         balances[from] = safeSub(balances[from] , numTokens);
         balances[receiver] = safeAdd(balances[receiver], numTokens);

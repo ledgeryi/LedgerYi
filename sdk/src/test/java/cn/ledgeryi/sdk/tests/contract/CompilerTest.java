@@ -54,7 +54,7 @@ public class CompilerTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","Storage.sol");
-            result = ledgerYiApiService.compileContractFromFile(source, true);
+            result = ledgerYiApiService.compileContractFromFile(source, "Storage",true);
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -69,7 +69,7 @@ public class CompilerTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources","erc20.sol");
-            result = ledgerYiApiService.compileContractFromFile(source, false);
+            result = ledgerYiApiService.compileContractFromFile(source, "Erc20",false);
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -84,7 +84,7 @@ public class CompilerTest {
         DeployContractParam result = null;
         try {
             Path source = Paths.get("src","test","resources", "MultiContractDemo.sol");
-            result = ledgerYiApiService.compileContractFromFile(source, false);
+            result = ledgerYiApiService.compileContractFromFile(source, "Demo2",false);
         } catch (ContractException e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
