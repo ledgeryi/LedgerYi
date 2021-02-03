@@ -41,10 +41,9 @@ public class CrossContractTest {
         try {
             Path source = Paths.get("src","test","resources","KhaExchange.sol");
             result = ledgerYiApiService.compileContractFromFile(source,false);
-            result.setConstructor("constructor(address,address)");
+            result.setConstructor("constructor(address)");
             ArrayList<Object> args = Lists.newArrayList();
             args.add("f70b04ce5854def4031bce8fc8282fcb88d6f67b");
-            args.add(ownerAddress);
             result.setArgs(args);
             deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
