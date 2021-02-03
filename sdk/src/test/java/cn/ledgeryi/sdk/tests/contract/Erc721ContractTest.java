@@ -75,12 +75,12 @@ public class Erc721ContractTest {
         System.out.println("contract address: " + deployContract.getContractAddress());
     }
 
-    // BasicFT address
-    private static String contractAddres = "5e43292102d33424a1577c42c2dffac3ea20c513";
+    // contract address
+    private static String contractAddress = "5e43292102d33424a1577c42c2dffac3ea20c513";
 
     @Test
     public void getContractFromOnChain(){
-        SmartContractOuterClass.SmartContract contract = ledgerYiApiService.getContract(DecodeUtil.decode(contractAddres));
+        SmartContractOuterClass.SmartContract contract = ledgerYiApiService.getContract(DecodeUtil.decode(contractAddress));
         System.out.println(JsonFormatUtil.printSmartContract(contract));
         JSONObject jsonObject = JSONObject.parseObject(JsonFormatUtil.printABI(contract.getAbi()));
         String abi = jsonObject.getString("entrys");
@@ -96,7 +96,7 @@ public class Erc721ContractTest {
 
     @Test
     public void balanceOf() {
-        List args = Arrays.asList(contractAddres);
+        List args = Arrays.asList(contractAddress);
         String method = "balanceOf(address)";
         TriggerContractReturn result = triggerContract(method, args, true);
         System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));
@@ -120,7 +120,7 @@ public class Erc721ContractTest {
 
     @Test
     public void tokenOfOwnerByIndex(){
-        List args = Arrays.asList(contractAddres,0);
+        List args = Arrays.asList(contractAddress,0);
         String method = "tokenOfOwnerByIndex(address,uint256)";
         TriggerContractReturn result = triggerContract(method, args, true);
         System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));
@@ -143,7 +143,7 @@ public class Erc721ContractTest {
 
     @Test
     public void transfer() {
-        String receiver = contractAddres;
+        String receiver = contractAddress;
         List args = Arrays.asList(ownerAddress,receiver,4);
         String method = "transferFrom(address,address,uint256)";
         triggerContract(method, args, false);
@@ -168,13 +168,13 @@ public class Erc721ContractTest {
     @Test
     public void clearContractAbi(){
         boolean result = ledgerYiApiService.clearContractABI(DecodeUtil.decode(ownerAddress),
-                DecodeUtil.decode(privateKey), DecodeUtil.decode(contractAddres));
+                DecodeUtil.decode(privateKey), DecodeUtil.decode(contractAddress));
         System.out.println("clear result: " +  result);
     }
 
     private TriggerContractReturn triggerContract(String method, List<Object> args, boolean isConstant) {
         TriggerContractParam triggerContractParam = new TriggerContractParam()
-                .setContractAddress(DecodeUtil.decode(contractAddres))
+                .setContractAddress(DecodeUtil.decode(contractAddress))
                 .setCallValue(0)
                 .setConstant(isConstant)
                 .setArgs(args)

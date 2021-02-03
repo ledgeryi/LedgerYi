@@ -66,12 +66,12 @@ public class StorageContractTest {
         System.out.println("contract address: " + deployContract.getContractAddress());
     }
 
-    // Storage address
-    private static String contractAddres = "fb700010dec717aa3600fea7ea43fccb24aebdb7";
+    // contract address
+    private static String contractAddress = "fb700010dec717aa3600fea7ea43fccb24aebdb7";
 
     @Test
     public void getContractFromOnChain(){
-        SmartContractOuterClass.SmartContract contract = ledgerYiApiService.getContract(DecodeUtil.decode(contractAddres));
+        SmartContractOuterClass.SmartContract contract = ledgerYiApiService.getContract(DecodeUtil.decode(contractAddress));
         System.out.println(JsonFormatUtil.printSmartContract(contract));
         JSONObject jsonObject = JSONObject.parseObject(JsonFormatUtil.printABI(contract.getAbi()));
         String abi = jsonObject.getString("entrys");
@@ -95,13 +95,13 @@ public class StorageContractTest {
     @Test
     public void clearContractAbi(){
         boolean result = ledgerYiApiService.clearContractABI(DecodeUtil.decode(ownerAddress),
-                DecodeUtil.decode(privateKey), DecodeUtil.decode(contractAddres));
+                DecodeUtil.decode(privateKey), DecodeUtil.decode(contractAddress));
         System.out.println("clear result: " +  result);
     }
 
     private void triggerContract(String method, List<Object> args, boolean isConstant) {
         TriggerContractParam triggerContractParam = new TriggerContractParam()
-                .setContractAddress(DecodeUtil.decode(contractAddres))
+                .setContractAddress(DecodeUtil.decode(contractAddress))
                 .setCallValue(0)
                 .setConstant(isConstant)
                 .setArgs(args)

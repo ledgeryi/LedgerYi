@@ -76,7 +76,6 @@ public class Erc20ContractTest {
     }
 
     // contract address
-    //private static String contractAddress = "5e529c4efc79361eacfc4fb0e4605cc3eee97113";
     private static String contractAddress = "e0742221ed9f60898e6953cb8829b4795600d884";
 
     @Test
