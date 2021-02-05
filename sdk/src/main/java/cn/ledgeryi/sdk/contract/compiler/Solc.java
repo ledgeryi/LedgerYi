@@ -27,7 +27,9 @@ public class Solc {
     }
 
     private void init() throws IOException {
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"), "solc");
+        String path = System.getProperty("user.dir");
+        // File tmpDir = new File(System.getProperty("java.io.tmpdir"), "solc");
+        File tmpDir = new File(path, "solc");
         tmpDir.mkdirs();
 
         InputStream is = getClass().getResourceAsStream("/native/" + getOS() + "/solc/file.list");

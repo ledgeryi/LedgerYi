@@ -1,5 +1,6 @@
 package cn.ledgeryi.sdk.contract.compiler;
 
+import cn.ledgeryi.sdk.contract.compiler.entity.Library;
 import cn.ledgeryi.sdk.contract.compiler.entity.Result;
 import com.google.common.base.Joiner;
 
@@ -45,9 +46,19 @@ public class SolidityCompiler {
         return new Result(error.getContent(), output.getContent(), success);
     }
 
-    public static Result compileSrc(File source, boolean combinedJson, Option... options) throws IOException {
-        List<String> commandParts = prepareCommandOptions(false, combinedJson, options);
-        commandParts.add(source.getAbsolutePath());
+    public static Result compileSrc(File source, boolean isNeedLibrary, Library library, Option... options) throws IOException {
+        if (isNeedLibrary && library == null){
+            throw new RuntimeException("need library, but library param is null");
+        }
+        List<String> commandParts = prepareCommandOptions(true, true, options);
+        commandParts.add(source.getAbsolutePath().replace("\\","/"));
+        if (isNeedLibrary){
+            commandParts.add("--" + Options.LIBRARIES.getName());
+            commandParts.add(library.toString());
+        }
+        if (!source.exists()) {
+            throw new RuntimeException("contract file not exist in current path: " + source.getAbsolutePath());
+        }
         ProcessBuilder processBuilder = new ProcessBuilder(commandParts).directory(Solc.getInstance().getExecutable().getParentFile());
         processBuilder.environment().put("LD_LIBRARY_PATH", Solc.getInstance().getExecutable().getParentFile().getCanonicalPath());
         Process process = processBuilder.start();
@@ -90,6 +101,7 @@ public class SolidityCompiler {
                 commandParts.add(option.getValue());
             }
         }
+
         return commandParts;
     }
 
@@ -98,8 +110,8 @@ public class SolidityCompiler {
     }
 
     /**
-     * This class is mainly here for backwards compatibility; however we are now reusing it making it the solely public
-     * interface listing all the supported options.
+     * This class is mainly here for backwards compatibility;
+     * however we are now reusing it making it the solely public interface listing all the supported options.
      */
     public static final class Options {
         public static final OutputOption AST = OutputOption.AST;
@@ -111,6 +123,7 @@ public class SolidityCompiler {
 
         private static final NameOnlyOption OPTIMIZE = NameOnlyOption.OPTIMIZE;
         private static final NameOnlyOption VERSION = NameOnlyOption.VERSION;
+        private static final NameOnlyOption LIBRARIES = NameOnlyOption.LIBRARIES;
 
         private static class CombinedJson extends ListOption {
             private CombinedJson(List values) {
@@ -181,7 +194,8 @@ public class SolidityCompiler {
             this.values = values;
         }
 
-        @Override public String getValue() {
+        @Override
+        public String getValue() {
             StringBuilder result = new StringBuilder();
             for (Object value : values) {
                 if (OutputOption.class.isAssignableFrom(value.getClass())) {
@@ -198,13 +212,16 @@ public class SolidityCompiler {
             }
             return result.toString();
         }
-        @Override public String getName() { return name; }
-        @Override public String toString() { return name; }
+        @Override
+        public String getName() { return name; }
+        @Override
+        public String toString() { return name; }
     }
 
     private enum NameOnlyOption implements Option {
         OPTIMIZE("optimize"),
-        VERSION("version");
+        VERSION("version"),
+        LIBRARIES("libraries");
 
         private String name;
 
@@ -212,9 +229,12 @@ public class SolidityCompiler {
             this.name = name;
         }
 
-        @Override public String getValue() { return ""; }
-        @Override public String getName() { return name; }
-        @Override public String toString() {
+        @Override
+        public String getValue() { return ""; }
+        @Override
+        public String getName() { return name; }
+        @Override
+        public String toString() {
             return name;
         }
     }
@@ -233,9 +253,12 @@ public class SolidityCompiler {
             this.name = name;
         }
 
-        @Override public String getValue() { return ""; }
-        @Override public String getName() { return name; }
-        @Override public String toString() {
+        @Override
+        public String getValue() { return ""; }
+        @Override
+        public String getName() { return name; }
+        @Override
+        public String toString() {
             return name;
         }
     }

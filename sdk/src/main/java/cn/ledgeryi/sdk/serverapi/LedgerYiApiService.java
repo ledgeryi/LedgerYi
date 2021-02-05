@@ -15,6 +15,7 @@ import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler;
 import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler.Options;
 import cn.ledgeryi.sdk.contract.compiler.entity.CompilationResult;
+import cn.ledgeryi.sdk.contract.compiler.entity.Library;
 import cn.ledgeryi.sdk.contract.compiler.entity.Result;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
@@ -28,6 +29,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -99,15 +101,35 @@ public class LedgerYiApiService {
     }
 
     /**
-     * compile contract from a file of type 'sol'
+     * compile contract from a file of type 'sol',
+     * support 'library'
+     * @param source contract file path
+     * @param contractName contract name
+     * @param library contract library
+     * @throws ContractException
+     */
+    public DeployContractParam compileContractFromFileNeedLibrary(
+            Path source, String contractName, Library library) throws ContractException {
+        return compileContractFromFiles(source, contractName,true, library);
+    }
+
+    /**
+     * compile contract from a file of type 'sol',
+     * support 'Contract inheritance', not support 'library'
+     *
      * @param source contract file path
      * @param contractName contract name
      */
     public DeployContractParam compileContractFromFile(Path source, String contractName) throws ContractException {
+        return compileContractFromFiles(source,contractName,false,null);
+    }
+
+    public DeployContractParam compileContractFromFiles(Path source, String contractName, boolean isNeedLibrary,
+                                                       Library library) throws ContractException {
         Result res;
         try {
-            res = SolidityCompiler.compileSrc(source.toFile(), true,
-                    Options.ABI, Options.BIN, Options.INTERFACE, Options.METADATA);
+            //SolidityCompiler.Option allowPathsOption = new SolidityCompiler.Options.AllowPaths(Collections.singletonList(source.getParent().toFile()));
+            res = SolidityCompiler.compileSrc(source.toFile(), isNeedLibrary, library, Options.ABI, Options.BIN, Options.INTERFACE/*, allowPathsOption*/);
         } catch (IOException e) {
             log.error("Compile contract error, io exception: ", e);
             throw new ContractException("Compilation io exception: " + e.getMessage());
