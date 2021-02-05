@@ -1,0 +1,1 @@
+// SPDX-License-Identifier: GPL-3.0pragma solidity ^0.6.9;import {Math} from "./Math.sol";contract LinkedLibrary {    using Math for Math.Balance;    Math.Balance public currentBalance;    function transfer(uint256 amount) public {        require(amount > 0,  "amount is not bigger than zero");        currentBalance.add(amount);    }}
