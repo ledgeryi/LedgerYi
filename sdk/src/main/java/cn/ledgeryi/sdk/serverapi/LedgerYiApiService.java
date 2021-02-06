@@ -364,7 +364,6 @@ public class LedgerYiApiService {
             log.error("transaction or contract is null");
             return false;
         }
-        //System.out.println(JsonFormatUtil.printTransactionExceptId(transactionExtention.getTransaction()));
         transaction = TransactionUtils.sign(transaction, privateKey);
         return rpcCli.broadcastTransaction(transaction);
     }

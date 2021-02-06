@@ -4,7 +4,6 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
-import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler;
 import cn.ledgeryi.sdk.contract.compiler.entity.Library;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
@@ -68,8 +67,6 @@ public class LinkedLibraryTest {
         DeployContractReturn deployContract = null;
         try {
             Path math = Paths.get("src","test","resources","library","Math.sol");
-            //result = ledgerYiApiService.compileContractFromFile(math, "Math");
-            //===============================================================================
             Library library = new Library();
             String libraryAddress = "1aa005c69039e27b2c2c3f462047b752feccd8e0";
             library.addLibrary(math.toFile().getAbsolutePath().replace("\\","/").concat(":").concat("Math"),libraryAddress);
@@ -88,7 +85,6 @@ public class LinkedLibraryTest {
 
     // contract address
     private static String contractAddress = "627a2343060d14a48950ac38fdd15cad7f38cc33";
-    //private static String contractAddress = "0a7cb384dc26c62b0f4f87601f89c5bbfbf32a3a";
 
     @Test
     public void getContractFromOnChain(){
