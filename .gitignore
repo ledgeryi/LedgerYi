@@ -33,3 +33,4 @@ protocol/src/main/java/
 output-directory
 crypto/src/test/java
 sdk/logs
+/logs
