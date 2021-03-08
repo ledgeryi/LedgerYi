@@ -50,18 +50,19 @@
     <appender-ref ref="ASYNC"/>
   </root>
 
-  <logger name="app" level="INFO"/>
-  <logger name="net" level="INFO"/>
-  <logger name="backup" level="INFO"/>
-  <logger name="discover" level="INFO"/>
-  <logger name="crypto" level="INFO"/>
-  <logger name="utils" level="INFO"/>
-  <logger name="actuator" level="INFO"/>
-  <logger name="API" level="INFO"/>
-  <logger name="master" level="INFO"/>
-  <logger name="DB" level="INFO"/>
-  <logger name="capsule" level="INFO"/>
-  <logger name="VM" level="INFO"/>
+  <logger name="app"        level="INFO"/>
+  <logger name="net"        level="INFO"/>
+  <logger name="backup"     level="INFO"/>
+  <logger name="discover"   level="INFO"/>
+  <logger name="crypto"     level="INFO"/>
+  <logger name="utils"      level="INFO"/>
+  <logger name="actuator"   level="INFO"/>
+  <logger name="API"        level="INFO"/>
+  <logger name="master"     level="INFO"/>
+  <logger name="DB"         level="INFO"/>
+  <logger name="capsule"    level="INFO"/>
+  <logger name="VM"         level="INFO"/>
+  <logger name="permission" level="INFO"/>
 
 </configuration>
 

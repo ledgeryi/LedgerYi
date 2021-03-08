@@ -30,8 +30,8 @@ public class NodeAndAccountTest {
     @Test
     public void getAccount(){
         String address = "851577327413881a6e47def36d54b4978609ca05";
-        Protocol.Account account = ledgerYiApiService.getAccount(address);
-        System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(account, true)));
+        /*Protocol.Account account = ledgerYiApiService.getAccount(address);
+        System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(account, true)));*/
     }
 
     @Test

@@ -5,13 +5,14 @@ import "core/ledger_yi.proto";
 import "core/contract/smart_contract.proto";
 
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 
 option java_package = "cn.ledgeryi.api";
 option java_outer_classname = "GrpcAPI";
 
 service Wallet {
 
-  rpc GetAccount (Account) returns (Account) {
+  /*rpc GetAccount (Account) returns (Account) {
     option (google.api.http) = {
       post: "/v1/getaccount"
       body: "*"
@@ -19,9 +20,9 @@ service Wallet {
         get: "/v1/getaccount"
       }
     };
-  };
+  };*/
 
-  rpc BroadcastTransaction (Transaction) returns (Return) {
+  rpc BroadcastTransaction (GrpcRequest) returns (Return) {
     option (google.api.http) = {
       post: "/v1/broadcasttransaction"
       body: "*"
@@ -31,7 +32,7 @@ service Wallet {
     };
   };
 
-  rpc GetNodes (EmptyMessage) returns (NodeList) {
+  rpc GetNodes (GrpcRequest) returns (NodeList) {
     option (google.api.http) = {
       post: "/v1/listnodes"
       body: "*"
@@ -41,16 +42,16 @@ service Wallet {
     };
   }
 
-  rpc GetNowBlock (EmptyMessage) returns (BlockExtention) {
+  rpc GetNowBlock (GrpcRequest) returns (BlockExtention) {
   }
 
-  rpc GetBlockByNum (NumberMessage) returns (BlockExtention) {
+  rpc GetBlockByNum (GrpcRequest) returns (BlockExtention) {
   }
 
-  rpc GetTransactionCountByBlockNum (NumberMessage) returns (NumberMessage) {
+  rpc GetTransactionCountByBlockNum (GrpcRequest) returns (NumberMessage) {
   }
 
-  rpc GetBlockById (BytesMessage) returns (Block) {
+  rpc GetBlockById (GrpcRequest) returns (Block) {
     option (google.api.http) = {
       post: "/v1/getblockbyid"
       body: "*"
@@ -60,10 +61,10 @@ service Wallet {
     };
   }
 
-  rpc GetBlockByLimitNext (BlockLimit) returns (BlockListExtention) {
+  rpc GetBlockByLimitNext (GrpcRequest) returns (BlockListExtention) {
   }
 
-  rpc GetTransactionById (BytesMessage) returns (Transaction) {
+  rpc GetTransactionById (GrpcRequest) returns (Transaction) {
     option (google.api.http) = {
       post: "/v1/gettransactionbyid"
       body: "*"
@@ -73,7 +74,7 @@ service Wallet {
     };
   }
 
-  rpc GetTransactionInfoById (BytesMessage) returns (TransactionInfo) {
+  rpc GetTransactionInfoById (GrpcRequest) returns (TransactionInfo) {
     option (google.api.http) = {
       post: "/v1/gettransactioninfobyid"
       body: "*"
@@ -83,7 +84,7 @@ service Wallet {
     };
   }
 
-  rpc GetMasters (EmptyMessage) returns (MastersList) {
+  rpc GetMasters (GrpcRequest) returns (MastersList) {
     option (google.api.http) = {
       post: "/v1/getmasters"
       body: "*"
@@ -93,28 +94,28 @@ service Wallet {
     };
   };
 
-  rpc GetNodeInfo (EmptyMessage) returns (NodeInfo) {
+  rpc GetNodeInfo (GrpcRequest) returns (NodeInfo) {
   }
 
-  rpc DeployContract (CreateSmartContract) returns (TransactionExtention) {
+  rpc DeployContract (GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc TriggerContract (TriggerSmartContract) returns (TransactionExtention) {
+  rpc TriggerContract (GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc TriggerConstantContract (TriggerSmartContract) returns (TransactionExtention) {
+  rpc TriggerConstantContract (GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc GetContract (BytesMessage) returns (SmartContract) {
+  rpc GetContract (GrpcRequest) returns (SmartContract) {
   }
 
-  rpc ClearContractABI (ClearABIContract) returns (TransactionExtention) {
+  rpc ClearContractABI (GrpcRequest) returns (TransactionExtention) {
   }
 
 };
 
-// the api of jingChain's db
-service Database {
+// the api of ledgeryi's db
+/*service Database {
   // for tapos
   rpc getBlockReference (EmptyMessage) returns (BlockReference) {
 
@@ -128,7 +129,7 @@ service Database {
   rpc GetBlockByNum (NumberMessage) returns (Block) {
 
   }
-};
+};*/
 
 message Return {
   enum response_code {
@@ -239,4 +240,10 @@ message Note {
 
 message TransactionInfoList {
   repeated TransactionInfo transactionInfo = 1;
+}
+
+message GrpcRequest {
+  string requestAddress = 1;
+  string requestRole = 2;
+  google.protobuf.Any param = 3;
 }

@@ -13,6 +13,7 @@ import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.core.config.Configuration;
 import cn.ledgeryi.framework.core.db.backup.DbBackupConfig;
 import cn.ledgeryi.chainbase.core.config.args.Master;
+import cn.ledgeryi.framework.core.permission.constant.NetTypeEnum;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.typesafe.config.Config;
@@ -327,9 +328,9 @@ public class Args {
   @Setter
   private int minEffectiveConnection;
 
-  @Getter
+  /*@Getter
   @Setter
-  private String cryptoEngine = Constant.ECKey_ENGINE;
+  private String cryptoEngine = Constant.ECKey_ENGINE;*/
 
   @Getter
   @Setter
@@ -353,13 +354,13 @@ public class Args {
   @Setter
   private Set<String> actuatorSet;
 
-  @Getter
-  @Setter
   public boolean ledgerYiNodeHttpEnable = true;
 
   @Getter
-  @Setter
   public boolean isEcc = true;
+
+  @Setter
+  public String netType;
 
   /**
    * set parameters.
@@ -371,12 +372,14 @@ public class Args {
     log.info("config file name: {}", confFileName);
     log.info("shell config file name: {}", INSTANCE.shellConfFileName);
 
+    INSTANCE.netType = config.getString(Constant.NETWORK_TYPE);
+
     if (config.hasPath(Constant.CRYPTO_ENGINE)) {
       INSTANCE.isEcc = Constant.ECKey_ENGINE.equalsIgnoreCase(config.getString(Constant.CRYPTO_ENGINE));
     }
-    if (config.hasPath(Constant.CRYPTO_ENGINE)) {
+    /*if (config.hasPath(Constant.CRYPTO_ENGINE)) {
       INSTANCE.cryptoEngine = config.getString(Constant.CRYPTO_ENGINE);
-    }
+    }*/
     initEncryptoEngine(INSTANCE);
 
     if (StringUtils.isNoneBlank(INSTANCE.privateKey)) {
@@ -892,5 +895,9 @@ public class Args {
 
   public boolean isEccCryptoEngine() {
     return isEcc;
+  }
+
+  public boolean isNotPermissionNet(){
+    return NetTypeEnum.PUBLIC_BLOCKCHAIN.getValue().equals(netType);
   }
 }

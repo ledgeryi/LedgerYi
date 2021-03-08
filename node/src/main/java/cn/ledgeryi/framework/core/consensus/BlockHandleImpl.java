@@ -57,7 +57,7 @@ public class BlockHandleImpl implements BlockHandle {
       manager.pushBlock(blockCapsule);
       ledgerYiNetService.broadcast(blockMessage);
     } catch (Exception e) {
-      log.error("Handle block {} failed.", blockCapsule.getBlockId().getString(), e);
+      log.error("Handle block {} failed, reason: {}.", blockCapsule.getBlockId().getString(), e.getMessage());
       return null;
     }
     return blockCapsule;

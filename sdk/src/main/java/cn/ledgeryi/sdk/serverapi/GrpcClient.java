@@ -7,9 +7,11 @@ import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Account;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.TransactionInfo;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.*;
 import cn.ledgeryi.sdk.common.utils.ByteArray;
 import cn.ledgeryi.sdk.config.Configuration;
+import cn.ledgeryi.sdk.serverapi.data.RequestUserInfo;
+import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
 import io.grpc.ManagedChannel;
@@ -41,24 +43,27 @@ public class GrpcClient {
         return new GrpcClient(ledgerYiNode);
     }
 
-    public Account queryAccount(byte[] address) {
+    /*public Account queryAccount(byte[] address) {
         ByteString addressBS = ByteString.copyFrom(address);
         Account request = Account.newBuilder().setAddress(addressBS).build();
         return blockingStubFull.getAccount(request);
+    }*/
+
+    public MastersList queryMasters(RequestUserInfo requestUser){
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        return blockingStubFull.getMasters(builder.build());
     }
 
-    public MastersList queryMasters(){
-        EmptyMessage message = EmptyMessage.newBuilder().build();
-        return blockingStubFull.getMasters(message);
-    }
-
-    public boolean broadcastTransaction(Transaction signaturedTransaction) {
+    public boolean broadcastTransaction(Transaction signaturedTransaction, RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId()).setParam(Any.pack(signaturedTransaction));
         int repeatTimes = BROADCAST_TRANSACTION_REPEAT_TIMES;
-        Return response = blockingStubFull.broadcastTransaction(signaturedTransaction);
+        Return response = blockingStubFull.broadcastTransaction(builder.build());
         while (!response.getResult() && response.getCode() == Return.response_code.SERVER_BUSY && repeatTimes > 0) {
             repeatTimes--;
-            response = blockingStubFull.broadcastTransaction(signaturedTransaction);
-            log.info("broadcast transaction, repeat times: " + (BROADCAST_TRANSACTION_REPEAT_TIMES - repeatTimes + 1));
+            response = blockingStubFull.broadcastTransaction(builder.build());
+            log.info("broadcast tx, repeat times: " + (BROADCAST_TRANSACTION_REPEAT_TIMES - repeatTimes + 1));
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -66,80 +71,112 @@ public class GrpcClient {
             }
         }
         if (!response.getResult()) {
-            log.error("broadcast transaction, result is false, code: " + response.getCode());
-            log.error("broadcast transaction, result is false, message: " + response.getMessage().toStringUtf8());
+            log.error("broadcast tx, code: {}, message: {}" + response.getCode(), response.getMessage().toStringUtf8());
         }
         return response.getResult();
     }
 
-    public BlockExtention getNowBlock() {
-        return blockingStubFull.getNowBlock(EmptyMessage.newBuilder().build());
+    public BlockExtention getNowBlock(RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        return blockingStubFull.getNowBlock(builder.build());
     }
 
-
-    public BlockExtention getBlockByNum(long blockNum) {
+    public BlockExtention getBlockByNum(long blockNum, RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
         if (blockNum < 0) {
-            return blockingStubFull.getNowBlock(EmptyMessage.newBuilder().build());
+            return blockingStubFull.getNowBlock(builder.build());
         }
-        NumberMessage.Builder builder = NumberMessage.newBuilder();
-        builder.setNum(blockNum);
+        NumberMessage.Builder numberBuilder = NumberMessage.newBuilder();
+        numberBuilder.setNum(blockNum);
+        builder.setParam(Any.pack(numberBuilder.build()));
         return blockingStubFull.getBlockByNum(builder.build());
     }
 
-    public BlockListExtention getBlockByLimitNext(long start, long end){
+    public BlockListExtention getBlockByLimitNext(long start, long end, RequestUserInfo requestUser) {
         BlockLimit.Builder builder = BlockLimit.newBuilder();
         builder.setStartNum(start);
         builder.setEndNum(end);
-        return blockingStubFull.getBlockByLimitNext(builder.build());
+        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
+        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        grpcBuilder.setParam(Any.pack(builder.build()));
+        return blockingStubFull.getBlockByLimitNext(grpcBuilder.build());
     }
 
-    public Transaction getTransactionById(String hash){
+    public Transaction getTransactionById(String hash, RequestUserInfo requestUser) {
         GrpcAPI.BytesMessage.Builder builder = GrpcAPI.BytesMessage.newBuilder();
         builder.setValue(ByteString.copyFrom(ByteArray.fromHexString(hash)));
-        return blockingStubFull.getTransactionById(builder.build());
+        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
+        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        grpcBuilder.setParam(Any.pack(builder.build()));
+        return blockingStubFull.getTransactionById(grpcBuilder.build());
     }
 
-    public TransactionInfo getTransactionInfoById(String txId) {
+    public TransactionInfo getTransactionInfoById(String txId, RequestUserInfo requestUser) {
         ByteString bsTxid = ByteString.copyFrom(ByteArray.fromHexString(txId));
         BytesMessage request = BytesMessage.newBuilder().setValue(bsTxid).build();
-        return blockingStubFull.getTransactionInfoById(request);
+        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
+        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        grpcBuilder.setParam(Any.pack(request));
+        return blockingStubFull.getTransactionInfoById(grpcBuilder.build());
     }
 
-    public NumberMessage getTransactionCountByBlockNum(long blockNum){
+    public NumberMessage getTransactionCountByBlockNum(long blockNum, RequestUserInfo requestUser) {
         NumberMessage.Builder builder = NumberMessage.newBuilder();
         builder.setNum(blockNum);
-        return blockingStubFull.getTransactionCountByBlockNum(builder.build());
+        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
+        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        grpcBuilder.setParam(Any.pack(builder.build()));
+        return blockingStubFull.getTransactionCountByBlockNum(grpcBuilder.build());
     }
 
-    public TransactionExtention triggerContract(SmartContractOuterClass.TriggerSmartContract request) {
-        return blockingStubFull.triggerContract(request);
+    public TransactionExtention triggerContract(TriggerSmartContract request, RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        builder.setParam(Any.pack(request));
+        return blockingStubFull.triggerContract(builder.build());
     }
 
-    public TransactionExtention deployContract(SmartContractOuterClass.CreateSmartContract request) {
-        return blockingStubFull.deployContract(request);
+    public TransactionExtention deployContract(CreateSmartContract request, RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        builder.setParam(Any.pack(request));
+        return blockingStubFull.deployContract(builder.build());
     }
 
-    public TransactionExtention triggerConstantContract(SmartContractOuterClass.TriggerSmartContract request) {
-        return blockingStubFull.triggerConstantContract(request);
+    public TransactionExtention triggerConstantContract(TriggerSmartContract request, RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        builder.setParam(Any.pack(request));
+        return blockingStubFull.triggerConstantContract(builder.build());
     }
 
-    public SmartContractOuterClass.SmartContract getContract(byte[] address) {
+    public SmartContract getContract(byte[] address, RequestUserInfo requestUser) {
         ByteString byteString = ByteString.copyFrom(address);
         BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
-        return blockingStubFull.getContract(bytesMessage);
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        builder.setParam(Any.pack(bytesMessage));
+        return blockingStubFull.getContract(builder.build());
     }
 
-    public TransactionExtention clearContractABI(SmartContractOuterClass.ClearABIContract request) {
-        return blockingStubFull.clearContractABI(request);
+    public TransactionExtention clearContractABI(ClearABIContract request, RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        builder.setParam(Any.pack(request));
+        return blockingStubFull.clearContractABI(builder.build());
     }
 
-    public NodeList getConnectNodes(){
-        EmptyMessage message = EmptyMessage.newBuilder().build();
-        return blockingStubFull.getNodes(message);
+    public NodeList getConnectNodes(RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        return blockingStubFull.getNodes(builder.build());
     }
 
-    public Protocol.NodeInfo getNodeInfo(){
-        EmptyMessage message = EmptyMessage.newBuilder().build();
-        return blockingStubFull.getNodeInfo(message);
+    public Protocol.NodeInfo getNodeInfo(RequestUserInfo requestUser) {
+        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        return blockingStubFull.getNodeInfo(builder.build());
     }
 }

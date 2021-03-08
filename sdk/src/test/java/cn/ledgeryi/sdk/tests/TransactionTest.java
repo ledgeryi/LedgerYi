@@ -5,6 +5,7 @@ import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.sdk.common.utils.JsonFormat;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
+import cn.ledgeryi.sdk.serverapi.data.RequestUserInfo;
 import cn.ledgeryi.sdk.serverapi.data.TransactionInformation;
 import com.alibaba.fastjson.JSONArray;
 import org.junit.Before;
@@ -26,8 +27,10 @@ public class TransactionTest {
 
     @Test
     public void getBlockByNum(){
-        long num = 49;
-        GrpcAPI.BlockExtention block = ledgerYiApiService.getBlock(num);
+        long num = 0;
+        String address = "9bd34d14acc715a37bcf77da13322526258bbb2d";
+        RequestUserInfo requestUserInfo = RequestUserInfo.builder().address(address).roleId("1").build();
+        GrpcAPI.BlockExtention block = ledgerYiApiService.getBlock(num,requestUserInfo);
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(block, true)));
     }
 

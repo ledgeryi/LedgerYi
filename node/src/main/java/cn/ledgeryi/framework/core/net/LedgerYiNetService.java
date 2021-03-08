@@ -40,7 +40,6 @@ public class LedgerYiNetService {
   @Autowired
   private InventoryMsgHandler inventoryMsgHandler;
 
-
   @Autowired
   private FetchInvDataMsgHandler fetchInvDataMsgHandler;
 

@@ -2,12 +2,7 @@ package cn.ledgeryi.framework.program;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
-import java.io.File;
-
 import cn.ledgeryi.common.core.Constant;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import cn.ledgeryi.framework.common.application.Application;
 import cn.ledgeryi.framework.common.application.ApplicationFactory;
 import cn.ledgeryi.framework.common.application.LedgerYiApplicationContext;
@@ -15,11 +10,16 @@ import cn.ledgeryi.framework.core.config.DefaultConfig;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.services.RpcApiService;
 import cn.ledgeryi.framework.core.services.http.LedgerYiNodeHttpApiService;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+
+import java.io.File;
 
 @Slf4j(topic = "app")
 public class LedgerYiNode {
 
-  public static void load(String path) {
+  private static void load(String path) {
     try {
       File file = new File(path);
       if (!file.exists() || !file.isFile() || !file.canRead()) {

@@ -92,12 +92,12 @@ public class StorageContractTest {
         triggerContract(method, args, true);
     }
 
-    @Test
+    /*@Test
     public void clearContractAbi(){
         boolean result = ledgerYiApiService.clearContractABI(DecodeUtil.decode(ownerAddress),
                 DecodeUtil.decode(privateKey), DecodeUtil.decode(contractAddress));
         System.out.println("clear result: " +  result);
-    }
+    }*/
 
     private void triggerContract(String method, List<Object> args, boolean isConstant) {
         TriggerContractParam triggerContractParam = new TriggerContractParam()

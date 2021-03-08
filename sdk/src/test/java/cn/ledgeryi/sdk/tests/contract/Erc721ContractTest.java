@@ -165,12 +165,12 @@ public class Erc721ContractTest {
         System.out.println("trigger contract result: " + Strings.fromByteArray(result.getCallResult().toByteArray()).trim());
     }
 
-    @Test
+    /*@Test
     public void clearContractAbi(){
         boolean result = ledgerYiApiService.clearContractABI(DecodeUtil.decode(ownerAddress),
                 DecodeUtil.decode(privateKey), DecodeUtil.decode(contractAddress));
         System.out.println("clear result: " +  result);
-    }
+    }*/
 
     private TriggerContractReturn triggerContract(String method, List<Object> args, boolean isConstant) {
         TriggerContractParam triggerContractParam = new TriggerContractParam()

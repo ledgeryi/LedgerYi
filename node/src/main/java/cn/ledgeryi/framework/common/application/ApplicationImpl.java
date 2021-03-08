@@ -13,7 +13,7 @@ import cn.ledgeryi.framework.core.net.LedgerYiNetService;
 @Component
 public class ApplicationImpl implements Application {
 
-  private BlockStore blockStoreDb;
+  //private BlockStore blockStoreDb;
   private ServiceContainer services;
 
   @Autowired
@@ -25,15 +25,15 @@ public class ApplicationImpl implements Application {
   @Autowired
   private ConsensusService consensusService;
 
-  @Override
+  /*@Override
   public void setOptions(Args args) {
     // not used
-  }
+  }*/
 
   @Override
   @Autowired
   public void init(Args args) {
-    blockStoreDb = dbManager.getBlockStore();
+    //blockStoreDb = dbManager.getBlockStore();
     services = new ServiceContainer();
   }
 
@@ -78,15 +78,15 @@ public class ApplicationImpl implements Application {
     services.stop();
   }
 
-  @Override
+  /*@Override
   public BlockStore getBlockStoreS() {
     return blockStoreDb;
-  }
+  }*/
 
-  @Override
+  /*@Override
   public Manager getDbManager() {
     return dbManager;
-  }
+  }*/
 
   private void closeRevokingStore() {
     log.info("******** begin to closeRevokingStore ********");

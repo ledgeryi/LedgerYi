@@ -1,6 +1,5 @@
 package cn.ledgeryi.framework.core.capsule;
 
-import cn.ledgeryi.chainbase.common.runtime.InternalTransaction;
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.ProtoCapsule;
@@ -13,13 +12,12 @@ import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.TransactionInfo.Log;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import cn.ledgeryi.framework.core.config.args.Args;
 
 @Slf4j(topic = "capsule")
 public class TransactionInfoCapsule implements ProtoCapsule<Protocol.TransactionInfo> {

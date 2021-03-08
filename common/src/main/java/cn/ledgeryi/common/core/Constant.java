@@ -2,13 +2,15 @@ package cn.ledgeryi.common.core;
 
 public class Constant {
 
-  //config for mainnet
   public static final String MAINNET_CONF = "config.conf";
 
   // config for transaction
   public static final long TRANSACTION_MAX_BYTE_SIZE = 500 * 1_024L;
   public static final long MAXIMUM_TIME_UNTIL_EXPIRATION = 24 * 60 * 60 * 1_000L; //one day
   public static final long TRANSACTION_DEFAULT_EXPIRATION_TIME = 60 * 1_000L; //60 seconds
+
+  // network type: permissioned blockchain or public blockchain
+  public static final String NETWORK_TYPE = "net.type";
 
   // Configuration items
   public static final String LOCAL_MASTER = "localMaster";

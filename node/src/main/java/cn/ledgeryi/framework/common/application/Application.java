@@ -6,7 +6,7 @@ import cn.ledgeryi.framework.core.db.Manager;
 
 public interface Application {
 
-  void setOptions(Args args);
+  //void setOptions(Args args);
 
   void init(Args args);
 
@@ -20,10 +20,10 @@ public interface Application {
 
   void shutdownServices();
 
-  BlockStore getBlockStoreS();
+  //BlockStore getBlockStoreS();
 
   void addService(Service service);
 
-  Manager getDbManager();
+  //Manager getDbManager();
 
 }

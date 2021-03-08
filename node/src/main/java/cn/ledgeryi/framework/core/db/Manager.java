@@ -28,6 +28,8 @@ import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
+import cn.ledgeryi.framework.core.permission.aop.Authentication;
+import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract;
 import com.google.common.cache.Cache;
@@ -433,7 +435,7 @@ public class Manager {
     try {
       binaryTree = khaosDb.getBranch(newHead.getBlockId(), getDynamicPropertiesStore().getLatestBlockHeaderHash());
     } catch (NonCommonBlockException e) {
-      log.info("there is not the most recent common ancestor, need to remove all blocks in the fork chain.");
+      log.info("there is not the most recent constant ancestor, need to remove all blocks in the fork chain.");
       BlockCapsule tmp = newHead;
       while (tmp != null) {
         khaosDb.removeBlk(tmp.getBlockId());
@@ -508,10 +510,11 @@ public class Manager {
    * save a block
    */
   public synchronized void pushBlock(final BlockCapsule block)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException,
-          UnLinkedBlockException, ValidateScheduleException, TaposException, TooBigTransactionException,
+          throws ValidateSignatureException, ContractValidateException,
+          ContractExeException, UnLinkedBlockException, VMIllegalException,
+          ValidateScheduleException, TaposException, TooBigTransactionException,
           DupTransactionException, TransactionExpirationException, BadNumberBlockException,
-          BadBlockException, NonCommonBlockException, ReceiptCheckErrException, VMIllegalException {
+          BadBlockException, NonCommonBlockException, ReceiptCheckErrException, AuthorizeException {
     long start = System.currentTimeMillis();
     PendingManager pm = new PendingManager(this,block);
     try {
@@ -520,8 +523,10 @@ public class Manager {
           log.error("The signature is not validated.");
           throw new BadBlockException("The signature is not validated");
         }
+
         if (!block.calcMerkleRoot().equals(block.getMerkleRoot())) {
-          log.error( "The merkle root doesn't match, Calc result is " + block.calcMerkleRoot() + " , the headers is " + block.getMerkleRoot());
+          log.error( "The merkle root doesn't match, Calc result is " + block.calcMerkleRoot()
+                  + " , the headers is " + block.getMerkleRoot());
           throw new BadBlockException("The merkle hash is not validated");
         }
         consensus.receiveBlock(block);
@@ -580,7 +585,7 @@ public class Manager {
         block.getNum(), System.currentTimeMillis() - start, block.getTransactions().size());
   }
 
-  public void updateDynamicProperties(BlockCapsule block) {
+  private void updateDynamicProperties(BlockCapsule block) {
     this.dynamicPropertiesStore.saveLatestBlockHeaderHash(block.getBlockId().getByteString());
     this.dynamicPropertiesStore.saveLatestBlockHeaderNumber(block.getNum());
     this.dynamicPropertiesStore.saveLatestBlockHeaderTimestamp(block.getTimeStamp());

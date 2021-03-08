@@ -27,9 +27,6 @@ import static cn.ledgeryi.consenus.base.Constant.SOLIDIFIED_THRESHOLD;
 public class DposService implements ConsensusInterface {
 
   @Autowired
-  private ConsensusDelegate consensusDelegate;
-
-  @Autowired
   private DposTask dposTask;
 
   @Autowired
@@ -40,6 +37,9 @@ public class DposService implements ConsensusInterface {
 
   @Autowired
   private StatisticManager statisticManager;
+
+  @Autowired
+  private ConsensusDelegate consensusDelegate;
 
   @Getter
   @Setter
@@ -146,7 +146,7 @@ public class DposService implements ConsensusInterface {
     log.info("Update solid block number to {}", newSolidNum);
   }
 
-  public void updateWitness(List<ByteString> list) {
+  private void updateWitness(List<ByteString> list) {
     if (list.size() > MAX_ACTIVE_WITNESS_NUM) {
       consensusDelegate.saveActiveMasters(list.subList(0, MAX_ACTIVE_WITNESS_NUM));
     } else {

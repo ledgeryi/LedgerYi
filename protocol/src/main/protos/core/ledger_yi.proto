@@ -183,7 +183,7 @@ message BlockHeader {
   bytes master_signature = 2;
 }
 
-message Permission {
+/*message Permission {
   enum PermissionType {
     Owner = 0;
     Master = 1;
@@ -196,7 +196,7 @@ message Permission {
   int32 parent_id = 5;
   bytes operations = 6; //1 bit 1 contract
   repeated Key keys = 7;
-}
+}*/
 
 // block
 message Block {

@@ -15,6 +15,7 @@ import cn.ledgeryi.chainbase.core.store.MasterScheduleStore;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.core.exception.P2pException.TypeEnum;
 import cn.ledgeryi.common.utils.Sha256Hash;
+import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.protos.Protocol;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +26,6 @@ import cn.ledgeryi.framework.common.backup.BackupServer;
 import cn.ledgeryi.framework.common.overlay.server.ChannelManager;
 import cn.ledgeryi.framework.common.overlay.server.SyncPool;
 import cn.ledgeryi.framework.core.db.Manager;
-import cn.ledgeryi.framework.core.exception.BadBlockException;
-import cn.ledgeryi.framework.core.exception.DupTransactionException;
-import cn.ledgeryi.framework.core.exception.TaposException;
-import cn.ledgeryi.framework.core.exception.TooBigTransactionException;
-import cn.ledgeryi.framework.core.exception.TransactionExpirationException;
-import cn.ledgeryi.framework.core.exception.ValidateScheduleException;
 import cn.ledgeryi.framework.core.net.message.BlockMessage;
 import cn.ledgeryi.framework.core.net.message.TransactionMessage;
 import cn.ledgeryi.framework.core.net.peer.PeerConnection;
@@ -190,19 +185,20 @@ public class LedgerYiNetDelegate {
           }
         }
       } catch (ValidateSignatureException
-          | ContractValidateException
-          | ContractExeException
-          | UnLinkedBlockException
-          | ValidateScheduleException
-          | TaposException
-          | TooBigTransactionException
-          | DupTransactionException
-          | TransactionExpirationException
-          | BadNumberBlockException
-          | BadBlockException
-          | NonCommonBlockException
-          | ReceiptCheckErrException
-           | VMIllegalException e) {
+              | ContractValidateException
+              | ContractExeException
+              | UnLinkedBlockException
+              | ValidateScheduleException
+              | TaposException
+              | TooBigTransactionException
+              | DupTransactionException
+              | TransactionExpirationException
+              | BadNumberBlockException
+              | BadBlockException
+              | NonCommonBlockException
+              | ReceiptCheckErrException
+              | VMIllegalException
+              | AuthorizeException e) {
         log.error("Process block failed, {}, reason: {}.", blockId.getString(), e.getMessage());
         throw new P2pException(TypeEnum.BAD_BLOCK, e);
       }
