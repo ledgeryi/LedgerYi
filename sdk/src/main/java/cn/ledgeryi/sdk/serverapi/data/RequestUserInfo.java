@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class RequestUserInfo {
     private String address;
-    private String roleId;
+    private int roleId;
 }

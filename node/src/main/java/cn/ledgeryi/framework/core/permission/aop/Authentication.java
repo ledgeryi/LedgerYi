@@ -8,9 +8,8 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Authentication {
-    RoleTypeEnum role() default RoleTypeEnum.READ_ONLY;
 
-    //String[] roles() default  {"1"};
+    RoleTypeEnum[] roles() default {RoleTypeEnum.READ_ONLY};
 
     // 1 - read only
     // 2 - transaction only

@@ -244,6 +244,6 @@ message TransactionInfoList {
 
 message GrpcRequest {
   string requestAddress = 1;
-  string requestRole = 2;
+  int32 requestRole = 2;
   google.protobuf.Any param = 3;
 }

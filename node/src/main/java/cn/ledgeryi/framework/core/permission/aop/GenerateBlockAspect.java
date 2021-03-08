@@ -15,14 +15,13 @@ import org.springframework.stereotype.Component;
 @Slf4j(topic = "permission")
 @Aspect
 @Component
-public class PushBlockAspect {
+public class GenerateBlockAspect {
 
     @Autowired
     private PermissionManager permissionManager;
 
     @Pointcut("execution(* cn.ledgeryi.framework.core.db.Manager.pushBlock(..)) && args(block)")
     public void pointPushBlock(BlockCapsule block) {
-
     }
 
     @Before("pointPushBlock(block)")

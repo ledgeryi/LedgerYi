@@ -8,15 +8,16 @@ import lombok.Getter;
 // 4 - consensus
 public enum RoleTypeEnum {
 
-    READ_ONLY("1"),
-    TRANSACTION_ONLY("2"),
-    DEPLOY_CONTRACT("3"),
-    CONSENSUS("4");
+    NO_PERMISSION(0),
+    READ_ONLY(1),
+    TRANSACTION_ONLY(2),
+    DEPLOY_CONTRACT(3),
+    CONSENSUS(4);
 
     @Getter
-    private String type;
+    private int type;
 
-    RoleTypeEnum(String type){
+    RoleTypeEnum(int type){
         this.type = type;
     }
 }

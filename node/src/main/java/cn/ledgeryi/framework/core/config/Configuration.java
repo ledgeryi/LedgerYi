@@ -37,12 +37,10 @@ public class Configuration {
   private static void resolveConfigFile(String fileName, File confFile) {
     if (confFile.exists()) {
       config = ConfigFactory.parseFile(confFile);
-    } else if (Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName)
-        != null) {
+    } else if (Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName) != null) {
       config = ConfigFactory.load(fileName);
     } else {
-      throw new IllegalArgumentException(
-          "Configuration path is required! No Such file " + fileName);
+      throw new IllegalArgumentException("Configuration path is required! No Such file " + fileName);
     }
   }
 }

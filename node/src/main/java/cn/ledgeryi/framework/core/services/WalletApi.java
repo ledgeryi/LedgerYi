@@ -111,9 +111,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         return wallet.createTransactionCapsule(message, contractType);
     }
 
-    @Authentication(role = RoleTypeEnum.TRANSACTION_ONLY)
+    @Authentication(roles = {RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void broadcastTransaction(GrpcRequest/*Protocol.Transaction*/ req, StreamObserver<GrpcAPI.Return> responseObserver) {
+    public void broadcastTransaction(GrpcRequest req, StreamObserver<GrpcAPI.Return> responseObserver) {
         try{
 
             Any param = req.getParam();
@@ -137,7 +137,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
       responseObserver.onCompleted();
     }*/
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
     public void getNowBlock(GrpcRequest request, StreamObserver<GrpcAPI.BlockExtention> responseObserver) {
         try {
@@ -148,9 +148,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getBlockByNum(GrpcRequest/*NumberMessage*/ request, StreamObserver<GrpcAPI.BlockExtention> responseObserver) {
+    public void getBlockByNum(GrpcRequest request, StreamObserver<GrpcAPI.BlockExtention> responseObserver) {
         try {
             Any requestParam = request.getParam();
             GrpcAPI.NumberMessage numberMessage = requestParam.unpack(GrpcAPI.NumberMessage.class);
@@ -162,9 +162,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getTransactionCountByBlockNum(GrpcRequest/*NumberMessage*/ request, StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
+    public void getTransactionCountByBlockNum(GrpcRequest request, StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
         GrpcAPI.NumberMessage.Builder builder = GrpcAPI.NumberMessage.newBuilder();
         try {
             Any requestParam = request.getParam();
@@ -179,9 +179,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getNodes(GrpcRequest/*EmptyMessage*/ request, StreamObserver<GrpcAPI.NodeList> responseObserver) {
+    public void getNodes(GrpcRequest request, StreamObserver<GrpcAPI.NodeList> responseObserver) {
         try{
             List<NodeHandler> handlerList = nodeManager.dumpActiveNodes();
             Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
@@ -202,9 +202,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getBlockById(GrpcRequest/*BytesMessage*/ request, StreamObserver<Block> responseObserver) {
+    public void getBlockById(GrpcRequest request, StreamObserver<Block> responseObserver) {
         try{
             Any requestParam = request.getParam();
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
@@ -218,9 +218,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getBlockByLimitNext(GrpcRequest/*BlockLimit*/ request, StreamObserver<BlockListExtention> responseObserver) {
+    public void getBlockByLimitNext(GrpcRequest request, StreamObserver<BlockListExtention> responseObserver) {
         try {
             Any requestParam = request.getParam();
             GrpcAPI.BlockLimit blockLimit = requestParam.unpack(GrpcAPI.BlockLimit.class);
@@ -235,9 +235,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getTransactionById(GrpcRequest/*BytesMessage*/ request, StreamObserver<Transaction> responseObserver) {
+    public void getTransactionById(GrpcRequest request, StreamObserver<Transaction> responseObserver) {
         try{
             Any requestParam = request.getParam();
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
@@ -251,9 +251,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getTransactionInfoById(GrpcRequest/*BytesMessage*/ request, StreamObserver<TransactionInfo> responseObserver) {
+    public void getTransactionInfoById(GrpcRequest request, StreamObserver<TransactionInfo> responseObserver) {
         try{
             Any requestParam = request.getParam();
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
@@ -268,9 +268,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getMasters(GrpcRequest/*EmptyMessage*/ request, StreamObserver<MastersList> responseObserver) {
+    public void getMasters(GrpcRequest request, StreamObserver<MastersList> responseObserver) {
         try{
             responseObserver.onNext(wallet.getMastersList());
         } catch (Exception e) {
@@ -279,9 +279,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication
+    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
     @Override
-    public void getNodeInfo(GrpcRequest/*EmptyMessage*/ request, StreamObserver<NodeInfo> responseObserver) {
+    public void getNodeInfo(GrpcRequest request, StreamObserver<NodeInfo> responseObserver) {
         try {
             responseObserver.onNext(nodeInfoService.getNodeInfo().transferToProtoEntity());
         } catch (Exception e) {
@@ -290,9 +290,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(role = RoleTypeEnum.DEPLOY_CONTRACT)
+    @Authentication(roles = RoleTypeEnum.DEPLOY_CONTRACT)
     @Override
-    public void deployContract(GrpcRequest/*CreateSmartContract*/ request, StreamObserver<TransactionExtention> responseObserver) {
+    public void deployContract(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         CreateSmartContract createSmartContract = null;
         try{
             Any requestParam = request.getParam();
@@ -327,13 +327,13 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
     }
 
     @Override
-    public void clearContractABI(GrpcRequest/*ClearABIContract*/ request, StreamObserver<TransactionExtention> responseObserver) {
+    public void clearContractABI(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         //createTransaction(request, ContractType.ClearABIContract, responseObserver);
     }
 
-    @Authentication
+    @Authentication(roles = RoleTypeEnum.DEPLOY_CONTRACT)
     @Override
-    public void getContract(GrpcRequest/*BytesMessage*/ request, StreamObserver<SmartContract> responseObserver) {
+    public void getContract(GrpcRequest request, StreamObserver<SmartContract> responseObserver) {
         try{
             Any requestParam = request.getParam();
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
@@ -345,15 +345,15 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(role = RoleTypeEnum.DEPLOY_CONTRACT)
+    @Authentication(roles = {RoleTypeEnum.TRANSACTION_ONLY})
     @Override
-    public void triggerContract(GrpcRequest/*TriggerSmartContract*/ request, StreamObserver<TransactionExtention> responseObserver) {
+    public void triggerContract(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         callContract(request, responseObserver, false);
     }
 
-    @Authentication(role = RoleTypeEnum.DEPLOY_CONTRACT)
+    @Authentication(roles = {RoleTypeEnum.TRANSACTION_ONLY})
     @Override
-    public void triggerConstantContract(GrpcRequest/*TriggerSmartContract*/ request, StreamObserver<TransactionExtention> responseObserver) {
+    public void triggerConstantContract(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         callContract(request, responseObserver, true);
     }
 

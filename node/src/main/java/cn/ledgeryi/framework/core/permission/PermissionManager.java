@@ -40,17 +40,15 @@ public class PermissionManager {
 
     private static final String PERMISSION_CONFIG = "permission/permission-config.json";
 
-    private void getContractAddress(){
+    private void readContractAddress(){
         try {
-            if (StringUtils.isEmpty(roleMgrAddress) || StringUtils.isEmpty(nodeMgrAddress)){
-                String path = System.getProperty("user.dir");
-                File file = new File(path + "/" + PERMISSION_CONFIG);
-                String json = FileUtils.readFileToString(file, "UTF-8");
-                JSONObject jsonObject = JSON.parseObject(json);
-                nodeMgrAddress = jsonObject.getString("nodeManagerAddress");
-                roleMgrAddress = jsonObject.getString("roleManagerAddress");
-                guardianAccount = jsonObject.getString("guardianAccount");
-            }
+            String path = System.getProperty("user.dir");
+            File file = new File(path + "/" + PERMISSION_CONFIG);
+            String json = FileUtils.readFileToString(file, "UTF-8");
+            JSONObject jsonObject = JSON.parseObject(json);
+            nodeMgrAddress = jsonObject.getString("nodeManagerAddress");
+            roleMgrAddress = jsonObject.getString("roleManagerAddress");
+            guardianAccount = jsonObject.getString("guardianAccount");
         } catch (IOException e) {
             log.error("parse contract address fail, error： ", e.getMessage());
             throw new RuntimeException("parse contract address error");
@@ -58,8 +56,10 @@ public class PermissionManager {
     }
 
     // check a user has a specified role.
-    public boolean hasRole(String requestAddress, String requestRole) {
-        getContractAddress();
+    public boolean hasRole(String requestAddress, int requestRole) {
+        if (StringUtils.isEmpty(roleMgrAddress)){
+            readContractAddress();
+        }
         List<Object> args = Arrays.asList(requestAddress, requestRole);
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("hasRole(address,uint8)", args));
         ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);

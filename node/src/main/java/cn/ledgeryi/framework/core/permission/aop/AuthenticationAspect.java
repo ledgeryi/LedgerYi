@@ -38,32 +38,27 @@ public class AuthenticationAspect {
         Signature signature = joinPoint.getSignature();
         String methodName = signature.getName();
         String requestAddress = request.getRequestAddress();
-        String requestRole = request.getRequestRole();
-        RoleTypeEnum preSetRole = authentication.role();
-        //如果你的角色与我设置的角色不一样，就抛出AuthorizeException异常，反之就继续下一步验证
-        //todo
-        if (!preSetRole.getType().equals(requestRole)) {
-            log.warn("user [{}] call method [{}], refused.", requestAddress, methodName);
-            responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED));
+        int requestRole = request.getRequestRole();
+        if (isContain(requestRole,authentication)) {
+            boolean hasRole = permissionManager.hasRole(requestAddress, requestRole);
+            if (hasRole) {
+                return;
+            }
         }
-
-        //如果你的角色与我设置的角色一样，就调用合约继续验证，验证失败就抛出AuthorizeException异常
-        //todo
-        boolean hasRole = permissionManager.hasRole(requestAddress, preSetRole.getType());
-        if (!hasRole) {
-            log.warn("user [{}] request method [{}], refused.", requestAddress, methodName);
-            responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED));
-        }
-
-        /**
-         * 部署合约：
-         * 调用合约（发起交易）：
-         * 共识：
-         * 只读：读区块，读交易，调用合约读
-         */
-
-
+        log.warn("user [{}] call method [{}], refused.", requestAddress, methodName);
+        responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED));
     }
+
+    private boolean isContain(int requestRole, Authentication authentication){
+        RoleTypeEnum[] preSetRoles = authentication.roles();
+        for (RoleTypeEnum preSetRole : preSetRoles) {
+            if (preSetRole.getType() == requestRole){
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 
 
