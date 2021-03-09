@@ -111,7 +111,10 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         return wallet.createTransactionCapsule(message, contractType);
     }
 
-    @Authentication(roles = {RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void broadcastTransaction(GrpcRequest req, StreamObserver<GrpcAPI.Return> responseObserver) {
         try{
@@ -137,7 +140,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
       responseObserver.onCompleted();
     }*/
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getNowBlock(GrpcRequest request, StreamObserver<GrpcAPI.BlockExtention> responseObserver) {
         try {
@@ -148,7 +155,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getBlockByNum(GrpcRequest request, StreamObserver<GrpcAPI.BlockExtention> responseObserver) {
         try {
@@ -162,7 +173,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getTransactionCountByBlockNum(GrpcRequest request, StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
         GrpcAPI.NumberMessage.Builder builder = GrpcAPI.NumberMessage.newBuilder();
@@ -179,7 +194,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getNodes(GrpcRequest request, StreamObserver<GrpcAPI.NodeList> responseObserver) {
         try{
@@ -202,7 +221,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getBlockById(GrpcRequest request, StreamObserver<Block> responseObserver) {
         try{
@@ -218,7 +241,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getBlockByLimitNext(GrpcRequest request, StreamObserver<BlockListExtention> responseObserver) {
         try {
@@ -235,7 +262,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getTransactionById(GrpcRequest request, StreamObserver<Transaction> responseObserver) {
         try{
@@ -251,7 +282,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getTransactionInfoById(GrpcRequest request, StreamObserver<TransactionInfo> responseObserver) {
         try{
@@ -268,7 +303,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getMasters(GrpcRequest request, StreamObserver<MastersList> responseObserver) {
         try{
@@ -279,7 +318,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.READ_ONLY,RoleTypeEnum.TRANSACTION_ONLY,RoleTypeEnum.DEPLOY_CONTRACT})
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getNodeInfo(GrpcRequest request, StreamObserver<NodeInfo> responseObserver) {
         try {
@@ -290,7 +333,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = RoleTypeEnum.DEPLOY_CONTRACT)
+    @Authentication(roles = {
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void deployContract(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         CreateSmartContract createSmartContract = null;
@@ -331,7 +376,11 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         //createTransaction(request, ContractType.ClearABIContract, responseObserver);
     }
 
-    @Authentication(roles = RoleTypeEnum.DEPLOY_CONTRACT)
+    @Authentication(roles = {
+            RoleTypeEnum.READ_ONLY,
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void getContract(GrpcRequest request, StreamObserver<SmartContract> responseObserver) {
         try{
@@ -345,13 +394,19 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         responseObserver.onCompleted();
     }
 
-    @Authentication(roles = {RoleTypeEnum.TRANSACTION_ONLY})
+    @Authentication(roles = {
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void triggerContract(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         callContract(request, responseObserver, false);
     }
 
-    @Authentication(roles = {RoleTypeEnum.TRANSACTION_ONLY})
+    @Authentication(roles = {
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
     @Override
     public void triggerConstantContract(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         callContract(request, responseObserver, true);

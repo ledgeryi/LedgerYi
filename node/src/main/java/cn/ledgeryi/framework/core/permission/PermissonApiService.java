@@ -1,8 +1,10 @@
 package cn.ledgeryi.framework.core.permission;
 
 import cn.ledgeryi.framework.core.permission.entity.Role;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j(topic = "permission")
 @Service
 public class PermissonApiService {
 

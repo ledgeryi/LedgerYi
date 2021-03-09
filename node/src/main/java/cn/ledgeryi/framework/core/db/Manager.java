@@ -28,8 +28,6 @@ import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
-import cn.ledgeryi.framework.core.permission.aop.Authentication;
-import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract;
 import com.google.common.cache.Cache;

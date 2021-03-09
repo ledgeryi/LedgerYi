@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Slf4j(topic = "permission")
 @Aspect
 @Component
-public class GenerateBlockAspect {
+public class ProduceBlockAspect {
 
     @Autowired
     private PermissionManager permissionManager;
@@ -30,7 +30,7 @@ public class GenerateBlockAspect {
             return;
         }
         String producer = ByteArray.toHexString(block.getMasterAddress().toByteArray());
-        boolean hasConsensusRole = permissionManager.hasRole(producer, RoleTypeEnum.CONSENSUS.getType());
+        boolean hasConsensusRole = permissionManager.hasRole(producer, RoleTypeEnum.BLOCK_PRODUCE.getType());
         if (!hasConsensusRole) {
             log.warn("Block cannot be produced without the role of producing block");
           throw new AuthorizeException("Block cannot be produced without the role of producing block");

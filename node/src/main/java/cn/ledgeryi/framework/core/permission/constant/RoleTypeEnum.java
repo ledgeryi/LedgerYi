@@ -5,14 +5,14 @@ import lombok.Getter;
 // 1 - read only
 // 2 - transaction only
 // 3 - deploy contract
-// 4 - consensus
+// 4 - block produce
 public enum RoleTypeEnum {
 
     NO_PERMISSION(0),
     READ_ONLY(1),
-    TRANSACTION_ONLY(2),
-    DEPLOY_CONTRACT(3),
-    CONSENSUS(4);
+    CONTRACT_CALL(2),
+    CONTRACT_DEPLOY(3),
+    BLOCK_PRODUCE(4);
 
     @Getter
     private int type;
