@@ -6,15 +6,15 @@ import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
+import cn.ledgeryi.sdk.parse.event.CallTransaction;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
-import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
-import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
-import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
-import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
+import cn.ledgeryi.sdk.serverapi.data.*;
 import com.alibaba.fastjson.JSONObject;
+import com.google.protobuf.ByteString;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -23,8 +23,8 @@ import java.util.List;
 
 public class StorageContractTest {
 
-    private static String privateKey = "e8b5177d5a69898dcc437d0e96a9343a37bac001cb9bec7a90b660eee66b4587";
-    private static String ownerAddress = "ada95a8734256b797efcd862e0b208529283ac56";
+    private static String privateKey = "ec19148056c4cfc5fc1b1923b8bb657e1e481a8f092415d5af96dd60f3e6806d";
+    private static String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
 
     private LedgerYiApiService ledgerYiApiService;
 
@@ -55,7 +55,9 @@ public class StorageContractTest {
         try {
             Path source = Paths.get("src","test","resources","Storage.sol");
             result = ledgerYiApiService.compileContractFromFile(source, "Storage");
-            deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), result);
+            //RequestUserInfo requestUserInfo = RequestUserInfo.builder().address(ownerAddress).roleId(3).build();
+            deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress),
+                    DecodeUtil.decode(privateKey), result);
         } catch (ContractException | CreateContractExecption e) {
             e.printStackTrace();
             System.out.println("contract compile error: " + e.getMessage());
@@ -67,7 +69,7 @@ public class StorageContractTest {
     }
 
     // contract address
-    private static String contractAddress = "fb700010dec717aa3600fea7ea43fccb24aebdb7";
+    private static String contractAddress = "9c92acf784a189e9f9620291870c1011e9736a9e";
 
     @Test
     public void getContractFromOnChain(){
@@ -80,16 +82,43 @@ public class StorageContractTest {
 
     @Test
     public void triggerStorage() {
-        List args = Arrays.asList("6");
-        String method = "store(uint256)";
+        List args = Arrays.asList(3,"a423eccf212820bf0869e9735d63f84fdf373795");
+        String method = "store(uint32,address)";
         triggerContract(method, args,false);
     }
 
     @Test
+    public void triggerUsed() {
+        List args = Arrays.asList(3);
+        String method = "checkUsed(uint32)";
+        ByteString triggerContract = triggerContract(method, args, true);
+        System.out.println(ByteUtil.byteArrayToInt(triggerContract.toByteArray()));
+    }
+
+    @Test
     public void triggerRetrieve() {
-        List args = Collections.EMPTY_LIST;
-        String method = "retrieve()";
-        triggerContract(method, args, true);
+        List args = Arrays.asList(3);
+        String method = "retrieve(uint32)";
+        ByteString triggerContract = triggerContract(method, args, true);
+
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("retrieve",
+                new String[]{"uint32"}, new String[]{"address", "uint32", "bool"});
+        Object[] objects = function.decodeResult(triggerContract.toByteArray());
+        for (Object object : objects) {
+            if (object instanceof String) {
+                String data = (String) object;
+                System.out.println("data: " + data);
+            } else if (object instanceof BigInteger) {
+                BigInteger id = (BigInteger) object;
+                System.out.println("id: " + id);
+            } else if (object instanceof byte[]) {
+                String address = DecodeUtil.createReadableString((byte[]) object);
+                System.out.println("address: " + address);
+            } else if (object instanceof Boolean) {
+                boolean uesd = (Boolean) object;
+                System.out.println("uesd: " + uesd);
+            }
+        }
     }
 
     /*@Test
@@ -99,7 +128,7 @@ public class StorageContractTest {
         System.out.println("clear result: " +  result);
     }*/
 
-    private void triggerContract(String method, List<Object> args, boolean isConstant) {
+    private ByteString triggerContract(String method, List<Object> args, boolean isConstant) {
         TriggerContractParam triggerContractParam = new TriggerContractParam()
                 .setContractAddress(DecodeUtil.decode(contractAddress))
                 .setCallValue(0)
@@ -117,8 +146,7 @@ public class StorageContractTest {
             } else {
                 System.out.println("Broadcast the " + cmdMethodStr + " failed");
             }
-        } else {
-            System.out.println("trigger contract result: " + ByteUtil.bytesToBigInteger(result.getCallResult().toByteArray()));
         }
+        return result.getCallResult();
     }
 }

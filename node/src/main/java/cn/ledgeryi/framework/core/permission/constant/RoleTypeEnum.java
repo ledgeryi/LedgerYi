@@ -3,8 +3,8 @@ package cn.ledgeryi.framework.core.permission.constant;
 import lombok.Getter;
 
 // 1 - read only
-// 2 - transaction only
-// 3 - deploy contract
+// 2 - contract call
+// 3 - contract deploy
 // 4 - block produce
 public enum RoleTypeEnum {
 

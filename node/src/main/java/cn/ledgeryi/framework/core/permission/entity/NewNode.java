@@ -2,12 +2,17 @@ package cn.ledgeryi.framework.core.permission.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigInteger;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class Node {
+public class NewNode {
     private String nodeOwner;//address
     private String host;//127.0.0.1
     private int port;//20051
-    private int status;
+    private boolean master;
+    //private int status;
 }

@@ -12,7 +12,7 @@ public @interface Authentication {
     RoleTypeEnum[] roles() default {RoleTypeEnum.READ_ONLY};
 
     // 1 - read only
-    // 2 - transaction only
-    // 3 - deploy contract
-    // 4 - consensus
+    // 2 - contract call
+    // 3 - contract deploy
+    // 4 - block produce
 }

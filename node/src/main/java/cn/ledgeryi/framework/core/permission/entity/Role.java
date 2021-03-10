@@ -10,5 +10,5 @@ import java.util.Map;
 public class Role {
     private String roleId;
     private boolean active;
-    private Map<String,Boolean> accounts;
+    private Map<String, Boolean> accounts;
 }

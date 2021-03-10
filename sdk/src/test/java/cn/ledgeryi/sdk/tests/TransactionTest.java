@@ -29,7 +29,7 @@ public class TransactionTest {
     public void getBlockByNum(){
         long num = 0;
         String address = "9bd34d14acc715a37bcf77da13322526258bbb2d";
-        RequestUserInfo requestUserInfo = RequestUserInfo.builder().address(address).roleId("1").build();
+        RequestUserInfo requestUserInfo = RequestUserInfo.builder().address(address).roleId(1).build();
         GrpcAPI.BlockExtention block = ledgerYiApiService.getBlock(num,requestUserInfo);
         System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(block, true)));
     }

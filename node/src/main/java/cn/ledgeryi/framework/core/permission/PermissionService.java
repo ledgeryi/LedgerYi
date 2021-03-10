@@ -2,15 +2,20 @@ package cn.ledgeryi.framework.core.permission;
 
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
+import cn.ledgeryi.chainbase.core.config.args.Master;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.utils.ByteUtil;
-import cn.ledgeryi.contract.vm.CallTransaction;
+import cn.ledgeryi.common.utils.DecodeUtil;
+import cn.ledgeryi.contract.vm.CallTransaction.Function;
 import cn.ledgeryi.framework.common.application.Service;
 import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.common.overlay.server.ChannelManager;
 import cn.ledgeryi.framework.common.utils.AbiUtil;
 import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.HeaderNotFound;
+import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
+import cn.ledgeryi.framework.core.permission.entity.NewNode;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.alibaba.fastjson.JSON;
@@ -26,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -44,41 +50,41 @@ public class PermissionService implements Service {
     private String roleMgrAddress;
     private String guardianAccount;
 
-    private static final String SPLIT_CHAR = ":";
     private static final String PERMISSION_CONFIG = "permission/permission-config.json";
     private final ScheduledExecutorService nodeExecutor = Executors.newSingleThreadScheduledExecutor();
 
     @Override
-    public void start(){
+    public void start() {
         nodeExecutor.scheduleWithFixedDelay(() -> {
             try {
                 queryNodeFromLedger();
             } catch (Throwable t) {
                 log.error("Exception in permission worker", t);
             }
-        }, 30000, 3600, TimeUnit.MILLISECONDS);//todo
+        }, 60000, 60000, TimeUnit.MILLISECONDS);
     }
 
-    private void queryNodeFromLedger(){
+    private void queryNodeFromLedger() {
         ChannelManager channelManager = ctx.getBean(ChannelManager.class);
         for (int i = 0; i < getNodeNum(); i++) {
-            String nodeNetAddress = getNodeNetAddress(i);
-            if (StringUtils.isEmpty(nodeNetAddress)) {
-                continue;
-            }
-            String host = nodeNetAddress.split(SPLIT_CHAR)[0];
-            int port = Integer.valueOf(nodeNetAddress.split(SPLIT_CHAR)[1]);
-            Node node = new Node(Node.getNodeId(), host, port);
+            NewNode newNode = getNodeNetAddress(i);
+            Node node = new Node(Node.getNodeId(), newNode.getHost(), newNode.getPort());
             channelManager.putNewNode(node);
+            if (newNode.isMaster()) {
+                Manager dbManager = ctx.getBean(Manager.class);
+                Master master = new Master();
+                master.setAddress(DecodeUtil.decode(newNode.getNodeOwner()));
+                dbManager.addMaster(master);
+            }
         }
     }
 
-    private int getNodeNum(){
-        if (StringUtils.isEmpty(nodeMgrAddress)){
+    private int getNodeNum() {
+        if (StringUtils.isEmpty(nodeMgrAddress)) {
             readContractAddress();
         }
         List args = Collections.EMPTY_LIST;
-        byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("nodeNum()", args));
+        byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("numberOfNodes()", args));
         ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
         if (callResult == null || callResult.toByteArray().length == 0) {
             return 0;
@@ -86,30 +92,45 @@ public class PermissionService implements Service {
         return ByteUtil.byteArrayToInt(callResult.toByteArray());
     }
 
-    private String getNodeNetAddress(int index){
-        if (StringUtils.isEmpty(nodeMgrAddress)){
+    private NewNode getNodeNetAddress(int index) {
+        if (StringUtils.isEmpty(nodeMgrAddress)) {
             readContractAddress();
         }
         List<Object> args = Arrays.asList(index);
-        byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("getNodeDetails()", args));
+        byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("getNode(uint32)", args));
         ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
         if (callResult == null || callResult.toByteArray().length == 0) {
             return null;
         }
-        //todo
-        CallTransaction.Function function = CallTransaction.Function.fromSignature(
-                "getNodeDetails",new String[]{"uint256"},new String[]{"address","string","uint256"});
+        Function function = Function.fromSignature("getNode",
+                new String[]{"uint256"}, new String[]{"address", "string", "uint32"});
         Object[] objects = function.decodeResult(callResult.toByteArray());
-        return objects[0] + SPLIT_CHAR + objects[1];
+        NewNode newNode = new NewNode();
+        for (Object object : objects) {
+            if (object instanceof String) {
+                String host = (String) object;
+                newNode.setHost(host);
+            } else if (object instanceof BigInteger) {
+                BigInteger port = (BigInteger) object;
+                newNode.setPort(port.intValue());
+            } else if (object instanceof byte[]) {
+                String owner = DecodeUtil.createReadableString((byte[]) object);
+                newNode.setNodeOwner(owner);
+            }
+        }
+        //check role
+        boolean isMaster = hasRole(newNode.getNodeOwner(), RoleTypeEnum.BLOCK_PRODUCE.getType());
+        newNode.setMaster(isMaster);
+        return newNode;
     }
 
     // check a user has a specified role.
     public boolean hasRole(String requestAddress, int requestRole) {
-        if (StringUtils.isEmpty(roleMgrAddress)){
+        if (StringUtils.isEmpty(roleMgrAddress)) {
             readContractAddress();
         }
         List<Object> args = Arrays.asList(requestAddress, requestRole);
-        byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("hasRole(address,uint8)", args));
+        byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("hasRole(address,uint32)", args));
         ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
         if (callResult == null) {
             return false;
@@ -117,7 +138,7 @@ public class PermissionService implements Service {
         return ByteUtil.byteArrayToInt(callResult.toByteArray()) == 1;
     }
 
-    private void readContractAddress(){
+    private void readContractAddress() {
         try {
             String path = System.getProperty("user.dir");
             File file = new File(path + "/" + PERMISSION_CONFIG);
@@ -132,7 +153,7 @@ public class PermissionService implements Service {
         }
     }
 
-    private ByteString callConstantContact(String contractAddress, byte[] methodDecode){
+    private ByteString callConstantContact(String contractAddress, byte[] methodDecode) {
         TriggerSmartContract triggerSmartContract = TriggerSmartContract.newBuilder()
                 .setContractAddress(ByteString.copyFromUtf8(contractAddress))
                 .setData(ByteString.copyFrom(methodDecode))
@@ -153,11 +174,10 @@ public class PermissionService implements Service {
     }
 
     @Override
-    public void init () {
+    public void init() {
     }
 
     @Override
     public void stop() {
     }
-
 }
