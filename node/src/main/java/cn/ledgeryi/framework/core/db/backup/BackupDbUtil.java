@@ -101,8 +101,7 @@ public class BackupDbUtil {
       log.warn("backup db error:" + e);
     }
     long timeUsed = System.currentTimeMillis() - t1;
-    log
-        .info("current block number is {}, backup all store use {} ms!", block.getNum(), timeUsed);
+    log.info("current block number is {}, backup all store use {} ms!", block.getNum(), timeUsed);
     if (timeUsed >= 3000) {
       log.warn("backup db use too much time.");
     }

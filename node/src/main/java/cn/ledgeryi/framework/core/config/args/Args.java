@@ -897,7 +897,7 @@ public class Args {
     return isEcc;
   }
 
-  public boolean isNotPermissionNet(){
-    return NetTypeEnum.PUBLIC_BLOCKCHAIN.getValue().equals(netType);
+  public boolean isPermissionNet(){
+    return NetTypeEnum.PERMISSIONED_BLOCKCHAIN.getValue().equals(netType);
   }
 }

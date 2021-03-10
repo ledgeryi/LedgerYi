@@ -118,7 +118,6 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
     @Override
     public void broadcastTransaction(GrpcRequest req, StreamObserver<GrpcAPI.Return> responseObserver) {
         try{
-
             Any param = req.getParam();
             Transaction transaction = param.unpack(Transaction.class);
             responseObserver.onNext(wallet.broadcastTransaction(transaction));
@@ -418,7 +417,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         try {
             Any param = request.getParam();
             TriggerSmartContract triggerSmartContract = param.unpack(TriggerSmartContract.class);
-            TransactionCapsule txCap = createTransactionCapsule(request, Transaction.Contract.ContractType.TriggerSmartContract);
+            TransactionCapsule txCap = createTransactionCapsule(triggerSmartContract, Transaction.Contract.ContractType.TriggerSmartContract);
             Transaction tx;
             if (isConstant) {
                 tx = wallet.triggerConstantContract(triggerSmartContract, txCap, txExtBuilder, retBuilder);

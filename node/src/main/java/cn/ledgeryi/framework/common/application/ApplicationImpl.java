@@ -44,7 +44,7 @@ public class ApplicationImpl implements Application {
 
   @Override
   public void initServices(Args args) {
-    services.init(args);
+    //services.init(args);
   }
 
   /**

@@ -144,7 +144,7 @@ mvn clean compile -DskipTests
 
 **4.启动MasterNode节点**
 
-编译成功后，通过`cn.ledgeryi.framework.program.LedgerYiNode.java`路径找到主函数文件，启动一个全节点。
+编译成功后，通过`cn.ledgeryi.framework.program.LedgerYiNodeApplication.java`路径找到主函数文件，启动一个全节点。
 
 如果需要启动一个共识节点，可手动修改`Args.java`类的字段`private boolean master = true;`,master默认为false。
 

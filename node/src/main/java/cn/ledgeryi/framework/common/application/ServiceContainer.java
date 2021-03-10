@@ -25,12 +25,12 @@ public class ServiceContainer {
     }
   }
 
-  public void init(Args args) {
-    for (Service service : this.services) {
-      log.debug("Initing " + service.getClass().getSimpleName());
-      service.init(args);
-    }
-  }
+//  public void init(Args args) {
+//    for (Service service : this.services) {
+//      log.debug("Initing " + service.getClass().getSimpleName());
+//      service.init(args);
+//    }
+//  }
 
   public void start() {
     log.debug("Starting services");

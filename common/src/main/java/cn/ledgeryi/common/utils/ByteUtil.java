@@ -294,6 +294,18 @@ public class ByteUtil {
     }
   }
 
+  public static byte[] bigIntegerToBytesSigned(BigInteger b, int numBytes) {
+    if (b == null)
+      return null;
+    byte[] bytes = new byte[numBytes];
+    Arrays.fill(bytes, b.signum() < 0 ? (byte) 0xFF : 0x00);
+    byte[] biBytes = b.toByteArray();
+    int start = (biBytes.length == numBytes + 1) ? 1 : 0;
+    int length = Math.min(biBytes.length, numBytes);
+    System.arraycopy(biBytes, start, bytes, numBytes - length, length);
+    return bytes;
+  }
+
   /**
    * Parses fixed number of bytes starting from {@code offset} in {@code input} array. If {@code
    * input} has not enough bytes return array will be right padded with zero bytes. I.e. if {@code

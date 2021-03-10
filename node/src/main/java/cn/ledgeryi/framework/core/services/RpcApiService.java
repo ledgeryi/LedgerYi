@@ -27,12 +27,11 @@ public class RpcApiService implements Service {
   @Autowired
   private WalletApi walletApi;
 
-  @Override
-  public void init() {
-  }
+  @Autowired
+  private PermissionApi permissionApi;
 
   @Override
-  public void init(Args args) {
+  public void init() {
   }
 
   @Override
@@ -40,6 +39,10 @@ public class RpcApiService implements Service {
     try {
       Args args = Args.getInstance();
       NettyServerBuilder serverBuilder = NettyServerBuilder.forPort(port).addService(walletApi);
+      //permission net
+      if (args.isPermissionNet()){
+        serverBuilder.addService(permissionApi);
+      }
       if (args.getRpcThreadNum() > 0) {
         serverBuilder = serverBuilder.executor(Executors.newFixedThreadPool(args.getRpcThreadNum()));
       }

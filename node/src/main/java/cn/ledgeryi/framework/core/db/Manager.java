@@ -157,7 +157,7 @@ public class Manager {
     return this.masterScheduleStore;
   }
 
-  public List<TransactionCapsule> getPendingTransactions() {
+  private List<TransactionCapsule> getPendingTransactions() {
     return this.pendingTransactions;
   }
 
@@ -169,7 +169,7 @@ public class Manager {
     return repushTransactions;
   }
 
-  public BlockCapsule getHead() throws HeaderNotFound {
+  /*public BlockCapsule getHead() throws HeaderNotFound {
     List<BlockCapsule> blocks = getBlockStore().getBlockByLatestNum(1);
     if (CollectionUtils.isNotEmpty(blocks)) {
       return blocks.get(0);
@@ -177,7 +177,7 @@ public class Manager {
       log.info("Header block Not Found");
       throw new HeaderNotFound("Header block Not Found");
     }
-  }
+  }*/
 
   public synchronized BlockCapsule.BlockId getHeadBlockId() {
     return new BlockCapsule.BlockId(
@@ -259,7 +259,7 @@ public class Manager {
   /**
    * init genesis block.
    */
-  public void initGenesis() {
+  private void initGenesis() {
     this.genesisBlock = BlockUtil.newGenesisBlockCapsule();
     if (this.containBlock(this.genesisBlock.getBlockId())) {
       Args.getInstance().setChainId(this.genesisBlock.getBlockId().toString());
@@ -309,7 +309,7 @@ public class Manager {
             });
   }
 
-  void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
+  private void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
     byte[] refBlockHash = transactionCapsule.getInstance().getRawData().getRefBlockHash().toByteArray();
     byte[] refBlockNumBytes = transactionCapsule.getInstance().getRawData().getRefBlockBytes().toByteArray();
     try {
@@ -329,7 +329,7 @@ public class Manager {
     }
   }
 
-  void validateCommon(TransactionCapsule transactionCapsule) throws TransactionExpirationException, TooBigTransactionException, ValidateSignatureException {
+    private void validateCommon(TransactionCapsule transactionCapsule) throws TransactionExpirationException, TooBigTransactionException, ValidateSignatureException {
     if (transactionCapsule.getData().length > Constant.TRANSACTION_MAX_BYTE_SIZE) {
       throw new TooBigTransactionException("too big transaction, the size is " + transactionCapsule.getData().length + " bytes");
     }
@@ -344,7 +344,7 @@ public class Manager {
     }
   }
 
-  public void validateDup(TransactionCapsule transactionCapsule) throws DupTransactionException {
+  private void validateDup(TransactionCapsule transactionCapsule) throws DupTransactionException {
     if (containsTransaction(transactionCapsule)) {
       log.debug(ByteArray.toHexString(transactionCapsule.getTransactionId().getBytes()));
       throw new DupTransactionException("dup trans");
@@ -394,7 +394,7 @@ public class Manager {
   /**
    * when switch fork need erase blocks on fork branch.
    */
-  public synchronized void eraseBlock() {
+  private synchronized void eraseBlock() {
     session.reset();
     try {
       BlockCapsule oldHeadBlock = getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash());
@@ -650,14 +650,14 @@ public class Manager {
   /**
    * judge has blocks.
    */
-  public boolean hasBlocks() {
+  private boolean hasBlocks() {
     return blockStore.iterator().hasNext() || this.khaosDb.hasData();
   }
 
   /**
    * Process transaction.
    */
-  public Protocol.TransactionInfo processTransaction(final TransactionCapsule txCap, BlockCapsule blockCap)
+  private Protocol.TransactionInfo processTransaction(final TransactionCapsule txCap, BlockCapsule blockCap)
           throws ValidateSignatureException, ContractValidateException, ContractExeException,
           TransactionExpirationException, TooBigTransactionException, DupTransactionException,
           TaposException, ReceiptCheckErrException, VMIllegalException {
@@ -800,7 +800,7 @@ public class Manager {
   /**
    * process block.
    */
-  public void processBlock(BlockCapsule block) throws ValidateSignatureException, ContractValidateException,
+  private void processBlock(BlockCapsule block) throws ValidateSignatureException, ContractValidateException,
           ContractExeException, TaposException, TooBigTransactionException, DupTransactionException, BadBlockException,
           TransactionExpirationException, ValidateScheduleException, ReceiptCheckErrException, VMIllegalException {
     // checkMaster
@@ -888,7 +888,7 @@ public class Manager {
     log.info("******** end to close db ********");
   }
 
-  public void closeOneStore(ILedgerYiBase database) {
+  private void closeOneStore(ILedgerYiBase database) {
     log.info("******** begin to close " + database.getName() + " ********");
     try {
       database.close();
@@ -903,7 +903,7 @@ public class Manager {
     return getPendingTransactions().size() + getRepushTransactions().size() > MAX_TRANSACTION_PENDING;
   }
 
-  public void preValidateTransactionSign(BlockCapsule block)
+  private void preValidateTransactionSign(BlockCapsule block)
       throws InterruptedException, ValidateSignatureException {
     log.debug("PreValidate Transaction Sign, size:" + block.getTransactions().size() + ",block num:" + block.getNum());
     int transSize = block.getTransactions().size();
@@ -928,7 +928,7 @@ public class Manager {
     }
   }
 
-  public void rePush(TransactionCapsule tx) {
+  private void rePush(TransactionCapsule tx) {
     if (containsTransaction(tx)) {
       return;
     }

@@ -114,6 +114,28 @@ service Wallet {
 
 };
 
+service Permission {
+  // role manage api
+  rpc addNewRole(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc inactiveRole(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc assignRoleForUser(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc revokeRoleOfUser(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc hasRole(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  //node manage api
+  rpc addNewNode(GrpcRequest) returns (TransactionExtention) {
+  }
+}
+
 // the api of ledgeryi's db
 /*service Database {
   // for tapos

@@ -8,7 +8,6 @@ import lombok.Getter;
 // 4 - block produce
 public enum RoleTypeEnum {
 
-    NO_PERMISSION(0),
     READ_ONLY(1),
     CONTRACT_CALL(2),
     CONTRACT_DEPLOY(3),

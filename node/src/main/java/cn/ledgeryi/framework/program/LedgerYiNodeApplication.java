@@ -8,8 +8,10 @@ import cn.ledgeryi.framework.common.application.ApplicationFactory;
 import cn.ledgeryi.framework.common.application.LedgerYiApplicationContext;
 import cn.ledgeryi.framework.core.config.DefaultConfig;
 import cn.ledgeryi.framework.core.config.args.Args;
+import cn.ledgeryi.framework.core.permission.PermissionService;
 import cn.ledgeryi.framework.core.services.RpcApiService;
 import cn.ledgeryi.framework.core.services.http.LedgerYiNodeHttpApiService;
+import com.sun.org.apache.xpath.internal.Arg;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -17,7 +19,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import java.io.File;
 
 @Slf4j(topic = "app")
-public class LedgerYiNode {
+public class LedgerYiNodeApplication {
 
   private static void load(String path) {
     try {
@@ -36,7 +38,7 @@ public class LedgerYiNode {
   }
 
   /**
-   * Start the LedgerYiNode.
+   * Start the LedgerYiNodeApplication.
    */
   public static void main(String[] args) {
     log.info("LedgerYi node running.");
@@ -69,7 +71,13 @@ public class LedgerYiNode {
       appT.addService(httpApiService);
     }
 
-    appT.initServices(cfgArgs);
+    //permissioned blockchain
+    if (Args.getInstance().isPermissionNet()){
+      PermissionService permissionService = context.getBean(PermissionService.class);
+      appT.addService(permissionService);
+    }
+
+    //appT.initServices(cfgArgs);
     appT.startServices();
     appT.startup();
 

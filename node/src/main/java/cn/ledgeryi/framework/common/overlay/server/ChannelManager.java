@@ -47,10 +47,9 @@ public class ChannelManager {
   @Getter
   private final Cache<InetAddress, Node> trustNodes = CacheBuilder.newBuilder().maximumSize(100).build();
   @Getter
-  private final Map<InetAddress, Node> activeNodes = new ConcurrentHashMap();
+  private final Map<InetAddress, Node> activeNodes = new ConcurrentHashMap<>();
   @Getter
-  private final Map<InetAddress, Node> fastForwardNodes = new ConcurrentHashMap();
-
+  private final Map<InetAddress, Node> fastForwardNodes = new ConcurrentHashMap<>();
 
   public void init() {
     if (this.args.getNodeListenPort() > 0) {
@@ -80,6 +79,11 @@ public class ChannelManager {
 
     syncPool.init();
     //fastForward.init();
+  }
+
+  public void putNewNode(Node newNode){
+    InetAddress address = new InetSocketAddress(newNode.getHost(), newNode.getPort()).getAddress();
+    activeNodes.put(address, newNode);
   }
 
   public void processDisconnect(Channel channel, Protocol.ReasonCode reason) {

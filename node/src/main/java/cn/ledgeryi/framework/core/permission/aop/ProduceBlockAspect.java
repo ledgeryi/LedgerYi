@@ -3,7 +3,7 @@ package cn.ledgeryi.framework.core.permission.aop;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.framework.core.exception.AuthorizeException;
-import cn.ledgeryi.framework.core.permission.PermissionManager;
+import cn.ledgeryi.framework.core.permission.PermissionService;
 import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Aspect;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class ProduceBlockAspect {
 
     @Autowired
-    private PermissionManager permissionManager;
+    private PermissionService permissionService;
 
     @Pointcut("execution(* cn.ledgeryi.framework.core.db.Manager.pushBlock(..)) && args(block)")
     public void pointPushBlock(BlockCapsule block) {
@@ -30,7 +30,7 @@ public class ProduceBlockAspect {
             return;
         }
         String producer = ByteArray.toHexString(block.getMasterAddress().toByteArray());
-        boolean hasConsensusRole = permissionManager.hasRole(producer, RoleTypeEnum.BLOCK_PRODUCE.getType());
+        boolean hasConsensusRole = permissionService.hasRole(producer, RoleTypeEnum.BLOCK_PRODUCE.getType());
         if (!hasConsensusRole) {
             log.warn("Block cannot be produced without the role of producing block");
           throw new AuthorizeException("Block cannot be produced without the role of producing block");

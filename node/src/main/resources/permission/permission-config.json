@@ -1,5 +1,14 @@
 {
-  "nodeManagerAddress": "0x8a5e2a6343108babed07899510fb42297938d41f",
-  "roleManagerAddress": "0x1349f3e1b8d71effb47b840594ff27da7e603d17",
-  "guardianAccount": "0x1349f3e1b8d71effb47b84059wsf27da7e603d15"
+  "nodeManagerAddress": "8a5e2a6343108babed07899510fb42297938d41f",
+  "roleManagerAddress": "1349f3e1b8d71effb47b840594ff27da7e603d17",
+  "guardianAccount": "1349f3e1b8d71effb47b84059wsf27da7e603d15",
+  "staticNodes": [
+    "enode://8a5e2a6343108babed07899510fb42297938d41f@127.0.0.1:50551",
+    "enode://8a5e2a6343108babed07899510fb42297938d41f@127.0.0.1:50552",
+    "enode://8a5e2a6343108babed07899510fb42297938d41f@127.0.0.1:50553",
+    "enode://8a5e2a6343108babed07899510fb42297938d41f@127.0.0.1:50554"
+  ],
+  "masters": [
+    ""
+  ]
 }

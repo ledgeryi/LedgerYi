@@ -16,7 +16,7 @@ import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
 import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import cn.ledgeryi.protos.Protocol.Transaction.raw;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.*;
 import com.google.protobuf.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -96,13 +96,13 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     try {
       switch (contract.getType()) {
         case CreateSmartContract:
-          owner = contract.getParameter().unpack(SmartContractOuterClass.CreateSmartContract.class).getOwnerAddress();
+          owner = contract.getParameter().unpack(CreateSmartContract.class).getOwnerAddress();
           break;
         case TriggerSmartContract:
-          owner = contract.getParameter().unpack(SmartContractOuterClass.TriggerSmartContract.class).getOwnerAddress();
+          owner = contract.getParameter().unpack(TriggerSmartContract.class).getOwnerAddress();
           break;
         case ClearABIContract:
-          owner = contract.getParameter().unpack(SmartContractOuterClass.ClearABIContract.class).getOwnerAddress();
+          owner = contract.getParameter().unpack(ClearABIContract.class).getOwnerAddress();
           break;
         default :
           return null;

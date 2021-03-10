@@ -67,7 +67,6 @@ public class JsonFormatUtil {
                   contractParameter.unpack(SmartContractOuterClass.ClearABIContract.class);
           contractJson = JSONObject.parseObject(JsonFormat.printToString(clearABIContract, selfType));
           break;
-        // todo add other contract
         default:
       }
       JSONObject parameter = new JSONObject();

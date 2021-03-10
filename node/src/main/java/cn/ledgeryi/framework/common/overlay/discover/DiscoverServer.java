@@ -27,18 +27,17 @@ public class DiscoverServer {
   @Autowired
   private WireTrafficStats stats;
 
-  private Args args = Args.getInstance();
-
-  private int port = args.getNodeListenPort();
-
   private Channel channel;
-
-  private DiscoveryExecutor discoveryExecutor;
-
+  private Args args = Args.getInstance();
   private volatile boolean shutdown = false;
+  private int port = args.getNodeListenPort();
+  private DiscoveryExecutor discoveryExecutor;
 
   @Autowired
   public DiscoverServer(final NodeManager nodeManager) {
+    if (Args.getInstance().isPermissionNet()){
+      return;
+    }
     this.nodeManager = nodeManager;
     if (args.isNodeDiscoveryEnable() && !args.isFastForward()) {
       if (port == 0) {

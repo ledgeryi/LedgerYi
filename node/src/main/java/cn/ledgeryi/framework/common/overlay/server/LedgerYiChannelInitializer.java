@@ -35,7 +35,7 @@ public class LedgerYiChannelInitializer extends ChannelInitializer<NioSocketChan
   public void initChannel(NioSocketChannel ch) {
     try {
       final Channel channel = ctx.getBean(PeerConnection.class);
-      channel.init(ch.pipeline(), remoteId, peerDiscoveryMode, channelManager);
+      channel.init(ch.pipeline(), remoteId, channelManager);
       // limit the size of receiving buffer to 1024
       ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(256 * 1024));
       ch.config().setOption(ChannelOption.SO_RCVBUF, 256 * 1024);

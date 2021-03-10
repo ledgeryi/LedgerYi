@@ -41,9 +41,6 @@ public class FetchInvDataMsgHandler implements LedgerYiMsgHandler {
   @Autowired
   private AdvService advService;
 
-  /**
-   * 处理收到同步区块或交易的请求：发生同步请求中包含的交易或区块
-   */
   @Override
   public void processMessage(PeerConnection peer, LedgerYiMessage msg) throws P2pException {
 

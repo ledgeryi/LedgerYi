@@ -36,26 +36,24 @@ import cn.ledgeryi.framework.core.db.Manager;
 @Component
 public class NodeManager implements EventHandler {
 
-  private static final long DB_COMMIT_RATE = 1 * 60 * 1000L;
   private static final int MAX_NODES = 2000;
   private static final int MAX_NODES_WRITE_TO_DB = 30;
   private static final int NODES_TRIM_THRESHOLD = 3000;
-  private Args args = Args.getInstance();
+  private static final long DB_COMMIT_RATE = 1 * 60 * 1000L;
+
+  private Node homeNode;
+  private NodeTable table;
   private Manager dbManager;
   private Consumer<UdpEvent> messageSender;
+  private ScheduledExecutorService pongTimer;
 
-  private NodeTable table;
-  private Node homeNode;
-  private final Map<String, NodeHandler> nodeHandlerMap = new ConcurrentHashMap<>();
+  private Args args = Args.getInstance();
   private final List<Node> bootNodes = new ArrayList<>();
-
-  private volatile boolean discoveryEnabled;
+  private final Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");
+  private final Map<String, NodeHandler> nodeHandlerMap = new ConcurrentHashMap<>();
 
   private volatile boolean inited = false;
-
-  private final Timer nodeManagerTasksTimer = new Timer("NodeManagerTasks");
-
-  private ScheduledExecutorService pongTimer;
+  private volatile boolean discoveryEnabled;
 
   @Autowired
   public NodeManager(Manager dBManager) {
@@ -96,7 +94,7 @@ public class NodeManager implements EventHandler {
     }
   }
 
-  public boolean isNodeAlive(NodeHandler nodeHandler) {
+  private boolean isNodeAlive(NodeHandler nodeHandler) {
     return nodeHandler.getState().equals(State.ALIVE)
         || nodeHandler.getState().equals(State.ACTIVE)
         || nodeHandler.getState().equals(State.EVICTCANDIDATE);

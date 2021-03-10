@@ -60,7 +60,7 @@ public class Channel {
   private boolean isTrustPeer;
   private boolean isFastForwardPeer;
 
-  public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode, ChannelManager channelManager) {
+  public void init(ChannelPipeline pipeline, String remoteId, ChannelManager channelManager) {
     this.channelManager = channelManager;
     isActive = remoteId != null && !remoteId.isEmpty();
     startTime = System.currentTimeMillis();

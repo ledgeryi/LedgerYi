@@ -2,6 +2,7 @@ package cn.ledgeryi.framework.core.net;
 
 import cn.ledgeryi.chainbase.common.message.Message;
 import cn.ledgeryi.common.core.exception.P2pException;
+import cn.ledgeryi.common.core.exception.P2pException.TypeEnum;
 import cn.ledgeryi.framework.common.overlay.server.ChannelManager;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.net.message.LedgerYiMessage;
@@ -100,7 +101,7 @@ public class LedgerYiNetService {
           transactionsMsgHandler.processMessage(peer, msg);
           break;
         default:
-          throw new P2pException(P2pException.TypeEnum.NO_SUCH_MESSAGE, msg.getType().toString());
+          throw new P2pException(TypeEnum.NO_SUCH_MESSAGE, msg.getType().toString());
       }
     } catch (Exception e) {
       processException(peer, msg, e);
@@ -133,7 +134,8 @@ public class LedgerYiNetService {
           code = ReasonCode.UNKNOWN;
           break;
       }
-      log.error("Message from {} process failed, {} \n type: {}, detail: {}.", peer.getInetAddress(), msg, type, ex.getMessage());
+      log.error("Message from {} process failed, {} \n type: {}, detail: {}.",
+              peer.getInetAddress(), msg, type, ex.getMessage());
     } else {
       code = ReasonCode.UNKNOWN;
       log.error("Message from {} process failed, {}", peer.getInetAddress(), msg, ex);

@@ -51,10 +51,6 @@ public class LedgerYiNodeHttpApiService implements Service {
   }
 
   @Override
-  public void init(Args args) {
-  }
-
-  @Override
   public void start() {
     try {
       server = new Server(port);

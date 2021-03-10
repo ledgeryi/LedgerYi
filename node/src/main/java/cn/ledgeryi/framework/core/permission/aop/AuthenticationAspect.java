@@ -2,7 +2,7 @@ package cn.ledgeryi.framework.core.permission.aop;
 
 import cn.ledgeryi.api.GrpcAPI.GrpcRequest;
 import cn.ledgeryi.framework.core.config.args.Args;
-import cn.ledgeryi.framework.core.permission.PermissionManager;
+import cn.ledgeryi.framework.core.permission.PermissionService;
 import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class AuthenticationAspect {
 
     @Autowired
-    private PermissionManager permissionManager;
+    private PermissionService permissionService;
 
     @Pointcut("@annotation(authentication) && args(request, responseObserver)")
     public void permission(Authentication authentication, GrpcRequest request, StreamObserver responseObserver){
@@ -32,7 +32,7 @@ public class AuthenticationAspect {
     public void doAuthentication(JoinPoint joinPoint,
                                  Authentication authentication, GrpcRequest request, StreamObserver responseObserver){
 
-        if (Args.getInstance().isNotPermissionNet()) {
+        if (!Args.getInstance().isPermissionNet()) {
             return;
         }
         Signature signature = joinPoint.getSignature();
@@ -40,7 +40,7 @@ public class AuthenticationAspect {
         String requestAddress = request.getRequestAddress();
         int requestRole = request.getRequestRole();
         if (isContain(requestRole,authentication)) {
-            boolean hasRole = permissionManager.hasRole(requestAddress, requestRole);
+            boolean hasRole = permissionService.hasRole(requestAddress, requestRole);
             if (hasRole) {
                 return;
             }
