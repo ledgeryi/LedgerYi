@@ -304,13 +304,17 @@ public class Manager {
         } else {
             accountCapsule = this.accountStore.getUnchecked(keyAddress);
         }
-        accountCapsule.setIsMaster(true);
+
         //add to account storage
+        accountCapsule.setIsMaster(true);
         this.accountStore.put(keyAddress, accountCapsule);
 
         //add to master storage
-        final MasterCapsule masterCapsule = new MasterCapsule(address);
-        this.masterStore.put(keyAddress, masterCapsule);
+        if (!masterStore.has(keyAddress)){
+            final MasterCapsule masterCapsule = new MasterCapsule(address);
+            this.masterStore.put(keyAddress, masterCapsule);
+        }
+
     }
 
     private void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
