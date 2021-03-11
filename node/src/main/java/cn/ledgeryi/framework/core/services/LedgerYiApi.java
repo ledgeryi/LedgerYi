@@ -12,7 +12,7 @@ import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
-import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.LedgerYi;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.permission.aop.Authentication;
 import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
@@ -40,10 +40,10 @@ import java.util.Objects;
 
 @Slf4j
 @Component
-public class WalletApi extends WalletGrpc.WalletImplBase {
+public class LedgerYiApi extends WalletGrpc.WalletImplBase {
 
     @Autowired
-    private Wallet wallet;
+    private LedgerYi ledgerYi;
 
     @Autowired
     private Manager dbManager;
@@ -108,7 +108,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
 
     private TransactionCapsule createTransactionCapsule(Message message, Transaction.Contract.ContractType contractType)
             throws ContractValidateException {
-        return wallet.createTransactionCapsule(message, contractType);
+        return ledgerYi.createTransactionCapsule(message, contractType);
     }
 
     @Authentication(roles = {
@@ -120,7 +120,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         try{
             Any param = req.getParam();
             Transaction transaction = param.unpack(Transaction.class);
-            responseObserver.onNext(wallet.broadcastTransaction(transaction));
+            responseObserver.onNext(ledgerYi.broadcastTransaction(transaction));
         } catch (Exception e) {
             responseObserver.onError(getRunTimeException(e));
         }
@@ -131,7 +131,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
     public void getAccount(Account req, StreamObserver<Account> responseObserver) {
       ByteString addressBs = req.getAddress();
       if (addressBs != null) {
-        Account reply = wallet.getAccount(req);
+        Account reply = ledgerYi.getAccount(req);
         responseObserver.onNext(reply);
       } else {
         responseObserver.onNext(null);
@@ -147,7 +147,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
     @Override
     public void getNowBlock(GrpcRequest request, StreamObserver<GrpcAPI.BlockExtention> responseObserver) {
         try {
-            responseObserver.onNext(blockExtention(wallet.getNowBlock()));
+            responseObserver.onNext(blockExtention(ledgerYi.getNowBlock()));
         } catch (Exception e) {
             responseObserver.onError(getRunTimeException(e));
         }
@@ -164,7 +164,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         try {
             Any requestParam = request.getParam();
             GrpcAPI.NumberMessage numberMessage = requestParam.unpack(GrpcAPI.NumberMessage.class);
-            Protocol.Block block = wallet.getBlockByNum(numberMessage.getNum());
+            Protocol.Block block = ledgerYi.getBlockByNum(numberMessage.getNum());
             responseObserver.onNext(blockExtention(block));
         } catch (InvalidProtocolBufferException e) {
             responseObserver.onError(getRunTimeException(e));
@@ -232,7 +232,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
             ByteString blockId = bytesMessage.getValue();
             if (Objects.nonNull(blockId)) {
-                responseObserver.onNext(wallet.getBlockById(blockId));
+                responseObserver.onNext(ledgerYi.getBlockById(blockId));
             }
         } catch (Exception e) {
             responseObserver.onError(getRunTimeException(e));
@@ -253,7 +253,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
             long startNum = blockLimit.getStartNum();
             long endNum = blockLimit.getEndNum();
             if (endNum > 0 && endNum > startNum && endNum - startNum <= BLOCK_LIMIT_NUM) {
-                responseObserver.onNext(blocklistExtention(wallet.getBlocksByLimitNext(startNum, endNum - startNum)));
+                responseObserver.onNext(blocklistExtention(ledgerYi.getBlocksByLimitNext(startNum, endNum - startNum)));
             }
         } catch (Exception e){
             responseObserver.onError(getRunTimeException(e));
@@ -273,7 +273,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
             ByteString transactionId = bytesMessage.getValue();
             if (Objects.nonNull(transactionId)) {
-                responseObserver.onNext(wallet.getTransactionById(transactionId));
+                responseObserver.onNext(ledgerYi.getTransactionById(transactionId));
             }
         } catch (Exception e) {
             responseObserver.onError(getRunTimeException(e));
@@ -293,7 +293,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
             ByteString id = bytesMessage.getValue();
             if (null != id) {
-                TransactionInfo reply = wallet.getTransactionInfoById(id);
+                TransactionInfo reply = ledgerYi.getTransactionInfoById(id);
                 responseObserver.onNext(reply);
             }
         } catch (Exception e) {
@@ -310,7 +310,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
     @Override
     public void getMasters(GrpcRequest request, StreamObserver<MastersList> responseObserver) {
         try{
-            responseObserver.onNext(wallet.getMastersList());
+            responseObserver.onNext(ledgerYi.getMastersList());
         } catch (Exception e) {
             responseObserver.onError(getRunTimeException(e));
         }
@@ -385,7 +385,7 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
         try{
             Any requestParam = request.getParam();
             GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
-            SmartContract contract = wallet.getContract(bytesMessage);
+            SmartContract contract = ledgerYi.getContract(bytesMessage);
             responseObserver.onNext(contract);
         } catch (Exception e) {
             responseObserver.onError(getRunTimeException(e));
@@ -420,9 +420,9 @@ public class WalletApi extends WalletGrpc.WalletImplBase {
             TransactionCapsule txCap = createTransactionCapsule(triggerSmartContract, Transaction.Contract.ContractType.TriggerSmartContract);
             Transaction tx;
             if (isConstant) {
-                tx = wallet.triggerConstantContract(triggerSmartContract, txCap, txExtBuilder, retBuilder);
+                tx = ledgerYi.triggerConstantContract(triggerSmartContract, txCap, txExtBuilder, retBuilder);
             } else {
-                tx = wallet.triggerContract(triggerSmartContract, txCap, txExtBuilder, retBuilder);
+                tx = ledgerYi.triggerContract(triggerSmartContract, txCap, txExtBuilder, retBuilder);
             }
             txExtBuilder.setTransaction(tx);
             txExtBuilder.setTxid(txCap.getTransactionId().getByteString());

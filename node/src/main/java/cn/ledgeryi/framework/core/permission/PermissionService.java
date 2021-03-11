@@ -6,12 +6,13 @@ import cn.ledgeryi.chainbase.core.config.args.Master;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.DecodeUtil;
+import cn.ledgeryi.common.utils.Pair;
 import cn.ledgeryi.contract.vm.CallTransaction.Function;
 import cn.ledgeryi.framework.common.application.Service;
 import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.common.overlay.server.ChannelManager;
 import cn.ledgeryi.framework.common.utils.AbiUtil;
-import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.LedgerYi;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.HeaderNotFound;
 import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
@@ -35,6 +36,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -81,11 +84,11 @@ public class PermissionService implements Service {
 
     private int getNodeNum() {
         if (StringUtils.isEmpty(nodeMgrAddress)) {
-            readContractAddress();
+            readAddress();
         }
         List args = Collections.EMPTY_LIST;
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("numberOfNodes()", args));
-        ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
+        ByteString callResult = callConstantContact(nodeMgrAddress, methodDecode);
         if (callResult == null || callResult.toByteArray().length == 0) {
             return 0;
         }
@@ -94,11 +97,11 @@ public class PermissionService implements Service {
 
     private NewNode getNodeNetAddress(int index) {
         if (StringUtils.isEmpty(nodeMgrAddress)) {
-            readContractAddress();
+            readAddress();
         }
         List<Object> args = Arrays.asList(index);
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("getNode(uint32)", args));
-        ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
+        ByteString callResult = callConstantContact(nodeMgrAddress, methodDecode);
         if (callResult == null || callResult.toByteArray().length == 0) {
             return null;
         }
@@ -124,28 +127,45 @@ public class PermissionService implements Service {
         return newNode;
     }
 
+
+    private Map<String,Pair<Integer,Boolean>> roleCache = new ConcurrentHashMap<>();
+
     // check a user has a specified role.
     public boolean hasRole(String requestAddress, int requestRole) {
         if (StringUtils.isEmpty(roleMgrAddress)) {
-            readContractAddress();
+            readAddress();
         }
+
+        Pair<Integer, Boolean> role = roleCache.get(requestAddress);
+        if (role != null && role.getKey() == requestRole && role.getValue()){
+            return true;
+        }
+
         List<Object> args = Arrays.asList(requestAddress, requestRole);
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("hasRole(address,uint32)", args));
         ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
         if (callResult == null) {
             return false;
         }
-        return ByteUtil.byteArrayToInt(callResult.toByteArray()) == 1;
+        boolean permissioned = ByteUtil.byteArrayToInt(callResult.toByteArray()) == 1;
+        if (permissioned) {
+            Pair<Integer, Boolean> rolePair = new Pair<>(requestRole, true);
+            roleCache.put(requestAddress,rolePair);
+        } else {
+            Pair<Integer, Boolean> rolePair = new Pair<>(requestRole, false);
+            roleCache.put(requestAddress,rolePair);
+        }
+        return permissioned;
     }
 
-    private void readContractAddress() {
+    private void readAddress() {
         try {
             String path = System.getProperty("user.dir");
             File file = new File(path + "/" + PERMISSION_CONFIG);
             String json = FileUtils.readFileToString(file, "UTF-8");
             JSONObject jsonObject = JSON.parseObject(json);
-            nodeMgrAddress = jsonObject.getString("nodeManagerAddress");
-            roleMgrAddress = jsonObject.getString("roleManagerAddress");
+            nodeMgrAddress = jsonObject.getString("nodeManagerContractAddress");
+            roleMgrAddress = jsonObject.getString("roleManagerContractAddress");
             guardianAccount = jsonObject.getString("guardianAccount");
         } catch (IOException e) {
             log.error("parse contract address fail, error： ", e.getMessage());
@@ -155,15 +175,15 @@ public class PermissionService implements Service {
 
     private ByteString callConstantContact(String contractAddress, byte[] methodDecode) {
         TriggerSmartContract triggerSmartContract = TriggerSmartContract.newBuilder()
-                .setContractAddress(ByteString.copyFromUtf8(contractAddress))
+                .setContractAddress(ByteString.copyFrom(DecodeUtil.decode(contractAddress)))
                 .setData(ByteString.copyFrom(methodDecode))
-                .setOwnerAddress(ByteString.copyFromUtf8(guardianAccount))
+                .setOwnerAddress(ByteString.copyFrom(DecodeUtil.decode(guardianAccount)))
                 .build();
 
         TransactionCapsule txCap;
         ProgramResult programResult;
         try {
-            Wallet wallet = ctx.getBean(Wallet.class);
+            LedgerYi wallet = ctx.getBean(LedgerYi.class);
             txCap = wallet.createTransactionCapsule(triggerSmartContract, ContractType.TriggerSmartContract);
             programResult = wallet.localCallConstantContract(txCap);
         } catch (ContractValidateException | HeaderNotFound e) {
@@ -171,6 +191,13 @@ public class PermissionService implements Service {
             return null;
         }
         return ByteString.copyFrom(programResult.getHReturn());
+    }
+
+    public String getGuardianAccount(){
+        if (StringUtils.isEmpty(guardianAccount)){
+            readAddress();
+        }
+        return guardianAccount;
     }
 
     @Override

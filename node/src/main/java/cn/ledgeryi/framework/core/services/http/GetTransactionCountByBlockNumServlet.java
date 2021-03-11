@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import cn.ledgeryi.api.GrpcAPI.NumberMessage;
-import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.LedgerYi;
 
 
 @Component
@@ -15,7 +15,7 @@ import cn.ledgeryi.framework.core.Wallet;
 public class GetTransactionCountByBlockNumServlet extends RateLimiterServlet {
 
   @Autowired
-  private Wallet wallet;
+  private LedgerYi wallet;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {

@@ -5,7 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.LedgerYi;
 import cn.ledgeryi.protos.Protocol.Block;
 
 
@@ -14,7 +14,7 @@ import cn.ledgeryi.protos.Protocol.Block;
 public class GetNowBlockServlet extends RateLimiterServlet {
 
   @Autowired
-  private Wallet wallet;
+  private LedgerYi wallet;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {

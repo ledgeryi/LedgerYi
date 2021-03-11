@@ -25,7 +25,7 @@ public class RpcApiService implements Service {
   private RateLimiterInterceptor rateLimiterInterceptor;
 
   @Autowired
-  private WalletApi walletApi;
+  private LedgerYiApi walletApi;
 
   @Autowired
   private PermissionApi permissionApi;

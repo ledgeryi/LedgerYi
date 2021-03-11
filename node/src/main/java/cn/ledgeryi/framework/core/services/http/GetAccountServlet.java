@@ -1,10 +1,8 @@
 package cn.ledgeryi.framework.core.services.http;
 
-import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.LedgerYi;
 import cn.ledgeryi.protos.Protocol.Account;
 import com.alibaba.fastjson.JSONObject;
-import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,7 +17,7 @@ import java.util.stream.Collectors;
 public class GetAccountServlet extends RateLimiterServlet {
 
   @Autowired
-  private Wallet wallet;
+  private LedgerYi wallet;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {

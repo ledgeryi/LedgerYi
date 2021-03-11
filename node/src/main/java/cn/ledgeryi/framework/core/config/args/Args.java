@@ -821,7 +821,8 @@ public class Args {
     Args args = getInstance();
     log.info("\n");
     log.info("************************ Node config ************************");
-    log.info("Is master node: {}", args.isMaster());
+    log.info("Is public block chain: {}", !args.isPermissionNet());
+    log.info("Is produce block node: {}", args.isMaster());
     log.info("************************ Net config ************************");
     log.info("P2P version: {}", args.getNodeP2pVersion());
     log.info("Bind IP: {}", args.getNodeDiscoveryBindIp());

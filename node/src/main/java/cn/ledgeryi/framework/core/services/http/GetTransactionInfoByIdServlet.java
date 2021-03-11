@@ -2,7 +2,7 @@ package cn.ledgeryi.framework.core.services.http;
 
 import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.LedgerYi;
 import cn.ledgeryi.protos.Protocol;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class GetTransactionInfoByIdServlet extends RateLimiterServlet {
 
     @Autowired
-    private Wallet wallet;
+    private LedgerYi wallet;
 
     private static String convertLogAddressToTronAddress(Protocol.TransactionInfo transactionInfo) {
         return JsonFormat.printToString(transactionInfo);

@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import cn.ledgeryi.framework.core.Wallet;
+import cn.ledgeryi.framework.core.LedgerYi;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 
@@ -23,7 +23,7 @@ import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 public class CreateCommonTransactionServlet extends RateLimiterServlet {
 
   @Autowired
-  private Wallet wallet;
+  private LedgerYi wallet;
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {

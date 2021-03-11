@@ -52,7 +52,7 @@ import java.util.Objects;
 
 @Slf4j
 @Component
-public class Wallet {
+public class LedgerYi {
 
   private int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
   @Getter
@@ -69,12 +69,12 @@ public class Wallet {
   /**
    * Creates a new Wallet with a random ECKey.
    */
-  public Wallet() {
+  public LedgerYi() {
     this.cryptoEngine = SignUtils.getGeneratedRandomSign(Utils.getRandom(), Args.getInstance().isEccCryptoEngine());
   }
 
 
-  public Wallet(final SignInterface cryptoEngine) {
+  public LedgerYi(final SignInterface cryptoEngine) {
     this.cryptoEngine = cryptoEngine;
     log.info("wallet address: {}", ByteArray.toHexString(this.cryptoEngine.getAddress()));
   }
