@@ -17,6 +17,7 @@ public class LocalMasters {
   @Getter
   private List<String> privateKeys = Lists.newArrayList();
 
+  @Getter
   private byte[] masterAccountAddress;
 
   public LocalMasters() {

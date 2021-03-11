@@ -13,6 +13,7 @@ import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.common.overlay.server.ChannelManager;
 import cn.ledgeryi.framework.common.utils.AbiUtil;
 import cn.ledgeryi.framework.core.LedgerYi;
+import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.HeaderNotFound;
 import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
@@ -22,6 +23,7 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
+import com.sun.org.apache.xpath.internal.Arg;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -71,8 +73,11 @@ public class PermissionService implements Service {
         ChannelManager channelManager = ctx.getBean(ChannelManager.class);
         for (int i = 0; i < getNodeNum(); i++) {
             NewNode newNode = getNodeNetAddress(i);
-            Node node = new Node(Node.getNodeId(), newNode.getHost(), newNode.getPort());
-            channelManager.putNewNode(node);
+            byte[] masterAddress = Args.getInstance().getLocalMasters().getMasterAccountAddress();
+            if (!DecodeUtil.createReadableString(masterAddress).equals(newNode.getNodeOwner())){
+                Node node = new Node(Node.getNodeId(), newNode.getHost(), newNode.getPort());
+                channelManager.putNewNode(node);
+            }
             if (newNode.isMaster()) {
                 Manager dbManager = ctx.getBean(Manager.class);
                 Master master = new Master();

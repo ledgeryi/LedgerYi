@@ -724,7 +724,7 @@ public class Manager {
     public synchronized BlockCapsule generateBlock(Param.Miner miner, long blockTime, long timeout) {
         long headBlockNum = getHeadBlockNum() + 1;
         BlockCapsule blockCapsule = new BlockCapsule(headBlockNum, getHeadBlockId(), blockTime, miner.getMasterAddress());
-        log.debug("Generate block, current block number: " + headBlockNum);
+        log.info("Generate block, current block number: " + headBlockNum);
         blockCapsule.generatedByMyself = true;
         session.reset();
         session.setValue(revokingStore.buildSession());
