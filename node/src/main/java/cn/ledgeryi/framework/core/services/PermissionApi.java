@@ -1,5 +1,6 @@
 package cn.ledgeryi.framework.core.services;
 
+import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.api.GrpcAPI.GrpcRequest;
 import cn.ledgeryi.api.GrpcAPI.TransactionExtention;
 import cn.ledgeryi.api.PermissionGrpc;
@@ -67,5 +68,14 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
     @Override
     public void addNewNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         walletApi.triggerContract(request,responseObserver);
+    }
+
+    @Authentication(roles = {
+            RoleTypeEnum.CONTRACT_CALL,
+            RoleTypeEnum.CONTRACT_DEPLOY,
+            RoleTypeEnum.BLOCK_PRODUCE})
+    @Override
+    public void broadcastTransaction(GrpcRequest request, StreamObserver<GrpcAPI.Return> responseObserver) {
+        walletApi.broadcastTransaction(request, responseObserver);
     }
 }

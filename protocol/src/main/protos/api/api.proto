@@ -134,6 +134,9 @@ service Permission {
   //node manage api
   rpc addNewNode(GrpcRequest) returns (TransactionExtention) {
   }
+
+  rpc BroadcastTransaction (GrpcRequest) returns (Return) {
+  }
 }
 
 // the api of ledgeryi's db
