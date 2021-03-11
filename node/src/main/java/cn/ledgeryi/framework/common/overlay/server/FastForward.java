@@ -64,15 +64,17 @@ public class FastForward {
 
   private void connect() {
     fastForwardNodes.forEach(node -> {
-      InetAddress address = new InetSocketAddress(node.getHost(), node.getPort()).getAddress();
-      channelManager.getActiveNodes().put(address, node);
+      InetSocketAddress socketAddress = new InetSocketAddress(node.getHost(), node.getPort());
+      //InetAddress address = socketAddress.getAddress();
+      channelManager.getActiveNodes().put(socketAddress, node);
     });
   }
 
   private void disconnect() {
     fastForwardNodes.forEach(node -> {
-      InetAddress address = new InetSocketAddress(node.getHost(), node.getPort()).getAddress();
-      channelManager.getActiveNodes().remove(address);
+      InetSocketAddress socketAddress = new InetSocketAddress(node.getHost(), node.getPort());
+      InetAddress address = socketAddress.getAddress();
+      channelManager.getActiveNodes().remove(socketAddress);
       channelManager.getActivePeers().forEach(channel -> {
         if (channel.getInetAddress().equals(address)) {
           channel.disconnect(ReasonCode.RESET);

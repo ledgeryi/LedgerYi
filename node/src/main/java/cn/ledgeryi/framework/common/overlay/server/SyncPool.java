@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -72,11 +73,11 @@ public class SyncPool {
 
   private void fillUp() {
     List<NodeHandler> connectNodes = new ArrayList<>();
-    Set<InetAddress> addressInUse = new HashSet<>();
+    Set<InetSocketAddress> addressInUse = new HashSet<>();
     Set<String> nodesInUse = new HashSet<>();
     channelManager.getActivePeers().forEach(channel -> {
       nodesInUse.add(channel.getPeerId());
-      addressInUse.add(channel.getInetAddress());
+      addressInUse.add(channel.getInetSocketAddress());
     });
 
     channelManager.getActiveNodes().forEach((address, node) -> {

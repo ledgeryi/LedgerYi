@@ -167,6 +167,10 @@ public class Channel {
     return ctx == null ? null : ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
   }
 
+  public InetSocketAddress getInetSocketAddress() {
+    return ctx == null ? null : ((InetSocketAddress) ctx.channel().remoteAddress());
+  }
+
   public NodeStatistics getNodeStatistics() {
     return nodeStatistics;
   }

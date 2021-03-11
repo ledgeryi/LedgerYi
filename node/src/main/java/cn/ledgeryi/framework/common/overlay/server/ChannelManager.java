@@ -47,7 +47,7 @@ public class ChannelManager {
   @Getter
   private final Cache<InetAddress, Node> trustNodes = CacheBuilder.newBuilder().maximumSize(100).build();
   @Getter
-  private final Map<InetAddress, Node> activeNodes = new ConcurrentHashMap<>();
+  private final Map<InetSocketAddress, Node> activeNodes = new ConcurrentHashMap<>();
   @Getter
   private final Map<InetAddress, Node> fastForwardNodes = new ConcurrentHashMap<>();
 
@@ -64,9 +64,10 @@ public class ChannelManager {
     }
 
     for (Node node : args.getActiveNodes()) {
-      address = new InetSocketAddress(node.getHost(), node.getPort()).getAddress();
+      InetSocketAddress socketAddress = new InetSocketAddress(node.getHost(), node.getPort());
+      address = socketAddress.getAddress();
       trustNodes.put(address, node);
-      activeNodes.put(address, node);
+      activeNodes.put(socketAddress, node);
     }
 
     for (Node node : args.getFastForwardNodes()) {
@@ -82,8 +83,9 @@ public class ChannelManager {
   }
 
   public void putNewNode(Node newNode){
-    InetAddress address = new InetSocketAddress(newNode.getHost(), newNode.getPort()).getAddress();
-    activeNodes.put(address, newNode);
+    //InetAddress address = new InetSocketAddress(newNode.getHost(), newNode.getPort()).getAddress();
+    InetSocketAddress socketAddress = new InetSocketAddress(newNode.getHost(), newNode.getPort());
+    activeNodes.put(socketAddress, newNode);
   }
 
   public void processDisconnect(Channel channel, Protocol.ReasonCode reason) {
