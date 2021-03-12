@@ -85,13 +85,8 @@ public class PermissionService implements Service {
         }
         List args = Collections.EMPTY_LIST;
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("numberOfNodes()", args));
-        ByteString callResult;
-        try {
-            callResult = callConstantContact(nodeMgrAddress, methodDecode);
-        } catch (Exception e) {
-            return 0;
-        }
-        if (callResult.toByteArray().length == 0) {
+        ByteString callResult = callConstantContact(nodeMgrAddress, methodDecode);
+        if (callResult == null || callResult.toByteArray().length == 0) {
             return 0;
         }
         return ByteUtil.byteArrayToInt(callResult.toByteArray());
@@ -103,13 +98,8 @@ public class PermissionService implements Service {
         }
         List<Object> args = Arrays.asList(index);
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("getNode(uint32)", args));
-        ByteString callResult;
-        try {
-            callResult = callConstantContact(nodeMgrAddress, methodDecode);
-        } catch (Exception e) {
-            return null;
-        }
-        if (callResult.toByteArray().length == 0) {
+        ByteString callResult = callConstantContact(nodeMgrAddress, methodDecode);
+        if (callResult == null || callResult.toByteArray().length == 0) {
             return null;
         }
         Function function = Function.fromSignature("getNode",
@@ -132,7 +122,7 @@ public class PermissionService implements Service {
     }
 
     // check a user has a specified role.
-    public boolean hasRole(String requestAddress, int requestRole) throws Exception{
+    public boolean hasRole(String requestAddress, int requestRole){
         if (StringUtils.isEmpty(roleMgrAddress)) {
             readAddress();
         }
@@ -145,7 +135,7 @@ public class PermissionService implements Service {
         List<Object> args = Arrays.asList(requestAddress, requestRole);
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("hasRole(address,uint32)", args));
         ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
-        if (callResult == null) {
+        if (callResult == null || callResult.toByteArray().length == 0) {
             return false;
         }
         boolean permissioned = ByteUtil.byteArrayToInt(callResult.toByteArray()) == 1;
@@ -175,7 +165,7 @@ public class PermissionService implements Service {
         }
     }
 
-    private ByteString callConstantContact(String contractAddress, byte[] methodDecode) throws Exception {
+    private ByteString callConstantContact(String contractAddress, byte[] methodDecode) {
         TriggerSmartContract triggerSmartContract = TriggerSmartContract.newBuilder()
                 .setContractAddress(ByteString.copyFrom(DecodeUtil.decode(contractAddress)))
                 .setData(ByteString.copyFrom(methodDecode))
@@ -190,7 +180,7 @@ public class PermissionService implements Service {
             programResult = wallet.localCallConstantContract(txCap);
         } catch (Exception e) {
             log.error("call contract [{}] fail", contractAddress);
-            throw e;
+            return null;
         }
         return ByteString.copyFrom(programResult.getHReturn());
     }

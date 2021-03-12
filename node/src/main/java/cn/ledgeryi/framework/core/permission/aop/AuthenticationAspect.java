@@ -49,12 +49,7 @@ public class AuthenticationAspect {
 
         int requestRole = request.getRequestRole();
         if (isContain(requestRole, authentication)) {
-            boolean hasRole = false;
-            try {
-                hasRole = permissionService.hasRole(requestAddress, requestRole);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            boolean hasRole = permissionService.hasRole(requestAddress, requestRole);
             if (hasRole) {
                 return;
             }
