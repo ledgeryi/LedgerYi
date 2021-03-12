@@ -2,8 +2,6 @@ package cn.ledgeryi.framework.core.permission;
 
 import cn.ledgeryi.chainbase.common.runtime.ProgramResult;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
-import cn.ledgeryi.chainbase.core.config.args.Master;
-import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.common.utils.Pair;
@@ -14,17 +12,12 @@ import cn.ledgeryi.framework.common.overlay.server.ChannelManager;
 import cn.ledgeryi.framework.common.utils.AbiUtil;
 import cn.ledgeryi.framework.core.LedgerYi;
 import cn.ledgeryi.framework.core.config.args.Args;
-import cn.ledgeryi.framework.core.db.Manager;
-import cn.ledgeryi.framework.core.exception.HeaderNotFound;
-import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
 import cn.ledgeryi.framework.core.permission.entity.NewNode;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
-import com.sun.org.apache.xpath.internal.Arg;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -83,12 +76,6 @@ public class PermissionService implements Service {
                 Node node = new Node(Node.getNodeId(), newNode.getHost(), newNode.getPort());
                 channelManager.putNewNode(node);
             }
-            /*if (newNode.isMaster()) {
-                Manager dbManager = ctx.getBean(Manager.class);
-                Master master = new Master();
-                master.setAddress(DecodeUtil.decode(newNode.getNodeOwner()));
-                dbManager.addMaster(master);
-            }*/
         }
     }
 
@@ -141,9 +128,6 @@ public class PermissionService implements Service {
                 newNode.setNodeOwner(owner);
             }
         }
-        //check role
-        /*boolean isMaster = hasRole(newNode.getNodeOwner(), RoleTypeEnum.BLOCK_PRODUCE.getType());
-        newNode.setMaster(isMaster);*/
         return newNode;
     }
 

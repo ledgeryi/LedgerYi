@@ -1,7 +1,8 @@
 {
-  "nodeManagerContractAddress": "327e2aab3cb5538b557782af5e8ff88e0fbc99ec",
-  "roleManagerContractAddress": "ad67410a93f084b8eaacbc07f32112c34c619783",
-  "storageContractAddress": "ec11e8e822453da868e0be22495cb3d4047c20ef",
+  "nodeManagerContractAddress": "d22b2203f69b25b9e8d72be758dbb7a945ad6405",
+  "roleManagerContractAddress": "71ef5581cad5afa1b50ebad3c10492ef9c85b983",
   "guardianAccount": "99b8466efe9f05cee87d4e167cdfaec0432d90fc",
-  "masters": []
+  "masters": ["ada95a8734256b797efcd862e0b208529283ac56",
+              "e506af507e6cb873036826db5c123e0f362fe8a1",
+              "9226b046377d70896bb3468864258feffdc956a1"]
 }
