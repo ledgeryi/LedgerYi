@@ -1,5 +1,6 @@
 package cn.ledgeryi.framework.common.overlay.server;
 
+import cn.ledgeryi.common.core.db.ByteArrayWrapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -100,9 +101,25 @@ public class SyncPool {
     }
 
     connectNodes.forEach(n -> {
-      peerClient.connectAsync(n, false);
+      if (checkNode(n)){
+        peerClient.connectAsync(n, false);
+      }
       nodeHandlerCache.put(n, System.currentTimeMillis());
     });
+  }
+
+  private boolean checkNode(NodeHandler nodeHandler){
+    String host = nodeHandler.getNode().getHost();
+    int port = nodeHandler.getNode().getPort();
+    Collection<Channel> activePeers = channelManager.getActivePeers();
+    for (Channel channel : activePeers) {
+      String host1 = channel.getNode().getHost();
+      int port1 = channel.getNode().getPort();
+      if (port == port1 && host.equals(host1) && !channel.isDisconnect()){
+        return false;
+      }
+    }
+    return true;
   }
 
   private synchronized void logActivePeers() {
