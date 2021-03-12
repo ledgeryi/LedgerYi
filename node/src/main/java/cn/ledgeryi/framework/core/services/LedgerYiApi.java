@@ -107,7 +107,7 @@ public class LedgerYiApi extends WalletGrpc.WalletImplBase {
     }
 
     private TransactionCapsule createTransactionCapsule(Message message, Transaction.Contract.ContractType contractType)
-            throws ContractValidateException {
+            throws Exception {
         return ledgerYi.createTransactionCapsule(message, contractType);
     }
 
