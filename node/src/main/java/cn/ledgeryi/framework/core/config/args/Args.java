@@ -643,13 +643,13 @@ public class Args {
   }
 
   private static List<Master> getMastersFromConfig(final com.typesafe.config.Config config) {
-    return config.getObjectList(Constant.GENESIS_BLOCK_WITNESSES).stream()
+    return config.getStringList(Constant.GENESIS_BLOCK_WITNESSES).stream()
         .map(Args::createMaster).collect(Collectors.toCollection(ArrayList::new));
   }
 
-  private static Master createMaster(final ConfigObject masterAccount) {
+  private static Master createMaster(final String masterAccount) {
     final Master master = new Master();
-    master.setAddress(DecodeUtil.decode(masterAccount.get("address").unwrapped().toString()));
+    master.setAddress(DecodeUtil.decode(masterAccount));
     return master;
   }
 
