@@ -93,7 +93,7 @@ public class LedgerYi {
   }
 
   public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType)
-          throws ContractValidateException {
+          throws Exception {
     TransactionCapsule tx = new TransactionCapsule(message, contractType);
     if (contractType != ContractType.CreateSmartContract && contractType != ContractType.TriggerSmartContract) {
       // for ContractType.ClearABIContract
@@ -113,6 +113,7 @@ public class LedgerYi {
       tx.setTimestamp();
     } catch (Exception e) {
       log.error("Create transaction capsule failed.", e);
+      throw e;
     }
     return tx;
   }

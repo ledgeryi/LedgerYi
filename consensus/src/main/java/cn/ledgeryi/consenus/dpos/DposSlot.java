@@ -41,9 +41,6 @@ public class DposSlot {
     if (consensusDelegate.getLatestBlockHeaderNumber() == 0) {
       return dposService.getGenesisBlockTime() + slot * interval;
     }
-    /*if (consensusDelegate.lastHeadBlockIsMaintenance()) {
-      slot += consensusDelegate.getMaintenanceSkipSlots();
-    }*/
     long time = consensusDelegate.getLatestBlockHeaderTimestamp();
     time = time - ((time - dposService.getGenesisBlockTime()) % interval);
     return time + interval * slot;

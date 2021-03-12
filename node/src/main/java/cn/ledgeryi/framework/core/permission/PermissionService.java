@@ -58,8 +58,10 @@ public class PermissionService implements Service {
     private String guardianAccount;
     private List<String> masters;
 
+    private Map<String,Pair<Integer,Boolean>> roleCache = new ConcurrentHashMap<>();
     private static final String PERMISSION_CONFIG = "permission/permission-config.json";
     private final ScheduledExecutorService nodeExecutor = Executors.newSingleThreadScheduledExecutor();
+
 
     @Override
     public void start() {
@@ -69,7 +71,7 @@ public class PermissionService implements Service {
             } catch (Throwable t) {
                 log.error("Exception in permission worker", t);
             }
-        }, 60000, 60000, TimeUnit.MILLISECONDS);
+        }, 60000, 30000, TimeUnit.MILLISECONDS);
     }
 
     private void queryNodeFromLedger() {
@@ -81,12 +83,12 @@ public class PermissionService implements Service {
                 Node node = new Node(Node.getNodeId(), newNode.getHost(), newNode.getPort());
                 channelManager.putNewNode(node);
             }
-            if (newNode.isMaster()) {
+            /*if (newNode.isMaster()) {
                 Manager dbManager = ctx.getBean(Manager.class);
                 Master master = new Master();
                 master.setAddress(DecodeUtil.decode(newNode.getNodeOwner()));
                 dbManager.addMaster(master);
-            }
+            }*/
         }
     }
 
@@ -96,8 +98,13 @@ public class PermissionService implements Service {
         }
         List args = Collections.EMPTY_LIST;
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("numberOfNodes()", args));
-        ByteString callResult = callConstantContact(nodeMgrAddress, methodDecode);
-        if (callResult == null || callResult.toByteArray().length == 0) {
+        ByteString callResult;
+        try {
+            callResult = callConstantContact(nodeMgrAddress, methodDecode);
+        } catch (Exception e) {
+            return 0;
+        }
+        if (callResult.toByteArray().length == 0) {
             return 0;
         }
         return ByteUtil.byteArrayToInt(callResult.toByteArray());
@@ -109,8 +116,13 @@ public class PermissionService implements Service {
         }
         List<Object> args = Arrays.asList(index);
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("getNode(uint32)", args));
-        ByteString callResult = callConstantContact(nodeMgrAddress, methodDecode);
-        if (callResult == null || callResult.toByteArray().length == 0) {
+        ByteString callResult;
+        try {
+            callResult = callConstantContact(nodeMgrAddress, methodDecode);
+        } catch (Exception e) {
+            return null;
+        }
+        if (callResult.toByteArray().length == 0) {
             return null;
         }
         Function function = Function.fromSignature("getNode",
@@ -130,16 +142,13 @@ public class PermissionService implements Service {
             }
         }
         //check role
-        boolean isMaster = hasRole(newNode.getNodeOwner(), RoleTypeEnum.BLOCK_PRODUCE.getType());
-        newNode.setMaster(isMaster);
+        /*boolean isMaster = hasRole(newNode.getNodeOwner(), RoleTypeEnum.BLOCK_PRODUCE.getType());
+        newNode.setMaster(isMaster);*/
         return newNode;
     }
 
-
-    private Map<String,Pair<Integer,Boolean>> roleCache = new ConcurrentHashMap<>();
-
     // check a user has a specified role.
-    public boolean hasRole(String requestAddress, int requestRole) {
+    public boolean hasRole(String requestAddress, int requestRole) throws Exception{
         if (StringUtils.isEmpty(roleMgrAddress)) {
             readAddress();
         }
@@ -182,7 +191,7 @@ public class PermissionService implements Service {
         }
     }
 
-    private ByteString callConstantContact(String contractAddress, byte[] methodDecode) {
+    private ByteString callConstantContact(String contractAddress, byte[] methodDecode) throws Exception {
         TriggerSmartContract triggerSmartContract = TriggerSmartContract.newBuilder()
                 .setContractAddress(ByteString.copyFrom(DecodeUtil.decode(contractAddress)))
                 .setData(ByteString.copyFrom(methodDecode))
@@ -195,9 +204,9 @@ public class PermissionService implements Service {
             LedgerYi wallet = ctx.getBean(LedgerYi.class);
             txCap = wallet.createTransactionCapsule(triggerSmartContract, ContractType.TriggerSmartContract);
             programResult = wallet.localCallConstantContract(txCap);
-        } catch (ContractValidateException | HeaderNotFound e) {
+        } catch (Exception e) {
             log.error("call contract [{}] fail", contractAddress);
-            return null;
+            throw e;
         }
         return ByteString.copyFrom(programResult.getHReturn());
     }

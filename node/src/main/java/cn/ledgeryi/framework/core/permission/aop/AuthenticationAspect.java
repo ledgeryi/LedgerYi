@@ -25,12 +25,16 @@ public class AuthenticationAspect {
     private PermissionService permissionService;
 
     @Pointcut("@annotation(authentication) && args(request, responseObserver)")
-    public void permission(Authentication authentication, GrpcRequest request, StreamObserver responseObserver){
+    public void permission(Authentication authentication,
+                           GrpcRequest request,
+                           StreamObserver responseObserver) {
     }
 
     @Before("permission(authentication, request, responseObserver)")
     public void doAuthentication(JoinPoint joinPoint,
-                                 Authentication authentication, GrpcRequest request, StreamObserver responseObserver){
+                                 Authentication authentication,
+                                 GrpcRequest request,
+                                 StreamObserver responseObserver) {
 
         if (!Args.getInstance().isPermissionNet()) {
             return;
@@ -39,13 +43,18 @@ public class AuthenticationAspect {
         String methodName = signature.getName();
         String requestAddress = request.getRequestAddress();
 
-        if (requestAddress.equals(permissionService.getGuardianAccount())){
+        if (requestAddress.equals(permissionService.getGuardianAccount())) {
             return;
         }
 
         int requestRole = request.getRequestRole();
-        if (isContain(requestRole,authentication)) {
-            boolean hasRole = permissionService.hasRole(requestAddress, requestRole);
+        if (isContain(requestRole, authentication)) {
+            boolean hasRole = false;
+            try {
+                hasRole = permissionService.hasRole(requestAddress, requestRole);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             if (hasRole) {
                 return;
             }
@@ -54,10 +63,10 @@ public class AuthenticationAspect {
         responseObserver.onError(new StatusRuntimeException(Status.PERMISSION_DENIED));
     }
 
-    private boolean isContain(int requestRole, Authentication authentication){
+    private boolean isContain(int requestRole, Authentication authentication) {
         RoleTypeEnum[] preSetRoles = authentication.roles();
         for (RoleTypeEnum preSetRole : preSetRoles) {
-            if (preSetRole.getType() == requestRole){
+            if (preSetRole.getType() == requestRole) {
                 return true;
             }
         }
