@@ -24,7 +24,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import com.sun.org.apache.xpath.internal.Arg;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
@@ -54,6 +56,7 @@ public class PermissionService implements Service {
     private String nodeMgrAddress;
     private String roleMgrAddress;
     private String guardianAccount;
+    private List<String> masters;
 
     private static final String PERMISSION_CONFIG = "permission/permission-config.json";
     private final ScheduledExecutorService nodeExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -172,6 +175,7 @@ public class PermissionService implements Service {
             nodeMgrAddress = jsonObject.getString("nodeManagerContractAddress");
             roleMgrAddress = jsonObject.getString("roleManagerContractAddress");
             guardianAccount = jsonObject.getString("guardianAccount");
+            masters = jsonObject.getJSONArray("masters").toJavaList(String.class);
         } catch (IOException e) {
             log.error("parse contract address fail, error： ", e.getMessage());
             throw new RuntimeException("parse contract address error");
@@ -203,6 +207,13 @@ public class PermissionService implements Service {
             readAddress();
         }
         return guardianAccount;
+    }
+
+    public List<String> getMasters(){
+        if (!CollectionUtils.isNotEmpty(masters)) {
+            readAddress();
+        }
+        return masters;
     }
 
     @Override

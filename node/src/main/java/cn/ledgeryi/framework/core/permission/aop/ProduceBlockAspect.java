@@ -29,11 +29,15 @@ public class ProduceBlockAspect {
         if (block.generatedByMyself) {
             return;
         }
+
         String producer = ByteArray.toHexString(block.getMasterAddress().toByteArray());
         boolean hasConsensusRole = permissionService.hasRole(producer, RoleTypeEnum.BLOCK_PRODUCE.getType());
         if (!hasConsensusRole) {
+            if (permissionService.getMasters().contains(producer)) {
+                return;
+            }
             log.warn("Block cannot be produced without the role of producing block");
-          throw new AuthorizeException("Block cannot be produced without the role of producing block");
+            throw new AuthorizeException("Block cannot be produced without the role of producing block");
         }
     }
 }
