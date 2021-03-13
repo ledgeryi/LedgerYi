@@ -147,7 +147,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>cn.ledgeryi.framework.program.LedgerYiNodeApplication</mainClass>
+                    <mainClass>cn.ledgeryi.framework.start.LedgerYiNodeApplication</mainClass>
                     <layout>ZIP</layout>
                 </configuration>
                 <executions>

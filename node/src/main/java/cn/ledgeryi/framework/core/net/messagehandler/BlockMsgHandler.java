@@ -15,7 +15,7 @@ import cn.ledgeryi.framework.core.net.peer.Item;
 import cn.ledgeryi.framework.core.net.peer.PeerConnection;
 import cn.ledgeryi.framework.core.net.service.AdvService;
 import cn.ledgeryi.framework.core.net.service.SyncService;
-import cn.ledgeryi.framework.core.services.MasterProductBlockService;
+import cn.ledgeryi.framework.core.api.service.MasterProductBlockService;
 import cn.ledgeryi.protos.Protocol.Inventory.InventoryType;
 
 import static cn.ledgeryi.chainbase.core.config.Parameter.ChainConstant.BLOCK_SIZE;

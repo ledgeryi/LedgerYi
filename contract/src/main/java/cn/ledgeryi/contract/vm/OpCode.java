@@ -263,15 +263,15 @@ public enum OpCode {
    */
   SSTORE(0x55, 2, 0, OpCode.Tier.SpecialTier),
   /**
-   * (0x56) Alter the program counter
+   * (0x56) Alter the start counter
    */
   JUMP(0x56, 1, 0, OpCode.Tier.SpecialTier),
   /**
-   * (0x57) Conditionally alter the program counter
+   * (0x57) Conditionally alter the start counter
    */
   JUMPI(0x57, 2, 0, OpCode.Tier.SpecialTier),
   /**
-   * (0x58) Get the program counter
+   * (0x58) Get the start counter
    */
   PC(0x58, 0, 1, OpCode.Tier.SpecialTier),
   /**

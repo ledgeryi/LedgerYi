@@ -164,7 +164,7 @@ public class LedgerYiVmActuator implements VmActuator {
       log.info("runtime result is :{}", result.getException().getMessage());
     }
 
-    //use program returned fill context
+    //use start returned fill context
     context.setProgramResult(result);
 
     if (VmConfig.vmTrace() && program != null) {

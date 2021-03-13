@@ -21,7 +21,7 @@ import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
 import cn.ledgeryi.framework.common.utils.Utils;
 import cn.ledgeryi.framework.core.actuator.ActuatorFactory;
-import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
+import cn.ledgeryi.chainbase.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.*;

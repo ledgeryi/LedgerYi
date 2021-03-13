@@ -452,7 +452,7 @@ public class Program {
     }
 
     /**
-     * Allocates extra memory in the program for a specified size, calculated from a given offset
+     * Allocates extra memory in the start for a specified size, calculated from a given offset
      * @param offset the memory address offset
      * @param size   the number of bytes to allocate
      */
@@ -1011,7 +1011,7 @@ public class Program {
 
     /**
      * Denotes problem when executing Ethereum bytecode. From blockchain and peer perspective this is
-     * quite normal situation and doesn't mean exceptional situation in terms of the program
+     * quite normal situation and doesn't mean exceptional situation in terms of the start
      * execution
      */
     @SuppressWarnings("serial")

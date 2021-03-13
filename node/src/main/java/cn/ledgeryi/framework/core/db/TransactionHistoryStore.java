@@ -7,7 +7,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
+import cn.ledgeryi.chainbase.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 
 @Component

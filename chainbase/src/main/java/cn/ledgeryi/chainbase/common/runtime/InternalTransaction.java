@@ -56,7 +56,7 @@ public class InternalTransaction {
     this.protoEncoded = txCap.getData();
     this.nonce = 0;
     // outside transaction should not have deep, so use -1 to mark it is root.
-    // It will not count in vm trace. But this deep will be shown in program result.
+    // It will not count in vm trace. But this deep will be shown in start result.
     this.deep = -1;
     if (txType == TxType.TX_CONTRACT_CREATION_TYPE) {
       SmartContractOuterClass.CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);

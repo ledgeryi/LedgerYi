@@ -25,7 +25,7 @@ import cn.ledgeryi.framework.common.utils.BlockUtil;
 import cn.ledgeryi.framework.common.utils.ForkController;
 import cn.ledgeryi.framework.common.utils.SessionOptional;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
-import cn.ledgeryi.framework.core.capsule.TransactionInfoCapsule;
+import cn.ledgeryi.chainbase.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
