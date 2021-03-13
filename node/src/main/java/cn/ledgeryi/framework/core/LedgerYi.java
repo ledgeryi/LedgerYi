@@ -320,7 +320,9 @@ public class LedgerYi {
   }
 
   public Transaction triggerConstantContract(TriggerSmartContract triggerSmartContract,
-                                             TransactionCapsule txCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
+                                             TransactionCapsule txCap,
+                                             TransactionExtention.Builder builder,
+                                             Return.Builder retBuilder)
           throws ContractValidateException, HeaderNotFound {
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
@@ -357,29 +359,10 @@ public class LedgerYi {
     return result;
   }
 
-  private Transaction callConstantContract(TransactionCapsule txCap, TransactionExtention.Builder builder, Return.Builder retBuilder)
+  private Transaction callConstantContract(TransactionCapsule txCap,
+                                           TransactionExtention.Builder builder,
+                                           Return.Builder retBuilder)
           throws ContractValidateException, HeaderNotFound {
-    /*Block headBlock;
-    List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
-    if (CollectionUtils.isEmpty(blockCapsuleList)) {
-      throw new HeaderNotFound("latest block not found");
-    } else {
-      headBlock = blockCapsuleList.get(0).getInstance();
-    }
-
-    TransactionContext context = new TransactionContext(new BlockCapsule(headBlock),
-            txCap, StoreFactory.getInstance(), true);
-
-    LedgerYiVmActuator ledgerYiVmActuator = new LedgerYiVmActuator(true);
-    ledgerYiVmActuator.validate(context);
-    ledgerYiVmActuator.execute(context);
-
-    ProgramResult result = context.getProgramResult();
-    if (result.getException() != null) {
-      RuntimeException e = result.getException();
-      log.warn("Constant call has error {}", e.getMessage());
-      throw e;
-    }*/
     ProgramResult result = localCallConstantContract(txCap);
     TransactionResultCapsule ret = new TransactionResultCapsule();
     builder.addConstantResult(ByteString.copyFrom(result.getHReturn()));

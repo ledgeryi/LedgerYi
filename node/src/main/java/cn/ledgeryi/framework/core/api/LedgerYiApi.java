@@ -349,7 +349,8 @@ public class LedgerYiApi extends WalletGrpc.WalletImplBase {
         createTransaction(createSmartContract, Transaction.Contract.ContractType.CreateSmartContract, responseObserver);
     }
 
-    private void createTransaction(Message request, Transaction.Contract.ContractType contractType, StreamObserver<TransactionExtention> responseObserver) {
+    private void createTransaction(Message request, Transaction.Contract.ContractType contractType,
+                                   StreamObserver<TransactionExtention> responseObserver) {
         TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
         Return.Builder retBuilder = Return.newBuilder();
         try {
@@ -358,11 +359,13 @@ public class LedgerYiApi extends WalletGrpc.WalletImplBase {
             txExtBuilder.setTxid(tx.getTransactionId().getByteString());
             retBuilder.setResult(true).setCode(Return.response_code.SUCCESS);
         } catch (ContractValidateException e) {
-            retBuilder.setResult(false).setCode(Return.response_code.CONTRACT_VALIDATE_ERROR)
+            retBuilder.setResult(false)
+                    .setCode(Return.response_code.CONTRACT_VALIDATE_ERROR)
                     .setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
             log.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
         } catch (Exception e) {
-            retBuilder.setResult(false).setCode(Return.response_code.OTHER_ERROR)
+            retBuilder.setResult(false)
+                    .setCode(Return.response_code.OTHER_ERROR)
                     .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
             log.info("exception caught" + e.getMessage());
         }

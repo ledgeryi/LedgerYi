@@ -122,10 +122,16 @@ service Permission {
   rpc inactiveRole(GrpcRequest) returns (TransactionExtention) {
   }
 
+  rpc getRole(GrpcRequest) returns (TransactionExtention) {
+  }
+
   rpc assignRoleForUser(GrpcRequest) returns (TransactionExtention) {
   }
 
   rpc revokeRoleOfUser(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc getUser(GrpcRequest) returns (TransactionExtention) {
   }
 
   rpc hasRole(GrpcRequest) returns (TransactionExtention) {
@@ -133,6 +139,22 @@ service Permission {
 
   //node manage api
   rpc addNewNode(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc updateNode(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc deleteNode(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc getNode(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  //contract manager api
+  rpc deployContract(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc GetContract (GrpcRequest) returns (SmartContract) {
   }
 
   rpc BroadcastTransaction (GrpcRequest) returns (Return) {
@@ -271,4 +293,9 @@ message GrpcRequest {
   string requestAddress = 1;
   int32 requestRole = 2;
   google.protobuf.Any param = 3;
+}
+
+message ContractCallParam {
+  string caller = 1;
+  repeated string args = 2;
 }

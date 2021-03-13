@@ -18,6 +18,7 @@ import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -46,7 +47,9 @@ public class PermissionService implements Service {
     @Autowired
     private ApplicationContext ctx;
 
+    @Getter
     private String nodeMgrAddress;
+    @Getter
     private String roleMgrAddress;
     private String guardianAccount;
     private List<String> masters;
@@ -54,7 +57,6 @@ public class PermissionService implements Service {
     private Map<String,Pair<Integer,Boolean>> roleCache = new ConcurrentHashMap<>();
     private static final String PERMISSION_CONFIG = "permission/permission-config.json";
     private final ScheduledExecutorService nodeExecutor = Executors.newSingleThreadScheduledExecutor();
-
 
     @Override
     public void start() {
@@ -64,7 +66,7 @@ public class PermissionService implements Service {
             } catch (Throwable t) {
                 log.error("Exception in permission worker", t);
             }
-        }, 60000, 30000, TimeUnit.MILLISECONDS);
+        }, 3000, 30000, TimeUnit.MILLISECONDS);
     }
 
     private void queryNodeFromLedger() {
