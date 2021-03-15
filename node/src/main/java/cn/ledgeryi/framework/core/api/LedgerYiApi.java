@@ -9,6 +9,7 @@ import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
 import cn.ledgeryi.common.core.exception.StoreException;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;

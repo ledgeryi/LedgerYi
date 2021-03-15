@@ -275,7 +275,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     toStringBuff.setLength(0);
     toStringBuff.append("TransactionCapsule \n[ ");
 
-    toStringBuff.append("hash=").append(getTransactionId()).append("\n");
+    /*toStringBuff.append("hash=").append(getTransactionId()).append("\n");
     AtomicInteger i = new AtomicInteger();
     if (getInstance().getRawData().getContract() != null) {
       toStringBuff.append("contract list:{ ");
@@ -287,7 +287,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       toStringBuff.append("}\n");
     } else {
       toStringBuff.append("contract list is empty\n");
-    }
+    }*/
     toStringBuff.append("]");
     return toStringBuff.toString();
   }

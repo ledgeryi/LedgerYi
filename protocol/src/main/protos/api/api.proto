@@ -122,6 +122,9 @@ service Permission {
   rpc inactiveRole(GrpcRequest) returns (TransactionExtention) {
   }
 
+  rpc getRoleNum(GrpcRequest) returns (TransactionExtention) {
+  }
+
   rpc getRole(GrpcRequest) returns (TransactionExtention) {
   }
 
@@ -129,6 +132,9 @@ service Permission {
   }
 
   rpc revokeRoleOfUser(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc getUserNum(GrpcRequest) returns (TransactionExtention) {
   }
 
   rpc getUser(GrpcRequest) returns (TransactionExtention) {
@@ -145,6 +151,9 @@ service Permission {
   }
 
   rpc deleteNode(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc getNodeNum(GrpcRequest) returns (TransactionExtention) {
   }
 
   rpc getNode(GrpcRequest) returns (TransactionExtention) {

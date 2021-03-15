@@ -50,16 +50,11 @@ public class GrpcClient {
     }*/
 
     public MastersList queryMasters(RequestUserInfo requestUser){
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        return blockingStubFull.getMasters(builder.build());
+        return blockingStubFull.getMasters(setRequestUser(requestUser));
     }
 
     public boolean broadcastTransaction(Transaction signaturedTransaction, RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        if (requestUser != null){
-            builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        }
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         builder.setParam(Any.pack(signaturedTransaction));
         int repeatTimes = BROADCAST_TRANSACTION_REPEAT_TIMES;
         Return response = blockingStubFull.broadcastTransaction(builder.build());
@@ -80,14 +75,12 @@ public class GrpcClient {
     }
 
     public BlockExtention getNowBlock(RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         return blockingStubFull.getNowBlock(builder.build());
     }
 
     public BlockExtention getBlockByNum(long blockNum, RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         if (blockNum < 0) {
             return blockingStubFull.getNowBlock(builder.build());
         }
@@ -101,8 +94,7 @@ public class GrpcClient {
         BlockLimit.Builder builder = BlockLimit.newBuilder();
         builder.setStartNum(start);
         builder.setEndNum(end);
-        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
-        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        GrpcRequest.Builder grpcBuilder = setRequestUser(requestUser).toBuilder();
         grpcBuilder.setParam(Any.pack(builder.build()));
         return blockingStubFull.getBlockByLimitNext(grpcBuilder.build());
     }
@@ -110,8 +102,7 @@ public class GrpcClient {
     public Transaction getTransactionById(String hash, RequestUserInfo requestUser) {
         GrpcAPI.BytesMessage.Builder builder = GrpcAPI.BytesMessage.newBuilder();
         builder.setValue(ByteString.copyFrom(ByteArray.fromHexString(hash)));
-        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
-        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        GrpcRequest.Builder grpcBuilder = setRequestUser(requestUser).toBuilder();
         grpcBuilder.setParam(Any.pack(builder.build()));
         return blockingStubFull.getTransactionById(grpcBuilder.build());
     }
@@ -119,8 +110,7 @@ public class GrpcClient {
     public TransactionInfo getTransactionInfoById(String txId, RequestUserInfo requestUser) {
         ByteString bsTxid = ByteString.copyFrom(ByteArray.fromHexString(txId));
         BytesMessage request = BytesMessage.newBuilder().setValue(bsTxid).build();
-        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
-        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        GrpcRequest.Builder grpcBuilder = setRequestUser(requestUser).toBuilder();
         grpcBuilder.setParam(Any.pack(request));
         return blockingStubFull.getTransactionInfoById(grpcBuilder.build());
     }
@@ -128,35 +118,25 @@ public class GrpcClient {
     public NumberMessage getTransactionCountByBlockNum(long blockNum, RequestUserInfo requestUser) {
         NumberMessage.Builder builder = NumberMessage.newBuilder();
         builder.setNum(blockNum);
-        GrpcRequest.Builder grpcBuilder = GrpcRequest.newBuilder();
-        grpcBuilder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        GrpcRequest.Builder grpcBuilder = setRequestUser(requestUser).toBuilder();
         grpcBuilder.setParam(Any.pack(builder.build()));
         return blockingStubFull.getTransactionCountByBlockNum(grpcBuilder.build());
     }
 
     public TransactionExtention triggerContract(TriggerSmartContract request, RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        if (requestUser != null) {
-            builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        }
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         builder.setParam(Any.pack(request));
         return blockingStubFull.triggerContract(builder.build());
     }
 
     public TransactionExtention deployContract(CreateSmartContract request, RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        if (requestUser != null) {
-            builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        }
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         builder.setParam(Any.pack(request));
         return blockingStubFull.deployContract(builder.build());
     }
 
     public TransactionExtention triggerConstantContract(TriggerSmartContract request, RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        if (requestUser != null) {
-            builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        }
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         builder.setParam(Any.pack(request));
         return blockingStubFull.triggerConstantContract(builder.build());
     }
@@ -164,30 +144,32 @@ public class GrpcClient {
     public SmartContract getContract(byte[] address, RequestUserInfo requestUser) {
         ByteString byteString = ByteString.copyFrom(address);
         BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        if (requestUser != null) {
-            builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        }
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         builder.setParam(Any.pack(bytesMessage));
         return blockingStubFull.getContract(builder.build());
     }
 
     public TransactionExtention clearContractABI(ClearABIContract request, RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+        GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         builder.setParam(Any.pack(request));
         return blockingStubFull.clearContractABI(builder.build());
     }
 
     public NodeList getConnectNodes(RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        return blockingStubFull.getNodes(builder.build());
+        return blockingStubFull.getNodes(setRequestUser(requestUser));
     }
 
     public Protocol.NodeInfo getNodeInfo(RequestUserInfo requestUser) {
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
-        return blockingStubFull.getNodeInfo(builder.build());
+        return blockingStubFull.getNodeInfo(setRequestUser(requestUser));
     }
+
+    private GrpcRequest setRequestUser(RequestUserInfo requestUser){
+        if (requestUser != null) {
+            GrpcRequest.Builder builder = GrpcRequest.newBuilder();
+            builder.setRequestAddress(requestUser.getAddress()).setRequestRole(requestUser.getRoleId());
+            return builder.build();
+        }
+        return GrpcRequest.getDefaultInstance();
+    }
+
 }

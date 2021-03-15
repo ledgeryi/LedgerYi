@@ -39,7 +39,7 @@ contract NodeManager {
         emit NodeDeleted(owner, host, port);
     }
 
-    function getNode(uint32 index) public view returns(bytes32 id, address owner, string memory host, uint32 port) {
+    function getNode(uint32 index) public view returns(bytes32, address, string memory, uint32) {
         bytes32 _record = keccak256(abi.encode(index));
         return storageManager.nodeInfo(_record);
     }
