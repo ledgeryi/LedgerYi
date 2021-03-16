@@ -105,7 +105,7 @@ public class PermissionService implements Service {
             return null;
         }
         Function function = Function.fromSignature("getNode",
-                new String[]{"uint256"}, new String[]{"address", "string", "uint32"});
+                new String[]{"uint32"}, new String[]{"bytes32","address","string","uint32"});
         Object[] objects = function.decodeResult(callResult.toByteArray());
         NewNode newNode = new NewNode();
         for (Object object : objects) {

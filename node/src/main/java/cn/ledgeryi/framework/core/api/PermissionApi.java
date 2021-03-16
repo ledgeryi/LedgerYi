@@ -1,6 +1,6 @@
 package cn.ledgeryi.framework.core.api;
 
-import cn.ledgeryi.api.GrpcAPI;
+import cn.ledgeryi.api.GrpcAPI.BytesMessage;
 import cn.ledgeryi.api.GrpcAPI.ContractCallParam;
 import cn.ledgeryi.api.GrpcAPI.GrpcRequest;
 import cn.ledgeryi.api.GrpcAPI.Return;
@@ -16,11 +16,13 @@ import cn.ledgeryi.framework.core.exception.AuthorizeException;
 import cn.ledgeryi.framework.core.permission.PermissionService;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ProtocolStringList;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -46,85 +48,85 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
     @Override
     public void addNewRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "addRole(uint32)";
-        callContract(method, false, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void inactiveRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "revokeRole(uint32)";
-        callContract(method, false, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void getRoleNum(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "numberOfRoles()";
-        callContract(method, true, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
     public void getRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "getRole(uint256)";
-        callContract(method, true, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
     public void assignRoleForUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "addUser(uint32,address)";
-        callContract(method, false, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void revokeRoleOfUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "removeUser(bytes32,uint32,address)";
-        callContract(method, false, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void hasRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "hasRole(bytes32,uint32,address)";
-        callContract(method, true, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
     public void getUserNum(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "numberOfUsers()";
-        callContract(method, true, request, responseObserver);
+        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
     public void getUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "getUser(bytes256)";
-        callContract(method, true, request, responseObserver);
+        String method = "getUser(uint256)";
+        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
     public void addNewNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "addNode(address,string,uint32)";
-        callContract(method, false, request, responseObserver);
+        callContract(permissionService.getNodeMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void updateNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "updateNode(bytes32,address,string,uint32)";
-        callContract(method, false, request, responseObserver);
+        callContract(permissionService.getNodeMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void deleteNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "deleteNode(bytes32)";
-        callContract(method, false, request, responseObserver);
+        callContract(permissionService.getNodeMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void getNodeNum(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "numberOfNodes()";
-        callContract(method, true, request, responseObserver);
+        callContract(permissionService.getNodeMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
     public void getNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "getNode(uint32)";
-        callContract(method, true, request, responseObserver);
+        callContract(permissionService.getNodeMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
@@ -133,11 +135,21 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
     }
 
     @Override
-    public void getContract(GrpcRequest request, StreamObserver<SmartContractOuterClass.SmartContract> responseObserver) {
+    public void getContract(GrpcRequest request, StreamObserver<SmartContract> responseObserver) {
         try {
             Any requestParam = request.getParam();
-            GrpcAPI.BytesMessage bytesMessage = requestParam.unpack(GrpcAPI.BytesMessage.class);
-            SmartContractOuterClass.SmartContract contract = ledgerYi.getContract(bytesMessage);
+            ContractCallParam contractCallParam = requestParam.unpack(ContractCallParam.class);
+            byte[] caller = contractCallParam.getCallerBytes().toByteArray();
+
+            //check caller is guardian account
+            String guardianAccount = permissionService.getGuardianAccount();
+            if (!Strings.fromByteArray(caller).equals(guardianAccount)) {
+                throw new AuthorizeException("getContract is called without permission");
+            }
+            String contractAddress = contractCallParam.getArgs(0);
+            ByteString contractAddressByteString = ByteString.copyFrom(DecodeUtil.decode(contractAddress));
+            BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(contractAddressByteString).build();
+            SmartContract contract = ledgerYi.getContract(bytesMessage);
             responseObserver.onNext(contract);
         } catch (Exception e) {
             responseObserver.onError(getRunTimeException(e));
@@ -157,12 +169,12 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
         responseObserver.onCompleted();
     }
 
-    private void callContract(String method,
+    private void callContract(String contactAddress,
+                              String method,
                               boolean isConstant,
                               GrpcRequest request,
                               StreamObserver<TransactionExtention> responseObserver) {
         Any requestParam = request.getParam();
-        String contactAddress = permissionService.getRoleMgrAddress();
         try {
             ContractCallParam callParam = requestParam.unpack(ContractCallParam.class);
             byte[] caller = callParam.getCallerBytes().toByteArray();
@@ -198,7 +210,29 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
      */
     private void createContract(GrpcRequest request,
                                 StreamObserver<TransactionExtention> responseObserver) {
-        createTransaction(request, true, ContractType.CreateSmartContract, responseObserver);
+        TransactionExtention.Builder txExtBuilder = TransactionExtention.newBuilder();
+        Return.Builder retBuilder = Return.newBuilder();
+        Any param = request.getParam();
+        try {
+            CreateSmartContract createSmartContract = param.unpack(CreateSmartContract.class);
+            TransactionCapsule txCap = ledgerYi.createTransactionCapsule(createSmartContract, ContractType.CreateSmartContract);
+            txExtBuilder.setTransaction(txCap.getInstance());
+            txExtBuilder.setTxid(txCap.getTransactionId().getByteString());
+            retBuilder.setResult(true).setCode(Return.response_code.SUCCESS);
+        } catch (ContractValidateException e) {
+            retBuilder.setResult(false)
+                    .setCode(Return.response_code.CONTRACT_VALIDATE_ERROR)
+                    .setMessage(ByteString.copyFromUtf8("contract validate error : " + e.getMessage()));
+            log.debug("ContractValidateException: {}", e.getMessage());
+        } catch (Exception e) {
+            retBuilder.setResult(false)
+                    .setCode(Return.response_code.OTHER_ERROR)
+                    .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
+            log.info("exception caught" + e.getMessage());
+        }
+        txExtBuilder.setResult(retBuilder);
+        responseObserver.onNext(txExtBuilder.build());
+        responseObserver.onCompleted();
     }
 
     /**
@@ -261,10 +295,13 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
 
     private List<Object> parseArgs(ContractCallParam callParam) {
         List<Object> args = new ArrayList<>();
-        List<ByteString> tmp = callParam.getArgsList().asByteStringList();
-        for (ByteString arg : tmp) {
+        //List<ByteString> tmp = callParam.getArgsList().asByteStringList();
+        ProtocolStringList paramArgsList = callParam.getArgsList();
+        args.addAll(paramArgsList);
+
+        /*for (ByteString arg : tmp) {
             args.add(DecodeUtil.createReadableString(arg));
-        }
+        }*/
         return args;
     }
 

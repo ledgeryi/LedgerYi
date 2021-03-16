@@ -4,7 +4,7 @@ import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.GrpcAPI.GrpcRequest;
 import cn.ledgeryi.api.PermissionGrpc;
 import cn.ledgeryi.protos.Protocol;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.*;
 import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
@@ -20,7 +20,6 @@ import cn.ledgeryi.sdk.serverapi.data.permission.RoleTypeEnum;
 import cn.ledgeryi.sdk.serverapi.data.permission.User;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.typesafe.config.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -83,7 +82,7 @@ public class PermissionGrpcClient {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, roleId+"");
+        callParam.addArgs(roleId+"");
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.getRole(builder.build());
         ByteString constantResult = tx.getConstantResult(0);
@@ -114,15 +113,16 @@ public class PermissionGrpcClient {
                                  String user, AccountYi caller){
         GrpcRequest request = createUserOperationRequest(userId, roleType, user, caller);
         TransactionExtention tx = permissionBlockingStub.hasRole(request);
-        return processTransaction(tx, caller);
+        byte[] callResult = tx.getConstantResult(0).toByteArray();
+        return cn.ledgeryi.common.utils.ByteUtil.byteArrayToInt(callResult) == 1;
     }
 
     public boolean assignRoleForUser(RoleTypeEnum roleType, String user, AccountYi caller){
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, roleType.getType() + "");
-        callParam.setArgs(1, user);
+        callParam.addArgs(roleType.getType() + "");
+        callParam.addArgs(user);
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.assignRoleForUser(builder.build());
         return processTransaction(tx, caller);
@@ -137,12 +137,11 @@ public class PermissionGrpcClient {
         return ByteUtil.byteArrayToInt(tx.getConstantResult(0).toByteArray());
     }
 
-    //todo check
     public User getUser(int userIndex, AccountYi caller){
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, userIndex+"");
+        callParam.addArgs(String.valueOf(userIndex));
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.getUser(builder.build());
         ByteString constantResult = tx.getConstantResult(0);
@@ -151,16 +150,20 @@ public class PermissionGrpcClient {
         User.UserBuilder user = User.builder();
         Object[] objects = function.decodeResult(constantResult.toByteArray());
         for (Object object : objects) {
-            /*if (object instanceof BigInteger) {
+            if (object instanceof BigInteger) {
                 BigInteger id = (BigInteger) object;
-                user.userId(id.intValue());
-            } else */if (object instanceof byte[]) {
-                String address = DecodeUtil.createReadableString((byte[]) object);
-                user.address(address);
+                user.roleId(id.intValue());
+            } else if (object instanceof byte[]) {
+                String stringData = DecodeUtil.createReadableString((byte[]) object);
+                if (((byte[]) object).length == 32) {
+                    user.userId(stringData);
+                } else if(((byte[]) object).length == 20){
+                    user.address(stringData);
+                }
             } else if (object instanceof Boolean) {
                 boolean active = (Boolean) object;
                 user.active(active);
-            }//todo
+            }
         }
         return user.build();
     }
@@ -169,9 +172,9 @@ public class PermissionGrpcClient {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, newNode.getOwner());
-        callParam.setArgs(1, newNode.getHost());
-        callParam.setArgs(2, newNode.getPort()+"");
+        callParam.addArgs(newNode.getOwner());
+        callParam.addArgs(newNode.getHost());
+        callParam.addArgs(String.valueOf(newNode.getPort()));
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.addNewNode(builder.build());
         return processTransaction(tx, caller);
@@ -181,10 +184,10 @@ public class PermissionGrpcClient {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, newNode.getNodeId());
-        callParam.setArgs(1, newNode.getOwner());
-        callParam.setArgs(2, newNode.getHost());
-        callParam.setArgs(3, newNode.getPort()+"");
+        callParam.addArgs(newNode.getNodeId());
+        callParam.addArgs(newNode.getOwner());
+        callParam.addArgs(newNode.getHost());
+        callParam.addArgs(newNode.getPort()+"");
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.updateNode(builder.build());
         return processTransaction(tx, caller);
@@ -194,7 +197,7 @@ public class PermissionGrpcClient {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, nodeId);
+        callParam.addArgs(nodeId);
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.deleteNode(builder.build());
         return processTransaction(tx, caller);
@@ -209,12 +212,11 @@ public class PermissionGrpcClient {
         return ByteUtil.byteArrayToInt(tx.getConstantResult(0).toByteArray());
     }
 
-    //todo
     public cn.ledgeryi.sdk.serverapi.data.permission.Node getNode(int nodeIndex, AccountYi caller){
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, nodeIndex+"");
+        callParam.addArgs(String.valueOf(nodeIndex));
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.getNode(builder.build());
         ByteString constantResult = tx.getConstantResult(0);
@@ -224,12 +226,16 @@ public class PermissionGrpcClient {
                 cn.ledgeryi.sdk.serverapi.data.permission.Node.builder();
         Object[] objects = function.decodeResult(constantResult.toByteArray());
         for (Object object : objects) {
-            /*if (object instanceof BigInteger) {
+            if (object instanceof BigInteger) {
                 BigInteger id = (BigInteger) object;
-                user.userId(id.intValue());
-            } else */if (object instanceof byte[]) {
-                String address = DecodeUtil.createReadableString((byte[]) object);
-                nodeBuilder.owner(address);
+                nodeBuilder.port(id.intValue());
+            } else if (object instanceof byte[]) {
+                String stringData = DecodeUtil.createReadableString((byte[]) object);
+                if (((byte[]) object).length == 32) {
+                    nodeBuilder.nodeId(stringData);
+                } else if(((byte[]) object).length == 20){
+                    nodeBuilder.owner(stringData);
+                }
             } else if (object instanceof String) {
                 String host = (String) object;
                 nodeBuilder.host(host);
@@ -240,28 +246,27 @@ public class PermissionGrpcClient {
 
     public DeployContractReturn deployContract(DeployContractParam param, AccountYi caller){
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        //SmartContractOuterClass.CreateSmartContract createContract = createContract(DecodeUtil.decode(caller.getAddress()), param);
+        CreateSmartContract createContract;
+        try {
+            createContract = createContract(DecodeUtil.decode(caller.getAddress()), param);
+        } catch (CreateContractExecption e) {
+            log.error(e.getMessage());
+            return null;
+        }
+        builder.setParam(Any.pack(createContract));
         TransactionExtention tx = permissionBlockingStub.deployContract(builder.build());
         boolean result = processTransaction(tx, caller);
         if (result) {
-            SmartContractOuterClass.CreateSmartContract createSmartContract;
-            try {
-                Any parameter = tx.getTransaction().getRawData().getContract().getParameter();
-                createSmartContract = parameter.unpack(SmartContractOuterClass.CreateSmartContract.class);
-            } catch (InvalidProtocolBufferException e) {
-                log.error("deploy contract, parameter parse fail");
-                return null;
-            }
-            String contractByteCodes = DecodeUtil.createReadableString(createSmartContract.getNewContract().getBytecode());
             String contractAddress = DecodeUtil.createReadableString(
-                    TransactionUtils.generateContractAddress(tx.getTransaction(), DecodeUtil.decode(caller.getAddress())));
+                    TransactionUtils.generateContractAddress(tx.getTransaction(),
+                            DecodeUtil.decode(caller.getAddress())));
             return DeployContractReturn.builder()
                     .transactionId(DecodeUtil.createReadableString(tx.getTxid()))
-                    .contractName(createSmartContract.getNewContract().getName())
-                    .contractByteCodes(contractByteCodes)
+                    .contractName(createContract.getNewContract().getName())
+                    .contractByteCodes(param.getContractByteCodes())
                     .ownerAddress(caller.getAddress())
                     .contractAddress(contractAddress)
-                    .contractAbi(createSmartContract.getNewContract().getAbi().toString())
+                    .contractAbi(createContract.getNewContract().getAbi().toString())
                     .build();
         } else {
             log.error("deploy contract failed.");
@@ -269,22 +274,31 @@ public class PermissionGrpcClient {
         }
     }
 
-    private SmartContractOuterClass.CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam)
+    public SmartContract getContract(String contractAddress, AccountYi caller) {
+        GrpcRequest.Builder requestBuilder = GrpcRequest.newBuilder();
+        ContractCallParam.Builder builder = ContractCallParam.newBuilder();
+        builder.setCaller(caller.getAddress());
+        builder.addArgs(contractAddress);
+        requestBuilder.setParam(Any.pack(builder.build()));
+        return permissionBlockingStub.getContract(requestBuilder.build());
+    }
+
+    private CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam)
             throws CreateContractExecption {
         String contractAbi = contractParam.getAbi();
         if (StringUtils.isEmpty(contractAbi)) {
             log.error("deploy contract, abi is null");
             throw new CreateContractExecption("deploy contract, abi is null");
         }
-        SmartContractOuterClass.SmartContract.ABI abi = JsonFormatUtil.jsonStr2ABI(contractAbi);
-        SmartContractOuterClass.SmartContract.Builder builder = SmartContractOuterClass.SmartContract.newBuilder();
+        SmartContract.ABI abi = JsonFormatUtil.jsonStr2ABI(contractAbi);
+        SmartContract.Builder builder = SmartContract.newBuilder();
         builder.setAbi(abi);
         builder.setName(contractParam.getContractName());
         //set contract owner
         builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         byte[] byteCode = Hex.decode(contractParam.getContractByteCodes());
         builder.setBytecode(ByteString.copyFrom(byteCode));
-        SmartContractOuterClass.CreateSmartContract.Builder createSmartContractBuilder = SmartContractOuterClass.CreateSmartContract.newBuilder();
+        CreateSmartContract.Builder createSmartContractBuilder = CreateSmartContract.newBuilder();
         //set call address
         createSmartContractBuilder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         createSmartContractBuilder.setNewContract(builder.build());
@@ -296,9 +310,9 @@ public class PermissionGrpcClient {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, userId);
-        callParam.setArgs(1, roleType.getType()+"");
-        callParam.setArgs(2, user);
+        callParam.addArgs(userId);
+        callParam.addArgs(roleType.getType()+"");
+        callParam.addArgs(user);
         builder.setParam(Any.pack(callParam.build()));
         return builder.build();
     }
@@ -307,7 +321,7 @@ public class PermissionGrpcClient {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.setArgs(0, roleType.getType() + "");
+        callParam.addArgs(String.valueOf(roleType.getType()));
         builder.setParam(Any.pack(callParam.build()));
         return builder.build();
     }
