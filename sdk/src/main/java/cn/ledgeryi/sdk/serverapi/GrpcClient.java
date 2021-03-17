@@ -33,13 +33,7 @@ public class GrpcClient {
     }
 
     public static GrpcClient initGrpcClient() {
-        Config config = Configuration.getConfig();
-        String ledgerYiNode;
-        if (config.hasPath("ledgernode.ip.list") && config.getStringList("ledgernode.ip.list").size() != 0) {
-            ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
-        } else {
-            throw new RuntimeException("No connection information is configured!");
-        }
+        String ledgerYiNode = Configuration.getLedgerYiNet();
         return new GrpcClient(ledgerYiNode);
     }
 

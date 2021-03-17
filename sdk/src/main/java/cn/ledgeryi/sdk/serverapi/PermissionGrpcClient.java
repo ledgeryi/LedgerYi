@@ -47,13 +47,7 @@ public class PermissionGrpcClient {
     }
 
     public static PermissionGrpcClient initPermissionGrpcClient() {
-        Config config = Configuration.getConfig();
-        String ledgerYiNode;
-        if (config.hasPath("ledgernode.ip.list") && config.getStringList("ledgernode.ip.list").size() != 0) {
-            ledgerYiNode = config.getStringList("ledgernode.ip.list").get(0);
-        } else {
-            throw new RuntimeException("No connection information is configured!");
-        }
+        String ledgerYiNode = Configuration.getLedgerYiNet();
         return new PermissionGrpcClient(ledgerYiNode);
     }
 
@@ -105,7 +99,7 @@ public class PermissionGrpcClient {
     public boolean revokeRoleOfUser(String userId, RoleTypeEnum roleType,
                                     String user, AccountYi caller){
         GrpcRequest request = createUserOperationRequest(userId, roleType, user, caller);
-        TransactionExtention tx = permissionBlockingStub.assignRoleForUser(request);
+        TransactionExtention tx = permissionBlockingStub.revokeRoleOfUser(request);
         return processTransaction(tx, caller);
     }
 
@@ -311,7 +305,7 @@ public class PermissionGrpcClient {
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
         callParam.addArgs(userId);
-        callParam.addArgs(roleType.getType()+"");
+        callParam.addArgs(String.valueOf(roleType.getType()));
         callParam.addArgs(user);
         builder.setParam(Any.pack(callParam.build()));
         return builder.build();

@@ -122,6 +122,17 @@ contract StorageManager {
         return false;
     }
 
+    function roleState(uint32 _roleId) private view returns(bool) {
+        uint256 length = roleStorage.length;
+        for(uint256 i = 0; i < length; i ++){
+            bool exist = roleStorage[i].roleId == _roleId;
+            if (exist) {
+                return roleStorage[i].active;
+            }
+        }
+        return false;
+    }
+
     function roleAssigned(bytes32 _record, uint32 _roleId, address _user) external view roleExist(_roleId) returns (bool) {
         require(userStorage[_record].roleId == _roleId, "roleId inconsistency");
         require(userStorage[_record].user == _user, "user address inconsistency");
@@ -135,6 +146,7 @@ contract StorageManager {
     }
 
     function assignRole(bytes32 _record, uint32 _roleId, address _user) external roleExist(_roleId) {
+        require(roleState(_roleId) == true, "role state is inactive");
         userStorage[_record] = User(_record, _roleId, _user, true);
     }
 

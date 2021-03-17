@@ -35,15 +35,12 @@ public class PermissionTests {
         this.permissionClient = PermissionGrpcClient.initPermissionGrpcClient();
         String ownerAddress = "99b8466efe9f05cee87d4e167cdfaec0432d90fc";
         String privateKey = "dfbf32c6cd4cbbb69d4a6d8c547636eaa4ba9fe28db3dec1272f03755111f7d7";
-
-        //String privateKey = "ec19148056c4cfc5fc1b1923b8bb657e1e481a8f092415d5af96dd60f3e6806d";
-        //String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
         this.caller = new AccountYi(ownerAddress, null, privateKey, null);
     }
 
     @Test
     public void addRole() {
-        boolean addRole = permissionClient.addRole(RoleTypeEnum.READ_ONLY, caller);
+        boolean addRole = permissionClient.addRole(RoleTypeEnum.CONTRACT_DEPLOY, caller);
         System.out.println(addRole);
     }
 
@@ -59,7 +56,7 @@ public class PermissionTests {
         System.out.println(roleNum);
     }
 
-    private int roleNum = 4;
+    private int roleNum = 2;
 
     @Test
     public void getRole() {
@@ -71,23 +68,24 @@ public class PermissionTests {
 
     @Test
     public void revokeRoleOfUser() {
-        String userId = "";
-        String user = "ada95a8734256b797efcd862e0b208529283ac56";
-        permissionClient.revokeRoleOfUser(userId, RoleTypeEnum.READ_ONLY, user, caller);
+        String userId = "290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563";
+        String user = "ada95a8734256b797efcd862e0b208529283ac50";
+        boolean revokeUser = permissionClient.revokeRoleOfUser(userId, RoleTypeEnum.CONTRACT_DEPLOY, user, caller);
+        System.out.println(revokeUser);
     }
 
     @Test
     public void hasRoleOfUser() {
-        String userId = "b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6";
-        String user = "ada95a8734256b797efcd862e0b208529283ac54";
-        boolean hasRoleOfUser = permissionClient.hasRoleOfUser(userId, RoleTypeEnum.READ_ONLY, user, caller);
+        String userId = "290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563";
+        String user = "ada95a8734256b797efcd862e0b208529283ac50";
+        boolean hasRoleOfUser = permissionClient.hasRoleOfUser(userId, RoleTypeEnum.CONTRACT_DEPLOY, user, caller);
         System.out.println(hasRoleOfUser);
     }
 
     @Test
     public void assignRoleForUser() {
-        String user = "ada95a8734256b797efcd862e0b208529283ac54";
-        boolean assignRoleForUser = permissionClient.assignRoleForUser(RoleTypeEnum.READ_ONLY, user, caller);
+        String user = "ada95a8734256b797efcd862e0b208529283ac50";
+        boolean assignRoleForUser = permissionClient.assignRoleForUser(RoleTypeEnum.CONTRACT_DEPLOY, user, caller);
         System.out.println(assignRoleForUser);
     }
 
@@ -97,7 +95,7 @@ public class PermissionTests {
         System.out.println(userNum);
     }
 
-    private int userNum = 2;
+    private int userNum = 1;
 
     @Test
     public void getUser() {
@@ -107,18 +105,6 @@ public class PermissionTests {
         }
     }
 
-    /**
-     * 角色BLOCK_PRODUCE：
-     *
-     * address:    ada95a8734256b797efcd862e0b208529283ac56
-     * privateKey: e8b5177d5a69898dcc437d0e96a9343a37bac001cb9bec7a90b660eee66b4587
-     *
-     * address:    e506af507e6cb873036826db5c123e0f362fe8a1
-     * privateKey: dbcef69812d842ffa2e0575e39b61543771fcb59bae9ebe155f043bf149f27b9
-     *
-     * address:    9226b046377d70896bb3468864258feffdc956a1
-     * privateKey: a8eb4340bf444b378494253d16ab7536a2dfc81d44dadeeb259be74fd131482a
-     */
     @Test
     public void addNode() {
         String owner = "e506af507e6cb873036826db5c123e0f362fe8a1";
@@ -159,10 +145,10 @@ public class PermissionTests {
         }
     }
 
-    private String storageManagerAddress = "192e6a87f217411a124b331b1309280dabd29362";
+    private String storageManagerAddress = "5e5943d8e74a68ef7768f7a4d403f253d2f4b3f9";
 
     @Test
-    public void deployStorageManagerContract(){
+    public void deployStorageManagerContract(){//361abef90199245a6847768e5915d612ce43acf0
         DeployContractParam param = null;
         DeployContractReturn deployContract = null;
         try {
@@ -219,12 +205,12 @@ public class PermissionTests {
         System.out.println("abi: " + param.getAbi());
         System.out.println("code: " + param.getContractByteCodes());
         System.out.println("contract address: " + deployContract.getContractAddress());
-        //53e69a964eb57e45c2d1892ef3f6a87378817539
+        //a9be8b8c4e12557e96f29369df2dede1a324eaf8
     }
 
     @Test
     public void getContract(){
-        String contractAddress = "53e69a964eb57e45c2d1892ef3f6a87378817539";
+        String contractAddress = "a9be8b8c4e12557e96f29369df2dede1a324eaf8";
         SmartContract contract = permissionClient.getContract(contractAddress, caller);
         System.out.println(JsonFormatUtil.printSmartContract(contract));
         JSONObject jsonObject = JSONObject.parseObject(JsonFormatUtil.printABI(contract.getAbi()));
