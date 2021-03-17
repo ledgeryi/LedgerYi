@@ -20,10 +20,6 @@ contract RoleManager {
         storageManager = StorageManager(_storage);
     }
 
-    function init() public {
-        numberOfRoles = storageManager.roleNum();
-    }
-
     function addRole(uint32 _roleId) public {
         numberOfRoles = storageManager.pushRole(_roleId);
         emit RoleCreated(_roleId);
