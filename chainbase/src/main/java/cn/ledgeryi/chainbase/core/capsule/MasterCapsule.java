@@ -39,7 +39,7 @@ public class MasterCapsule implements ProtoCapsule<Master>, Comparable<MasterCap
     try {
       this.master = cn.ledgeryi.protos.Protocol.Master.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
-      log.debug(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     }
   }
 

@@ -57,7 +57,7 @@ public class ValidateAddressServlet extends RateLimiterServlet {
     try {
       response.getWriter().println(validAddress(input));
     } catch (IOException e) {
-      log.debug("IOException: {}", e.getMessage());
+      log.error("IOException: {}", e.getMessage());
     }
   }
 
@@ -68,7 +68,7 @@ public class ValidateAddressServlet extends RateLimiterServlet {
       JSONObject jsonAddress = JSON.parseObject(input);
       response.getWriter().println(validAddress(jsonAddress.getString("address")));
     } catch (Exception e) {
-      log.debug("Exception: {}", e.getMessage());
+      log.error("Exception: {}", e.getMessage());
     }
   }
 }

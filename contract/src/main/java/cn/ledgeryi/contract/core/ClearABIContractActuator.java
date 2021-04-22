@@ -40,7 +40,7 @@ public class ClearABIContractActuator extends AbstractActuator {
       contractStore.put(contractAddress, deployedContract);
       ret.setStatus(code.SUCESS);
     } catch (InvalidProtocolBufferException e) {
-      log.debug(e.getMessage(), e);
+      log.error(e.getMessage(), e);
       ret.setStatus(code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -65,7 +65,7 @@ public class ClearABIContractActuator extends AbstractActuator {
     try {
       contract = this.any.unpack(ClearABIContract.class);
     } catch (InvalidProtocolBufferException e) {
-      log.debug(e.getMessage(), e);
+      log.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
     if (!DecodeUtil.addressValid(contract.getOwnerAddress().toByteArray())) {

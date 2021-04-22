@@ -181,7 +181,7 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     try {
       return database.get(key);
     } catch (DBException e) {
-      log.debug(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     } finally {
       resetDbLock.readLock().unlock();
     }

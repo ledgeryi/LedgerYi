@@ -21,7 +21,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     try {
       this.account = Account.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
-      log.debug(e.getMessage());
+      log.error(e.getMessage());
     }
   }
 

@@ -34,7 +34,7 @@ public final class StoreIterator implements cn.ledgeryi.framework.core.db.common
         dbIterator.close();
       }
     } catch (Exception e) {
-      log.debug(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     }
 
     return hasNext;
