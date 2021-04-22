@@ -222,16 +222,7 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 
 **交易**
 
-**(1)createtransaction**
-
-|类别|说明|
-|:---|:---|
-|作用|创建一个转账Transaction(，如果转账的to地址不存在，则在区块链上创建该账号)|
-|示例|curl -X POST http://127.0.0.1:8090/v1/createtransaction -d '{"to_address":  <br>"4e23514ccc74f7e10fe7da1c84346a98f14de1b65a", "owner_address": "4e50381e6c0ad007d59b321f2f39f8800e43045a1a", "amount": 1}'|
-|参数说明|to_address是转账转入地址，默认为hexString；owner_address是转账转出地址，默认为hexString；amount是转账数量|
-|返回值|转账合约|
-
-**(2)broadcasttransaction**
+**(1)broadcasttransaction**
 
 |类别|说明|
 |:---|:---|
@@ -240,7 +231,7 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |参数说明|签名之后的Transaction|
 |返回值|广播是否成功|
 
-**(3)gettransactionbyid**
+**(2)gettransactionbyid**
 
 |类别|说明|
 |:---|:---|
@@ -249,7 +240,7 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |参数说明|交易ID|
 |返回值|交易信息|
 
-**(4)gettransactioninfobyid**
+**(3)gettransactioninfobyid**
 
 |类别|说明|
 |:---|:---|
