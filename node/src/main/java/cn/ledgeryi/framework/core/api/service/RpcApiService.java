@@ -64,7 +64,8 @@ public class RpcApiService implements Service {
       rateLimiterInterceptor.init(apiServer);
       apiServer.start();
     } catch (IOException e) {
-      log.debug(e.getMessage(), e);
+      log.error("Unable to start Rpc Server ", e);
+      throw new RuntimeException(e);
     }
     log.info("RpcApiService started, listening on " + port);
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
