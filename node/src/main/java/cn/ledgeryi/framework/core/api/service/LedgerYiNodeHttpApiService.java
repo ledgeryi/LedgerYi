@@ -1,8 +1,8 @@
 package cn.ledgeryi.framework.core.api.service;
 
 import cn.ledgeryi.framework.common.application.Service;
-import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.api.http.*;
+import cn.ledgeryi.framework.core.config.args.Args;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.ConnectionLimit;
 import org.eclipse.jetty.server.Server;
@@ -64,7 +64,7 @@ public class LedgerYiNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getNodeInfoServlet), "/getnodeinfo");
 
       //account
-      context.addServlet(new ServletHolder(getAccountServlet), "/getaccount");
+//      context.addServlet(new ServletHolder(getAccountServlet), "/getaccount");
 
       //block
       context.addServlet(new ServletHolder(getNowBlockServlet), "/getnowblock");

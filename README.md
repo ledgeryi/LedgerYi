@@ -190,16 +190,6 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 
 **账户**
 
-**(1)getaccount**
-
-|类别|说明|
-|:---|:---|
-|作用|查询一个账号的信息|
-|示例|curl -X POST  http://127.0.0.1:8090/v1/getaccount -d '{"address": "4e23514ccc74f7e10fe7da1c84346a98f14de1b65a"}'|
-|参数说明|address默认为hexString|
-|返回值|Account对象|
-
-
 **区块**
 
 **(1)getnowblock**
@@ -339,14 +329,7 @@ rpc BroadcastTransaction (Transaction) returns (Return) {}
 ```
 **3.账户**
 
-**(1)getAccount**
-
-作用：通过accountId查询一个账号的信息
-```text
-rpc GetAccount (Account) returns (Account) {}
-```
-
-**(2)getMasters**
+**(1)getMasters**
 
 作用：查询MasterNode列表
 
