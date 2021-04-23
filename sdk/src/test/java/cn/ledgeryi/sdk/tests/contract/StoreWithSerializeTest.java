@@ -46,12 +46,12 @@ public class StoreWithSerializeTest extends AbstractContractTest {
         Map<String, String> json = new HashMap<>();
         json.put("unit", "new_BSC");
 
-        assertEqualsSetSymbolPerFiveSecond(writeObjectToJason(json));
-        assertEqualsSetSymbolPerFiveSecond(writeObjectToJason(Arrays.asList("a,b,c")));
-        assertEqualsSetSymbolPerFiveSecond("{\"unit\":\"new_BSC\"}");
-        assertEqualsSetSymbolPerFiveSecond(",,,");
-        assertEqualsSetSymbolPerFiveSecond("abd");
-        assertEqualsSetSymbolPerFiveSecond("{abc}");
+//        assertEqualsSetSymbolPerFiveSecond(writeObjectToJason(json));
+//        assertEqualsSetSymbolPerFiveSecond(writeObjectToJason(Arrays.asList("a,b,c")));
+//        assertEqualsSetSymbolPerFiveSecond("{\"unit\":\"new_BSC\"}");
+//        assertEqualsSetSymbolPerFiveSecond(",,,");
+//        assertEqualsSetSymbolPerFiveSecond("abd");
+//        assertEqualsSetSymbolPerFiveSecond("{abc}");
         assertEqualsSetSymbolPerFiveSecond("{abc}");
     }
 

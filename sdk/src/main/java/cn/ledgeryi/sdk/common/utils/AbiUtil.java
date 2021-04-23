@@ -338,7 +338,7 @@ public class AbiUtil {
 
   private static byte[] encodeInput(String methodSign, String input) {
     ObjectMapper mapper = new ObjectMapper();
-    input = "[" + input + "]";
+    input = "[" + doEscape(input) + "]";
     List items;
     try {
       items = mapper.readValue(input, List.class);
@@ -369,7 +369,7 @@ public class AbiUtil {
     //add " to format when start " : need skip it in start
     if (input.startsWith(DOUBLE_QUOTE)) {
       input = input.substring(1);
-      formatResult.append("\"");
+      formatResult.append(DOUBLE_QUOTE);
     }
 
     //skip " in last
@@ -380,7 +380,7 @@ public class AbiUtil {
     }
 
     //replace and re-format it " --> \"
-    formatResult.append(StringUtils.replace(input, "\"", "\\\"", -1)).append(endWithDoubleQuote?DOUBLE_QUOTE:"");
+    formatResult.append(StringUtils.replace(input, DOUBLE_QUOTE, "\\\"", -1)).append(endWithDoubleQuote ? DOUBLE_QUOTE : "");
 
     return formatResult.toString();
   }
