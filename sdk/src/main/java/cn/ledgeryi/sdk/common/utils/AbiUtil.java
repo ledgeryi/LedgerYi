@@ -360,7 +360,7 @@ public class AbiUtil {
    * @return
    */
   private static String doEscape(String input) {
-    if (Objects.isNull(input) || input.isEmpty() || !input.contains(DOUBLE_QUOTE)) {
+    if (Objects.isNull(input) || input.isEmpty() || !(input.contains("\"{") || input.contains("\"["))) {
       return input;
     }
 
