@@ -10,11 +10,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AbiUtil {
 
+  private static final String DOUBLE_QUOTE = "\"";
   private static Pattern paramTypeBytes = Pattern.compile("^bytes([0-9]*)$");
   private static Pattern paramTypeNumber = Pattern.compile("^(u?int)([0-9]*)$");
   private static Pattern paramTypeArray = Pattern.compile("^(.*)\\[([0-9]*)]$");
@@ -334,9 +336,9 @@ public class AbiUtil {
     return pack(coders, parameters);
   }
 
-  public static byte[] encodeInput(String methodSign, String input) {
+  private static byte[] encodeInput(String methodSign, String input) {
     ObjectMapper mapper = new ObjectMapper();
-    input = "[" + input + "]";
+    input = "[" + doEscape(input) + "]";
     List items;
     try {
       items = mapper.readValue(input, List.class);
@@ -350,6 +352,37 @@ public class AbiUtil {
       coders.add(c);
     }
     return pack(coders, items);
+  }
+
+  /**
+   * escape string : "str"" --> "str\""
+   * @param input
+   * @return
+   */
+  private static String doEscape(String input) {
+    if (Objects.isNull(input) || input.isEmpty() || !input.contains(DOUBLE_QUOTE)) {
+      return input;
+    }
+
+    StringBuilder formatResult = new StringBuilder(input.length() + 15);
+
+    //add " to format when start " : need skip it in start
+    if (input.startsWith(DOUBLE_QUOTE)) {
+      input = input.substring(1);
+      formatResult.append(DOUBLE_QUOTE);
+    }
+
+    //skip " in last
+    boolean endWithDoubleQuote = false;
+    if (input.endsWith(DOUBLE_QUOTE)) {
+      input = input.substring(0, input.length() - 1);
+      endWithDoubleQuote = true;
+    }
+
+    //replace and re-format it " --> \"
+    formatResult.append(StringUtils.replace(input, DOUBLE_QUOTE, "\\\"", -1)).append(endWithDoubleQuote ? DOUBLE_QUOTE : "");
+
+    return formatResult.toString();
   }
 
   public static String parseMethod(String methodSign, List<Object> parameters) {

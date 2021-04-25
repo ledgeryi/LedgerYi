@@ -354,7 +354,7 @@ public class Manager {
 
     private void validateDup(TransactionCapsule transactionCapsule) throws DupTransactionException {
         if (containsTransaction(transactionCapsule)) {
-            log.debug(ByteArray.toHexString(transactionCapsule.getTransactionId().getBytes()));
+            log.error(ByteArray.toHexString(transactionCapsule.getTransactionId().getBytes()));
             throw new DupTransactionException("dup trans");
         }
     }
@@ -943,17 +943,17 @@ public class Manager {
         try {
             this.pushTransaction(tx);
         } catch (ValidateSignatureException | ContractValidateException | ContractExeException | VMIllegalException e) {
-            log.debug(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         } catch (DupTransactionException e) {
-            log.debug("pending manager: dup trans", e);
+            log.error("pending manager: dup trans", e);
         } catch (TaposException e) {
-            log.debug("pending manager: tapos exception", e);
+            log.error("pending manager: tapos exception", e);
         } catch (TooBigTransactionException e) {
-            log.debug("too big transaction");
+            log.error("too big transaction");
         } catch (TransactionExpirationException e) {
-            log.debug("expiration transaction");
+            log.error("expiration transaction");
         } catch (ReceiptCheckErrException e) {
-            log.debug("outOfSlotTime transaction");
+            log.error("outOfSlotTime transaction");
         }
     }
 

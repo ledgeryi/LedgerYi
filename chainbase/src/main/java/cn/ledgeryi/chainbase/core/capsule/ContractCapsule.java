@@ -24,7 +24,7 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
         try {
             this.smartContract = SmartContract.parseFrom(data);
         } catch (InvalidProtocolBufferException e) {
-            log.debug(e.getMessage());
+            log.error(e.getMessage());
         }
     }
 

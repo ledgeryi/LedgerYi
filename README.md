@@ -190,16 +190,6 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 
 **账户**
 
-**(1)getaccount**
-
-|类别|说明|
-|:---|:---|
-|作用|查询一个账号的信息|
-|示例|curl -X POST  http://127.0.0.1:8090/v1/getaccount -d '{"address": "4e23514ccc74f7e10fe7da1c84346a98f14de1b65a"}'|
-|参数说明|address默认为hexString|
-|返回值|Account对象|
-
-
 **区块**
 
 **(1)getnowblock**
@@ -232,25 +222,7 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 
 **交易**
 
-**(1)createtransaction**
-
-|类别|说明|
-|:---|:---|
-|作用|创建一个转账Transaction(，如果转账的to地址不存在，则在区块链上创建该账号)|
-|示例|curl -X POST http://127.0.0.1:8090/v1/createtransaction -d '{"to_address":  <br>"4e23514ccc74f7e10fe7da1c84346a98f14de1b65a", "owner_address": "4e50381e6c0ad007d59b321f2f39f8800e43045a1a", "amount": 1}'|
-|参数说明|to_address是转账转入地址，默认为hexString；owner_address是转账转出地址，默认为hexString；amount是转账数量|
-|返回值|转账合约|
-
-**(2)broadcasttransaction**
-
-|类别|说明|
-|:---|:---|
-|作用|对签名后的transaction进行广播|
-|示例|curl -X POST http://127.0.0.1:8090/v1/broadcasttransaction -d '{"signature":  <br>["97c825b41c77de2a8bd65b3df55cd4c0df59c307c0187e42321dcc1cc455ddba583dd9502e17cfec5945b34cad0511985a6165999092a6dec84c2bdd97e649fc01"],<br>"txID":"e5bdf8fb25fc9b93b8f8bda4ff0356b54f46ea9e6211ad31cd5101125c6a2012", <br>"raw_data":{"contract":[{"parameter":{"value":{"amount":1,"owner_address":"4e50381e6c0ad007d59b321f2f39f8800e43045a1a",<br>"to_address":"4e23514ccc74f7e10fe7da1c84346a98f14de1b65a"},<br>"type_url":"type.googleapis.com/protocol.TransferContract"},"type":"TransferContract"}], <br>"ref_block_bytes":"0047","ref_block_hash":"9465d7aff769ec1c","expiration":1607675676000,"timestamp":1607913591421},<br>"raw_data_hex":"0a02004722089465d7aff769ec1c40e08ac087e52e5a631a610a2d747970652e676f6f676c656<br>17069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412300a15d8598fe888d5e6ca98450730518e5b439760d<br>b7db712159e127afced01bdfb90db1769dac6f79658966015aa180170fda4f9f8e52e"}|
-|参数说明|签名之后的Transaction|
-|返回值|广播是否成功|
-
-**(3)gettransactionbyid**
+**(1)gettransactionbyid**
 
 |类别|说明|
 |:---|:---|
@@ -259,7 +231,7 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |参数说明|交易ID|
 |返回值|交易信息|
 
-**(4)gettransactioninfobyid**
+**(2)gettransactioninfobyid**
 
 |类别|说明|
 |:---|:---|
@@ -339,14 +311,7 @@ rpc BroadcastTransaction (Transaction) returns (Return) {}
 ```
 **3.账户**
 
-**(1)getAccount**
-
-作用：通过accountId查询一个账号的信息
-```text
-rpc GetAccount (Account) returns (Account) {}
-```
-
-**(2)getMasters**
+**(1)getMasters**
 
 作用：查询MasterNode列表
 

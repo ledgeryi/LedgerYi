@@ -77,7 +77,14 @@ public class LedgerYiNodeApplication {
     }
 
     //appT.initServices(cfgArgs);
-    appT.startServices();
+    try {
+      appT.startServices();
+    } catch (Exception e) {
+      log.error("Unable to Start Service ",e);
+      appT.shutdown();
+      appT.shutdownServices();
+      System.exit(0);
+    }
     appT.startup();
 
     rpcApiService.blockUntilShutdown();
