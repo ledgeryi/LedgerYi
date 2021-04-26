@@ -2,6 +2,7 @@ package cn.ledgeryi.framework.core.permission.aop;
 
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.exception.AuthorizeException;
 import cn.ledgeryi.framework.core.permission.PermissionService;
 import cn.ledgeryi.framework.core.permission.constant.RoleTypeEnum;
@@ -26,7 +27,7 @@ public class ProduceBlockAspect {
 
     @Before("pointPushBlock(block)")
     public void doAuthentication(BlockCapsule block) throws AuthorizeException {
-        if (block.generatedByMyself) {
+        if (block.generatedByMyself || !Args.getInstance().isPermissionNet()) {
             return;
         }
         String producer = ByteArray.toHexString(block.getMasterAddress().toByteArray());
