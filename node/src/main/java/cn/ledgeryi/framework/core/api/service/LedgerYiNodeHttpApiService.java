@@ -72,7 +72,7 @@ public class LedgerYiNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getBlockByLimitNextServlet), "/getblockbylimitnext");
 
       //transaction
-      context.addServlet(new ServletHolder(createTransactionServlet),"/createtransaction");
+//      context.addServlet(new ServletHolder(createTransactionServlet),"/createtransaction");
 //      context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(getTransactionByIdServlet), "/gettransactionbyid");
       context.addServlet(new ServletHolder(getTransactionInfoByIdServlet), "/gettransactioninfobyid");
