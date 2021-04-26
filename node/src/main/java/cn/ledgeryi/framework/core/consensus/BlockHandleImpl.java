@@ -5,14 +5,14 @@ import cn.ledgeryi.consenus.Consensus;
 import cn.ledgeryi.consenus.base.BlockHandle;
 import cn.ledgeryi.consenus.base.Param;
 import cn.ledgeryi.consenus.base.State;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import cn.ledgeryi.framework.common.backup.BackupManager;
 import cn.ledgeryi.framework.common.backup.BackupManager.BackupStatusEnum;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
 import cn.ledgeryi.framework.core.net.message.BlockMessage;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Slf4j(topic = "consensus")
 @Component
@@ -47,10 +47,10 @@ public class BlockHandleImpl implements BlockHandle {
     if (blockCapsule == null) {
       return null;
     }
-    if (blockCapsule.getTransactions().size() <= 0){
-      log.info("Produce block failed: " + State.BLOCK_NOT_CONTAIN_TRANSACTIONS);
-     return null;
-    }
+//    if (blockCapsule.getTransactions().size() <= 0){
+//      log.info("Produce block failed: " + State.BLOCK_NOT_CONTAIN_TRANSACTIONS);
+//     return null;
+//    }
     try {
       consensus.receiveBlock(blockCapsule);
       BlockMessage blockMessage = new BlockMessage(blockCapsule);
