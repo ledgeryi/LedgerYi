@@ -1,18 +1,18 @@
 package cn.ledgeryi.framework.core.config.args;
 
-import cn.ledgeryi.chainbase.core.config.Parameter.NetConstants;
-import cn.ledgeryi.chainbase.core.config.Parameter.NodeConstant;
 import cn.ledgeryi.chainbase.common.storage.rocksdb.RocksDbSettings;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
+import cn.ledgeryi.chainbase.core.config.Parameter.NetConstants;
+import cn.ledgeryi.chainbase.core.config.Parameter.NodeConstant;
 import cn.ledgeryi.chainbase.core.config.args.Account;
 import cn.ledgeryi.chainbase.core.config.args.GenesisBlock;
+import cn.ledgeryi.chainbase.core.config.args.Master;
 import cn.ledgeryi.chainbase.core.store.AccountStore;
 import cn.ledgeryi.common.core.Constant;
 import cn.ledgeryi.common.utils.DecodeUtil;
 import cn.ledgeryi.framework.common.overlay.discover.node.Node;
 import cn.ledgeryi.framework.core.config.Configuration;
 import cn.ledgeryi.framework.core.db.backup.DbBackupConfig;
-import cn.ledgeryi.chainbase.core.config.args.Master;
 import cn.ledgeryi.framework.core.permission.constant.NetTypeEnum;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -50,6 +50,11 @@ public class Args {
 
   @Parameter(names = {"-c", "--config"}, description = "Config File")
   private String shellConfFileName = "";
+
+  @Getter
+  @Setter
+  @Parameter(names = {"--blank-block"}, description = "be prohibit generate blank block")
+  private boolean prohibitGenerateBlankBlock = false;
 
   //@Parameter(names = {"-d", "--output-directory"}, description = "Directory")
   private String outputDirectory = "output-directory";

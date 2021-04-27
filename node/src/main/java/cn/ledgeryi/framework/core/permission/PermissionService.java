@@ -181,7 +181,7 @@ public class PermissionService implements Service {
             txCap = wallet.createTransactionCapsule(triggerSmartContract, ContractType.TriggerSmartContract);
             programResult = wallet.localCallConstantContract(txCap);
         } catch (Exception e) {
-            log.error("call contract [{}] fail", contractAddress);
+            log.error("call contract [{}] fail:{}", contractAddress, e.getMessage());
             return null;
         }
         return ByteString.copyFrom(programResult.getHReturn());

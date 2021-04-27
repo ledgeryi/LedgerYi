@@ -14,6 +14,7 @@ import cn.ledgeryi.chainbase.core.store.ContractStore;
 import cn.ledgeryi.chainbase.core.store.StoreFactory;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.contract.vm.LedgerYiVmActuator;
 import cn.ledgeryi.crypto.SignInterface;
 import cn.ledgeryi.crypto.SignUtils;
@@ -21,7 +22,6 @@ import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler;
 import cn.ledgeryi.framework.common.overlay.discover.node.NodeManager;
 import cn.ledgeryi.framework.common.utils.Utils;
 import cn.ledgeryi.framework.core.actuator.ActuatorFactory;
-import cn.ledgeryi.chainbase.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
 import cn.ledgeryi.framework.core.exception.*;
@@ -401,6 +401,7 @@ public class LedgerYi {
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
     SmartContract.ABI abi = contractStore.getABI(contractAddress);
     if (abi == null || abi.getEntrysList().isEmpty()) {
+      log.error("in valid contract address {}", ByteUtil.toHexString(contractAddress));
       throw new ContractValidateException("No contract or not a valid smart contract");
     }
     byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());

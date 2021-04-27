@@ -1,10 +1,5 @@
 package cn.ledgeryi.framework.common.overlay.discover.node;
 
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import lombok.extern.slf4j.Slf4j;
 import cn.ledgeryi.framework.common.net.udp.handler.UdpEvent;
 import cn.ledgeryi.framework.common.net.udp.message.Message;
 import cn.ledgeryi.framework.common.net.udp.message.discover.FindNodeMessage;
@@ -12,6 +7,14 @@ import cn.ledgeryi.framework.common.net.udp.message.discover.NeighborsMessage;
 import cn.ledgeryi.framework.common.net.udp.message.discover.PingMessage;
 import cn.ledgeryi.framework.common.net.udp.message.discover.PongMessage;
 import cn.ledgeryi.framework.common.overlay.discover.node.statistics.NodeStatistics;
+import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j(topic = "discover")
 public class NodeHandler {
@@ -227,7 +230,11 @@ public class NodeHandler {
   }
 
   public void sendPing() {
-    PingMessage msg = new PingMessage(nodeManager.getPublicHomeNode(), getNode());
+    Node node = getNode();
+    if (Objects.isNull(node) || Strings.isNullOrEmpty(node.getHost())) {
+      return;
+    }
+    PingMessage msg = new PingMessage(nodeManager.getPublicHomeNode(), node);
     log.info("send PING message, homeNode:{}:{}, remoteNode:{}:{} ",
             nodeManager.getPublicHomeNode().getHost(),
             nodeManager.getPublicHomeNode().getPort(),
