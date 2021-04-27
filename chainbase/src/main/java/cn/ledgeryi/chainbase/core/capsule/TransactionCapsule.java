@@ -5,7 +5,9 @@ import cn.ledgeryi.chainbase.common.message.Message;
 import cn.ledgeryi.chainbase.common.utils.DBConfig;
 import cn.ledgeryi.chainbase.core.db.TransactionContext;
 import cn.ledgeryi.chainbase.core.db.TransactionTrace;
-import cn.ledgeryi.common.core.exception.*;
+import cn.ledgeryi.common.core.exception.BadItemException;
+import cn.ledgeryi.common.core.exception.P2pException;
+import cn.ledgeryi.common.core.exception.ValidateSignatureException;
 import cn.ledgeryi.common.utils.ByteArray;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.crypto.SignInterface;
@@ -16,7 +18,9 @@ import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
 import cn.ledgeryi.protos.Protocol.Transaction.Result;
 import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import cn.ledgeryi.protos.Protocol.Transaction.raw;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.*;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.ClearABIContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.google.protobuf.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +34,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static cn.ledgeryi.common.core.exception.P2pException.TypeEnum.PROTOBUF_ERROR;
 
@@ -89,6 +92,10 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         Transaction.Contract.newBuilder().setType(contractType).setParameter(
             (message instanceof Any ? (Any) message : Any.pack(message))).build());
     transaction = Transaction.newBuilder().setRawData(rawBuilder.build()).build();
+  }
+
+  public static byte[] getOwnerAddress(TransactionCapsule transactionCapsule) {
+    return getOwner(transactionCapsule.transaction.getRawData().getContract());
   }
 
   public static byte[] getOwner(Transaction.Contract contract) {

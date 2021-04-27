@@ -2,23 +2,10 @@ package cn.ledgeryi.framework.core.net.service;
 
 import cn.ledgeryi.chainbase.common.message.Message;
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
+import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
+import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.common.utils.Time;
-import cn.ledgeryi.protos.Protocol;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import cn.ledgeryi.framework.common.overlay.discover.node.statistics.MessageCount;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.net.LedgerYiNetDelegate;
@@ -28,10 +15,24 @@ import cn.ledgeryi.framework.core.net.message.InventoryMessage;
 import cn.ledgeryi.framework.core.net.message.TransactionMessage;
 import cn.ledgeryi.framework.core.net.peer.Item;
 import cn.ledgeryi.framework.core.net.peer.PeerConnection;
+import cn.ledgeryi.protos.Protocol;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static cn.ledgeryi.chainbase.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
 import static cn.ledgeryi.chainbase.core.config.Parameter.NetConstants.MAX_TX_FETCH_PER_PEER;
 import static cn.ledgeryi.chainbase.core.config.Parameter.NetConstants.MSG_CACHE_DURATION_IN_BLOCKS;
-import static cn.ledgeryi.chainbase.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
 
 @Slf4j(topic = "net")
 @Component
@@ -161,6 +162,7 @@ public class AdvService {
             item = new Item(txMsg.getMessageId(), Protocol.Inventory.InventoryType.TX);
             txCount.add();
             txCache.put(item, new TransactionMessage(txMsg.getTransactionCapsule().getInstance()));
+            log.info("Broadcast transaction Success. Hash:{}, From:{} Will be broadcast transaction", txMsg.getMessageId(), ByteUtil.toHexString(TransactionCapsule.getOwnerAddress(txMsg.getTransactionCapsule())));
         } else {
             log.error("Adv item is neither block nor tx, type: {}", msg.getType());
             return;
