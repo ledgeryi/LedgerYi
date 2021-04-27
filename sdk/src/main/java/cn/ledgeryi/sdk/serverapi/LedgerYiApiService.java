@@ -13,15 +13,13 @@ import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.*;
 import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.contract.ContactCompileUtil;
-import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler;
-import cn.ledgeryi.sdk.contract.compiler.SolidityCompiler.Options;
-import cn.ledgeryi.sdk.contract.compiler.entity.CompilationResult;
 import cn.ledgeryi.sdk.contract.compiler.entity.Library;
-import cn.ledgeryi.sdk.contract.compiler.entity.Result;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.parse.event.Log;
 import cn.ledgeryi.sdk.serverapi.data.*;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -29,11 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 public class LedgerYiApiService {
@@ -64,12 +60,12 @@ public class LedgerYiApiService {
         return getNowBlock(null);
     }
 
-    public GrpcAPI.BlockExtention getBlock(long blockNum) {
-        return getBlock(blockNum,null);
-    }
-
     public GrpcAPI.BlockListExtention getBlockByLimitNext(long start, long end){
         return getBlockByLimitNext(start, end, null);
+    }
+
+    public GrpcAPI.BlockExtention getBlock(long blockNum) {
+        return getBlock(blockNum,null);
     }
 
     public Protocol.Transaction getTransactionById(String hash){
@@ -367,5 +363,36 @@ public class LedgerYiApiService {
             return false;
         }
         return true;
+    }
+
+    public CommonBlockInformation queryCommonBlockInformationByTx(String txHash) {
+        if (Strings.isNullOrEmpty(txHash)) {
+            throw new RuntimeException("txHash cannot be null");
+        }
+        Protocol.TransactionInfo transactionInfo = getTransactionInfoById(txHash);
+        if (Objects.isNull(transactionInfo)) {
+            return CommonBlockInformation.UN_FOUND_BLOCK;
+        }
+        return CommonBlockInformation.of(transactionInfo.getBlockNumber(), transactionInfo.getId());
+    }
+
+    public List<CommonBlockInformation> queryRecentCommonBlockInformationByLimit(long limitedBlockHeight) {
+        if (limitedBlockHeight < 0 || limitedBlockHeight > 10) {
+            throw new IllegalArgumentException("limitedBlockHeight must between 1 and 10");
+        }
+
+        GrpcAPI.BlockExtention latestBlock = getNowBlock();
+        if (Objects.isNull(latestBlock)) {
+            return Lists.newArrayList();
+        }
+
+        long latestBlockHeight = latestBlock.getBlockHeader().getRawData().getNumber();
+        if (latestBlockHeight == limitedBlockHeight) {
+            return Lists.newArrayList(CommonBlockInformation.of(latestBlockHeight, latestBlock.getBlockid()));
+        }
+
+        return CommonBlockInformation.of(
+                getBlockByLimitNext(latestBlockHeight - Math.min(limitedBlockHeight, latestBlockHeight),
+                latestBlockHeight) );
     }
 }
