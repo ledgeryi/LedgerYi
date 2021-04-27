@@ -14,6 +14,7 @@ import cn.ledgeryi.chainbase.core.store.*;
 import cn.ledgeryi.common.core.Constant;
 import cn.ledgeryi.common.core.exception.*;
 import cn.ledgeryi.common.utils.ByteArray;
+import cn.ledgeryi.common.utils.ByteUtil;
 import cn.ledgeryi.common.utils.Pair;
 import cn.ledgeryi.common.utils.Sha256Hash;
 import cn.ledgeryi.consenus.Consensus;
@@ -25,7 +26,6 @@ import cn.ledgeryi.framework.common.utils.BlockUtil;
 import cn.ledgeryi.framework.common.utils.ForkController;
 import cn.ledgeryi.framework.common.utils.SessionOptional;
 import cn.ledgeryi.framework.core.actuator.ActuatorCreator;
-import cn.ledgeryi.chainbase.core.capsule.TransactionInfoCapsule;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.exception.*;
 import cn.ledgeryi.framework.core.net.LedgerYiNetService;
@@ -396,6 +396,8 @@ public class Manager {
         } finally {
             pushTransactionQueue.remove(tx);
         }
+        log.info("Verify transaction Success. Hash:{}, From:{} Will be broadcast transaction",
+                tx.getTransactionId(), ByteUtil.toHexString(TransactionCapsule.getOwnerAddress(tx)));
         return true;
     }
 
