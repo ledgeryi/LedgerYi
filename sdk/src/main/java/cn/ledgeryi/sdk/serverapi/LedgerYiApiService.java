@@ -377,7 +377,7 @@ public class LedgerYiApiService {
     }
 
     public List<CommonBlockInformation> queryRecentCommonBlockInformationByLimit(long limitedBlockHeight) {
-        if (limitedBlockHeight < 0 || limitedBlockHeight > 10) {
+        if (limitedBlockHeight < 1 || limitedBlockHeight > 10) {
             throw new IllegalArgumentException("limitedBlockHeight must between 1 and 10");
         }
 
@@ -387,12 +387,8 @@ public class LedgerYiApiService {
         }
 
         long latestBlockHeight = latestBlock.getBlockHeader().getRawData().getNumber();
-        if (latestBlockHeight == limitedBlockHeight) {
-            return Lists.newArrayList(CommonBlockInformation.of(latestBlockHeight, latestBlock.getBlockid()));
-        }
+        long start = latestBlockHeight - Math.min(limitedBlockHeight, latestBlockHeight);
 
-        return CommonBlockInformation.of(
-                getBlockByLimitNext(latestBlockHeight - Math.min(limitedBlockHeight, latestBlockHeight),
-                latestBlockHeight) );
+        return CommonBlockInformation.of(getBlockByLimitNext(start, latestBlockHeight) );
     }
 }
