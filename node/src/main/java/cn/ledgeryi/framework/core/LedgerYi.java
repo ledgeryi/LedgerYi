@@ -380,13 +380,16 @@ public class LedgerYi {
   }
 
   public SmartContract getContract(GrpcAPI.BytesMessage bytesMessage) {
-    byte[] address = bytesMessage.getValue().toByteArray();
+    return getContract(bytesMessage.getValue().toByteArray());
+  }
+
+  public SmartContract getContract(byte[] address) {
     AccountCapsule accountCapsule = dbManager.getAccountStore().get(address);
     if (accountCapsule == null) {
       log.error("Get contract failed, the account does not exist or the account does not have a code hash!");
       return null;
     }
-    ContractCapsule contractCapsule = dbManager.getContractStore().get(bytesMessage.getValue().toByteArray());
+    ContractCapsule contractCapsule = dbManager.getContractStore().get(address);
     if (Objects.nonNull(contractCapsule)) {
       return contractCapsule.getInstance();
     }
