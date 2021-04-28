@@ -4,16 +4,12 @@ import cn.ledgeryi.api.GrpcAPI;
 import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.sdk.common.utils.JsonFormat;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
-import cn.ledgeryi.sdk.serverapi.CommonBlockInformation;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
 import cn.ledgeryi.sdk.serverapi.data.RequestUserInfo;
 import cn.ledgeryi.sdk.serverapi.data.TransactionInformation;
 import com.alibaba.fastjson.JSONArray;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 public class TransactionTest {
 
@@ -76,29 +72,5 @@ public class TransactionTest {
         long blockNum = 2;
         GrpcAPI.NumberMessage transactionCountByBlockNum = ledgerYiApiService.getTransactionCountByBlockNum(blockNum);
         System.out.println(transactionCountByBlockNum.getNum());
-    }
-
-    @Test
-    public void getCommonBlockInfoByTx(){
-        String txHash = "8117bb9ad165c7b0241cd4e225ebffe537480975f64e05b807a0b92ed434c62e";
-        CommonBlockInformation commonBlockInformation = ledgerYiApiService.queryCommonBlockInformationByTx(txHash);
-
-        Assert.assertNotNull(commonBlockInformation);
-        Assert.assertNotNull(commonBlockInformation.getBlockId());
-        Assert.assertTrue(commonBlockInformation.getBlockNumber() > 0);
-        Assert.assertTrue(commonBlockInformation.getBlockId().length() == 64);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void getRecentBlockWithExpectException(){
-        ledgerYiApiService.queryRecentCommonBlockInformationByLimit(100);
-    }
-
-    @Test
-    public void getRecentBlock(){
-        long maxQueryBlockNum = 10;
-        List<CommonBlockInformation> recentBlockInformation = ledgerYiApiService.queryRecentCommonBlockInformationByLimit(maxQueryBlockNum);
-        Assert.assertNotNull(recentBlockInformation);
-        Assert.assertTrue(recentBlockInformation.size() == maxQueryBlockNum);
     }
 }

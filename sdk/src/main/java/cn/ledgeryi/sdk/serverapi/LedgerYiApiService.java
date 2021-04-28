@@ -18,8 +18,6 @@ import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.parse.event.Log;
 import cn.ledgeryi.sdk.serverapi.data.*;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -29,7 +27,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 public class LedgerYiApiService {
@@ -363,32 +360,5 @@ public class LedgerYiApiService {
             return false;
         }
         return true;
-    }
-
-    public CommonBlockInformation queryCommonBlockInformationByTx(String txHash) {
-        if (Strings.isNullOrEmpty(txHash)) {
-            throw new RuntimeException("txHash cannot be null");
-        }
-        Protocol.TransactionInfo transactionInfo = getTransactionInfoById(txHash);
-        if (Objects.isNull(transactionInfo)) {
-            return CommonBlockInformation.UN_FOUND_BLOCK;
-        }
-        return CommonBlockInformation.of(transactionInfo.getBlockNumber(), transactionInfo.getId());
-    }
-
-    public List<CommonBlockInformation> queryRecentCommonBlockInformationByLimit(long limitedBlockHeight) {
-        if (limitedBlockHeight < 1 || limitedBlockHeight > 10) {
-            throw new IllegalArgumentException("limitedBlockHeight must between 1 and 10");
-        }
-
-        GrpcAPI.BlockExtention latestBlock = getNowBlock();
-        if (Objects.isNull(latestBlock)) {
-            return Lists.newArrayList();
-        }
-
-        long latestBlockHeight = latestBlock.getBlockHeader().getRawData().getNumber();
-        long start = latestBlockHeight - Math.min(limitedBlockHeight, latestBlockHeight);
-
-        return CommonBlockInformation.of(getBlockByLimitNext(start, latestBlockHeight) );
     }
 }
