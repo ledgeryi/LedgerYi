@@ -188,8 +188,6 @@ http api接口请求格式：'http://127.0.0.1:8090/v1/listnodes'
 |参数说明|无|
 |返回值|所有Master节点列表|
 
-**账户**
-
 **区块**
 
 **(1)getnowblock**
