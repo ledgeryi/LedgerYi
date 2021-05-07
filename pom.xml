@@ -8,7 +8,7 @@
     <artifactId>LedgerYi</artifactId>
     <packaging>pom</packaging>
 
-    <version>latest</version>
+    <version>beta-0.4.0-SNAPSHOT</version>
 
     <description>Root project of LedgerYi.</description>
 
@@ -46,6 +46,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+        <cn.ledgeryi.protocol.version>beta-0.4.0-SNAPSHOT</cn.ledgeryi.protocol.version>
+        <cn.ledgeryi.crypto.version>beta-0.4.0-SNAPSHOT</cn.ledgeryi.crypto.version>
+        <cn.ledgeryi.common.version>beta-0.4.0-SNAPSHOT</cn.ledgeryi.common.version>
+        <cn.ledgeryi.node.version>beta-0.4.0-SNAPSHOT</cn.ledgeryi.node.version>
+        <cn.ledgeryi.contract.version>beta-0.4.0-SNAPSHOT</cn.ledgeryi.contract.version>
+        <cn.ledgeryi.chainbase.version>beta-0.4.0-SNAPSHOT</cn.ledgeryi.chainbase.version>
+        <cn.ledgeryi.consensus.version>beta-0.4.0-SNAPSHOT</cn.ledgeryi.consensus.version>
     </properties>
 
 
@@ -54,37 +61,37 @@
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>protocol</artifactId>
-                <version>latest</version>
+                <version>${cn.ledgeryi.protocol.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>crypto</artifactId>
-                <version>latest</version>
+                <version>${cn.ledgeryi.crypto.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>common</artifactId>
-                <version>latest</version>
+                <version>${cn.ledgeryi.common.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>node</artifactId>
-                <version>latest</version>
+                <version>${cn.ledgeryi.node.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>contract</artifactId>
-                <version>latest</version>
+                <version>${cn.ledgeryi.contract.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>chainbase</artifactId>
-                <version>latest</version>
+                <version>${cn.ledgeryi.chainbase.version}</version>
             </dependency>
             <dependency>
                 <groupId>cn.ledgeryi</groupId>
                 <artifactId>consensus</artifactId>
-                <version>latest</version>
+                <version>${cn.ledgeryi.consensus.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -130,5 +137,11 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>nexus</id>
+            <url>http://47.52.174.154:8081/repository/maven-snapshots/</url>
+        </repository>
+    </distributionManagement>
 
 </project>

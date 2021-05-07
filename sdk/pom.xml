@@ -5,12 +5,12 @@
     <parent>
         <artifactId>LedgerYi</artifactId>
         <groupId>cn.ledgeryi</groupId>
-        <version>latest</version>
+        <version>beta-0.4.0-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sdk</artifactId>
-
+    <version>beta-0.4.0-SNAPSHOT</version>
     <properties>
         <collections4.version>4.0</collections4.version>
         <fastjson.version>1.2.60</fastjson.version>
