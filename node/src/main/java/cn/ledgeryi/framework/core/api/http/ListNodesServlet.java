@@ -1,12 +1,13 @@
 package cn.ledgeryi.framework.core.api.http;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import cn.ledgeryi.api.GrpcAPI.NodeList;
+import cn.ledgeryi.framework.core.LedgerYi;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import cn.ledgeryi.api.GrpcAPI.NodeList;
-import cn.ledgeryi.framework.core.LedgerYi;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 
 @Component
@@ -21,7 +22,7 @@ public class ListNodesServlet extends RateLimiterServlet {
       boolean visible = Util.getVisible(request);
       NodeList reply = wallet.listNodes();
       if (reply != null) {
-        response.getWriter().println(JsonFormat.printToString(reply, visible));
+        response.getWriter().println(JsonFormat.printToString(reply));
       } else {
         response.getWriter().println("{}");
       }
