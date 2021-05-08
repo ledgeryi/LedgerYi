@@ -22,7 +22,7 @@ public class ListNodesServlet extends RateLimiterServlet {
       boolean visible = Util.getVisible(request);
       NodeList reply = wallet.listNodes();
       if (reply != null) {
-        response.getWriter().println("{" + reply + "}");
+        response.getWriter().println(JsonFormat.printToString(reply));
       } else {
         response.getWriter().println("{}");
       }
