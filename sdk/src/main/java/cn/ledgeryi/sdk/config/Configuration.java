@@ -35,6 +35,7 @@ public class Configuration {
 
     static {
         Config config = Configuration.getByPath("config.conf");
+        log.info("config : {}", config);
         if (config.hasPath(CRYPTO_ENGINE)) {
             isEcc = config.getString(CRYPTO_ENGINE).equalsIgnoreCase("ecc");
             log.info("is ecc engine: " + isEcc);
@@ -79,17 +80,17 @@ public class Configuration {
         }
 
         if (config == null) {
-            File configFile = new File(System.getProperty("user.dir") + '/' + configurationPath);
+            File configFile = new File(System.getProperty("user.dir") + File.separator + configurationPath);
             if (configFile.exists()) {
                 try {
                     config = ConfigFactory.parseReader(new InputStreamReader(new FileInputStream(configurationPath)));
-                    log.debug("use user defined config file in current dir");
+                    log.info("use user defined config file in current dir");
                 } catch (FileNotFoundException e) {
                     log.error("load user defined config file exception: " + e.getMessage());
                 }
             } else {
                 config = ConfigFactory.load(configurationPath);
-                log.debug("user defined config file doesn't exists, use default config file in jar");
+                log.info("user defined config file doesn't exists, use default config file in jar");
             }
         }
         return config;
