@@ -1,8 +1,11 @@
 {
-  "nodeManagerContractAddress": "ad15d34a0473a5ae18aa5877207c316bd7225ea2",
-  "roleManagerContractAddress": "a9be8b8c4e12557e96f29369df2dede1a324eaf8",
-  "guardianAccount": "99b8466efe9f05cee87d4e167cdfaec0432d90fc",
+  "nodeManagerContractAddress": "54a63e9c4b78898d56dd7264bc9d492cf47ae3a9",
+  "adminManagerContractAddress": "5b8325e9f86caf6a7644c332cb8c5411dff76679",
+  "adminStorage": "70f0509945d13e5eed0f741590da0e3e41e98414",
+  "permissionManagerContractAddress": "49117130cb2a685a636a05a75e2a13b92e526ede",
+  "proposalManagerContractAddress": "a528779e818526d5b4c1fd73d4979ead0264712d",
+  "guardianAccount": "c179d10bfb49ea9ae525c8b1113a914073b394cf",
   "masters": ["ada95a8734256b797efcd862e0b208529283ac56",
-              "e506af507e6cb873036826db5c123e0f362fe8a1",
+              "c179d10bfb49ea9ae525c8b1113a914073b394cf",
               "9226b046377d70896bb3468864258feffdc956a1"]
 }

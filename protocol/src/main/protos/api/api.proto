@@ -115,14 +115,14 @@ service Wallet {
 };
 
 service Permission {
-  // role manage api
-  rpc addNewRole(GrpcRequest) returns (TransactionExtention) {
+  //set proposal manager address for node/admin manager
+  rpc init(GrpcRequest) returns (TransactionExtention){
   }
 
-  rpc inactiveRole(GrpcRequest) returns (TransactionExtention) {
+  rpc disableRole(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc getRoleNum(GrpcRequest) returns (TransactionExtention) {
+  rpc enableRole(GrpcRequest) returns (TransactionExtention) {
   }
 
   rpc getRole(GrpcRequest) returns (TransactionExtention) {
@@ -131,32 +131,42 @@ service Permission {
   rpc assignRoleForUser(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc revokeRoleOfUser(GrpcRequest) returns (TransactionExtention) {
+  rpc reassignRoleForUser(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc getUserNum(GrpcRequest) returns (TransactionExtention) {
+  rpc removeUser(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc getUser(GrpcRequest) returns (TransactionExtention) {
+  // call admin storage to create admin
+  rpc addDefaultAdmin(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  //admin: proposal
+  rpc createProposalWithCreateAdmin(GrpcRequest) returns (TransactionExtention) {
+  }
+  rpc createProposalWithRemoveAdmin(GrpcRequest) returns (TransactionExtention) {
   }
 
   rpc hasRole(GrpcRequest) returns (TransactionExtention) {
   }
 
-  //node manage api
-  rpc addNewNode(GrpcRequest) returns (TransactionExtention) {
+  rpc queryUserInfo(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc updateNode(GrpcRequest) returns (TransactionExtention) {
+  rpc queryAllUserInfo(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc deleteNode(GrpcRequest) returns (TransactionExtention) {
+  rpc queryAllUserInfoByPage(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc getNodeNum(GrpcRequest) returns (TransactionExtention) {
+  //node: proposal
+  rpc createProposalWithCreateNode(GrpcRequest) returns (TransactionExtention) {
   }
 
-  rpc getNode(GrpcRequest) returns (TransactionExtention) {
+  rpc createProposalWithRemoveNode(GrpcRequest) returns (TransactionExtention) {
+  }
+
+  rpc queryNodeInfo(GrpcRequest) returns (TransactionExtention) {
   }
 
   //contract manager api

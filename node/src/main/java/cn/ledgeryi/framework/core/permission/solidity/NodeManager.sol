@@ -20,7 +20,7 @@ contract NodeManager {
     function addNode(address _owner, string memory _host, uint32 _port) public {
         bytes32 _record = keccak256(abi.encode(numberOfNodes));
         numberOfNodes++;
-        storageManager.pushNode( _record, _owner, _host, _port);
+        storageManager.addNode( _record, _owner, _host, _port);
         emit NodeAdded(_owner, _host, _port);
     }
 
@@ -33,7 +33,7 @@ contract NodeManager {
         address owner;
         string memory host;
         uint32 port;
-        (,owner,host,port) = storageManager.nodeInfo(_record);
+        (,owner,host,port) = storageManager.queryNodeInfo(_record);
         storageManager.removeNode(_record);
         numberOfNodes--;
         emit NodeDeleted(owner, host, port);
@@ -41,6 +41,6 @@ contract NodeManager {
 
     function getNode(uint32 index) public view returns(bytes32, address, string memory, uint32) {
         bytes32 _record = keccak256(abi.encode(index));
-        return storageManager.nodeInfo(_record);
+        return storageManager.queryNodeInfo(_record);
     }
 }

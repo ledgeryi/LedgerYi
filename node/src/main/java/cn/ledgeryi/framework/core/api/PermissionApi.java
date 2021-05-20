@@ -1,11 +1,7 @@
 package cn.ledgeryi.framework.core.api;
 
-import cn.ledgeryi.api.GrpcAPI.BytesMessage;
-import cn.ledgeryi.api.GrpcAPI.ContractCallParam;
-import cn.ledgeryi.api.GrpcAPI.GrpcRequest;
-import cn.ledgeryi.api.GrpcAPI.Return;
+import cn.ledgeryi.api.GrpcAPI.*;
 import cn.ledgeryi.api.GrpcAPI.Return.response_code;
-import cn.ledgeryi.api.GrpcAPI.TransactionExtention;
 import cn.ledgeryi.api.PermissionGrpc;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.common.core.exception.ContractValidateException;
@@ -16,8 +12,8 @@ import cn.ledgeryi.framework.core.exception.AuthorizeException;
 import cn.ledgeryi.framework.core.permission.PermissionService;
 import cn.ledgeryi.protos.Protocol.Transaction;
 import cn.ledgeryi.protos.Protocol.Transaction.Contract.ContractType;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -46,86 +42,81 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
     private PermissionService permissionService;
 
     @Override
-    public void addNewRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "addRole(uint32)";
-        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
-    }
-
-    @Override
-    public void inactiveRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "revokeRole(uint32)";
-        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
-    }
-
-    @Override
-    public void getRoleNum(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "numberOfRoles()";
-        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
+    public void disableRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "disableRole(uint32)";
+        callContract(permissionService.getPermissionMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void getRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "getRole(uint256)";
-        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
+        callContract(permissionService.getPermissionMgrAddress(), method, true, request, responseObserver);
+    }
+
+    @Override
+    public void enableRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "enableRole(uint32)";
+        callContract(permissionService.getPermissionMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
     public void assignRoleForUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "addUser(uint32,address)";
-        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
+        String method = "assignRoleForUser(address,uint8)";
+        callContract(permissionService.getPermissionMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
-    public void revokeRoleOfUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "removeUser(bytes32,uint32,address)";
-        callContract(permissionService.getRoleMgrAddress(), method, false, request, responseObserver);
+    public void reassignRoleForUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "reassignRoleForUser(address,uint32)";
+        callContract(permissionService.getPermissionMgrAddress(), method, false, request, responseObserver);
+    }
+
+    @Override
+    public void removeUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "removeUser(address)";
+        callContract(permissionService.getPermissionMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
     public void hasRole(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "hasRole(bytes32,uint32,address)";
-        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
+        String method = "hasRole(address,uint8)";
+        callContract(permissionService.getPermissionMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
-    public void getUserNum(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "numberOfUsers()";
-        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
+    public void queryUserInfo(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "queryUserInfo(address)";
+        callContract(permissionService.getPermissionMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
-    public void getUser(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "getUser(uint256)";
-        callContract(permissionService.getRoleMgrAddress(), method, true, request, responseObserver);
+    public void queryAllUserInfo(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "queryAllUserInfo(uint32,uint8)";
+        callContract(permissionService.getPermissionMgrAddress(), method, true, request, responseObserver);
     }
 
     @Override
-    public void addNewNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "addNode(address,string,uint32)";
+    public void queryAllUserInfoByPage(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "queryAllUserInfoByPage()";
+        callContract(permissionService.getPermissionMgrAddress(), method, true, request, responseObserver);
+    }
+
+    @Override
+    public void init(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "init(address)";
         callContract(permissionService.getNodeMgrAddress(), method, false, request, responseObserver);
+        callContract(permissionService.getAdminMgrAddress(), method, false, request, responseObserver);
     }
 
     @Override
-    public void updateNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "updateNode(bytes32,address,string,uint32)";
-        callContract(permissionService.getNodeMgrAddress(), method, false, request, responseObserver);
+    public void addDefaultAdmin(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "addAdmin(address)";
+        callContract(permissionService.getAdminStorageAddress(), method, false, request, responseObserver);
     }
 
     @Override
-    public void deleteNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "deleteNode(bytes32)";
-        callContract(permissionService.getNodeMgrAddress(), method, false, request, responseObserver);
-    }
-
-    @Override
-    public void getNodeNum(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "numberOfNodes()";
-        callContract(permissionService.getNodeMgrAddress(), method, true, request, responseObserver);
-    }
-
-    @Override
-    public void getNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
-        String method = "getNode(uint32)";
+    public void queryNodeInfo(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        String method = "queryNodeInfo(address)";
         callContract(permissionService.getNodeMgrAddress(), method, true, request, responseObserver);
     }
 

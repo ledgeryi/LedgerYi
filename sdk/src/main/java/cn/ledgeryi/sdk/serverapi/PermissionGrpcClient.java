@@ -1,12 +1,14 @@
 package cn.ledgeryi.sdk.serverapi;
 
-import cn.ledgeryi.api.GrpcAPI.*;
+import cn.ledgeryi.api.GrpcAPI.ContractCallParam;
 import cn.ledgeryi.api.GrpcAPI.GrpcRequest;
+import cn.ledgeryi.api.GrpcAPI.Return;
+import cn.ledgeryi.api.GrpcAPI.TransactionExtention;
 import cn.ledgeryi.api.PermissionGrpc;
 import cn.ledgeryi.protos.Protocol;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.*;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
 import cn.ledgeryi.sdk.common.AccountYi;
-import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
@@ -15,19 +17,22 @@ import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.parse.event.CallTransaction;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
+import cn.ledgeryi.sdk.serverapi.data.permission.Node;
 import cn.ledgeryi.sdk.serverapi.data.permission.Role;
 import cn.ledgeryi.sdk.serverapi.data.permission.RoleTypeEnum;
 import cn.ledgeryi.sdk.serverapi.data.permission.User;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
-import com.typesafe.config.Config;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 /**
  * @author Brian
@@ -51,25 +56,79 @@ public class PermissionGrpcClient {
         return new PermissionGrpcClient(ledgerYiNode);
     }
 
-    public boolean addRole(RoleTypeEnum roleType, AccountYi caller) {
+    public boolean assignRoleForUser(RoleTypeEnum roleType, AccountYi caller) {
         GrpcRequest request = createGrpcRequest(roleType, caller);
-        TransactionExtention tx = permissionBlockingStub.addNewRole(request);
+        TransactionExtention tx = permissionBlockingStub.assignRoleForUser(request);
         return processTransaction(tx, caller);
     }
 
-    public boolean revokeRole(RoleTypeEnum roleType, AccountYi caller){
-        GrpcRequest request = createGrpcRequest(roleType, caller);
-        TransactionExtention tx = permissionBlockingStub.inactiveRole(request);
+    /**
+     * set proposal manager address for node/admin manager
+     */
+    public void init(AccountYi caller, String proposalMgrAddress) {
+        GrpcRequest request = createGrpcRequest(caller, proposalMgrAddress);
+        TransactionExtention tx = permissionBlockingStub.init(request);
+         processTransaction(tx, caller);
+    }
+
+    /**
+     * the default admin address is using for call proposal manager contract. just one can meet the require
+     */
+    public boolean addDefaultAdmin(AccountYi caller, String defaultAdminAddress) {
+        GrpcRequest request = createGrpcRequest(caller, defaultAdminAddress);
+        TransactionExtention tx = permissionBlockingStub.addDefaultAdmin(request);
         return processTransaction(tx, caller);
     }
 
-    public int getRoleNum(AccountYi caller){
+    public boolean addNewNode(AccountYi caller, String proposer, String host, int port) {
+        long currentTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        //todo find it in contract
+        int allVoterCounter = 1;
+
+        GrpcRequest request = createGrpcRequest(caller, currentTime,  currentTime + 60, allVoterCounter, proposer, host, port);
+        TransactionExtention tx = permissionBlockingStub.createProposalWithCreateNode(request);
+
+        return processTransaction(tx, caller);
+    }
+
+    public Node queryNodeInfo(AccountYi caller, String address) {
+        GrpcRequest request = createGrpcRequest(caller, address);
+        TransactionExtention tx = permissionBlockingStub.queryNodeInfo(request);
+        processTransaction(tx, caller);
+
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("queryNodeInfo",
+                new String[]{"address"}, new String[]{"address", "string", "uint16", "uint8"});
+        ByteString constantResult = tx.getConstantResult(0);
+
+        if(constantResult.isEmpty()) {
+            return Node.builder().host("Unknown").port(-1).build();
+        }
+
+        Object[] objects = function.decodeResult(constantResult.toByteArray());
+
+        Node.NodeBuilder builder = Node.builder();
+        builder.host(objects[1].toString()).port(NumberUtils.toInt(objects[2].toString()));
+
+        return builder.build();
+    }
+
+    private GrpcRequest createGrpcRequest(AccountYi caller, Object... params) {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        ContractCallParam defaultCallParam = ContractCallParam.getDefaultInstance();
-        ContractCallParam.Builder builderCallParam = defaultCallParam.toBuilder().setCaller(caller.getAddress());
-        builder.setParam(Any.pack(builderCallParam.build()));
-        TransactionExtention tx = permissionBlockingStub.getRoleNum(builder.build());
-        return ByteUtil.byteArrayToInt(tx.getConstantResult(0).toByteArray());
+        ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
+
+        callParam.setCaller(caller.getAddress());
+        for (Object param : params) {
+            callParam.addArgs(param.toString());
+        }
+
+        builder.setParam(Any.pack(callParam.build()));
+        return builder.build();
+    }
+
+    public boolean reassignRoleForUser(RoleTypeEnum roleType, AccountYi caller) {
+        GrpcRequest request = createGrpcRequest(roleType, caller);
+        TransactionExtention tx = permissionBlockingStub.reassignRoleForUser(request);
+        return processTransaction(tx, caller);
     }
 
     public Role getRole(int roleId, AccountYi caller){
@@ -96,13 +155,6 @@ public class PermissionGrpcClient {
         return role.build();
     }
 
-    public boolean revokeRoleOfUser(String userId, RoleTypeEnum roleType,
-                                    String user, AccountYi caller){
-        GrpcRequest request = createUserOperationRequest(userId, roleType, user, caller);
-        TransactionExtention tx = permissionBlockingStub.revokeRoleOfUser(request);
-        return processTransaction(tx, caller);
-    }
-
     public boolean hasRoleOfUser(String userId, RoleTypeEnum roleType,
                                  String user, AccountYi caller){
         GrpcRequest request = createUserOperationRequest(userId, roleType, user, caller);
@@ -115,20 +167,11 @@ public class PermissionGrpcClient {
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
-        callParam.addArgs(roleType.getType() + "");
         callParam.addArgs(user);
+        callParam.addArgs(roleType.getType() + "");
         builder.setParam(Any.pack(callParam.build()));
         TransactionExtention tx = permissionBlockingStub.assignRoleForUser(builder.build());
         return processTransaction(tx, caller);
-    }
-
-    public int getUserNum(AccountYi caller){
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        ContractCallParam defaultCallParam = ContractCallParam.getDefaultInstance();
-        ContractCallParam.Builder builderCallParam = defaultCallParam.toBuilder().setCaller(caller.getAddress());
-        builder.setParam(Any.pack(builderCallParam.build()));
-        TransactionExtention tx = permissionBlockingStub.getUserNum(builder.build());
-        return ByteUtil.byteArrayToInt(tx.getConstantResult(0).toByteArray());
     }
 
     public User getUser(int userIndex, AccountYi caller){
@@ -137,7 +180,7 @@ public class PermissionGrpcClient {
         callParam.setCaller(caller.getAddress());
         callParam.addArgs(String.valueOf(userIndex));
         builder.setParam(Any.pack(callParam.build()));
-        TransactionExtention tx = permissionBlockingStub.getUser(builder.build());
+        TransactionExtention tx = permissionBlockingStub.queryUserInfo(builder.build());
         ByteString constantResult = tx.getConstantResult(0);
         CallTransaction.Function function = CallTransaction.Function.fromSignature("getUser",
                 new String[]{"uint256"}, new String[]{"bytes32", "uint32", "address", "bool"});
@@ -165,16 +208,17 @@ public class PermissionGrpcClient {
     public boolean addNode(cn.ledgeryi.sdk.serverapi.data.permission.Node newNode, AccountYi caller){
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
+        //todo need update param
         callParam.setCaller(caller.getAddress());
         callParam.addArgs(newNode.getOwner());
         callParam.addArgs(newNode.getHost());
         callParam.addArgs(String.valueOf(newNode.getPort()));
         builder.setParam(Any.pack(callParam.build()));
-        TransactionExtention tx = permissionBlockingStub.addNewNode(builder.build());
+        TransactionExtention tx = permissionBlockingStub.createProposalWithCreateNode(builder.build());
         return processTransaction(tx, caller);
     }
 
-    public boolean updateNode(cn.ledgeryi.sdk.serverapi.data.permission.Node newNode, AccountYi caller){
+    public boolean removeNode(cn.ledgeryi.sdk.serverapi.data.permission.Node newNode, AccountYi caller){
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
@@ -183,36 +227,17 @@ public class PermissionGrpcClient {
         callParam.addArgs(newNode.getHost());
         callParam.addArgs(newNode.getPort()+"");
         builder.setParam(Any.pack(callParam.build()));
-        TransactionExtention tx = permissionBlockingStub.updateNode(builder.build());
+        TransactionExtention tx = permissionBlockingStub.createProposalWithRemoveNode(builder.build());
         return processTransaction(tx, caller);
     }
 
-    public boolean deleteNode(String nodeId, AccountYi caller){
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
-        callParam.setCaller(caller.getAddress());
-        callParam.addArgs(nodeId);
-        builder.setParam(Any.pack(callParam.build()));
-        TransactionExtention tx = permissionBlockingStub.deleteNode(builder.build());
-        return processTransaction(tx, caller);
-    }
-
-    public int getNodeNum(AccountYi caller){
-        GrpcRequest.Builder builder = GrpcRequest.newBuilder();
-        ContractCallParam defaultCallParam = ContractCallParam.getDefaultInstance();
-        ContractCallParam.Builder builderCallParam = defaultCallParam.toBuilder().setCaller(caller.getAddress());
-        builder.setParam(Any.pack(builderCallParam.build()));
-        TransactionExtention tx = permissionBlockingStub.getNodeNum(builder.build());
-        return ByteUtil.byteArrayToInt(tx.getConstantResult(0).toByteArray());
-    }
-
-    public cn.ledgeryi.sdk.serverapi.data.permission.Node getNode(int nodeIndex, AccountYi caller){
+    public cn.ledgeryi.sdk.serverapi.data.permission.Node queryNodeInfo(int nodeIndex, AccountYi caller){
         GrpcRequest.Builder builder = GrpcRequest.newBuilder();
         ContractCallParam.Builder callParam = ContractCallParam.newBuilder();
         callParam.setCaller(caller.getAddress());
         callParam.addArgs(String.valueOf(nodeIndex));
         builder.setParam(Any.pack(callParam.build()));
-        TransactionExtention tx = permissionBlockingStub.getNode(builder.build());
+        TransactionExtention tx = permissionBlockingStub.queryNodeInfo(builder.build());
         ByteString constantResult = tx.getConstantResult(0);
         CallTransaction.Function function = CallTransaction.Function.fromSignature("getNode",
                 new String[]{"uint32"}, new String[]{"bytes32", "address", "string", "uint32"});

@@ -22,7 +22,8 @@ public class TransactionTest {
 
     @Test
     public void getNowBlock(){
-        System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(ledgerYiApiService.getNowBlock(),true)));
+        System.out.println(System.getProperty("user.dir"));
+//        System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(ledgerYiApiService.getNowBlock(),true)));
     }
 
     @Test

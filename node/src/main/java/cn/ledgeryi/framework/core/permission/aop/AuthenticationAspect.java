@@ -43,9 +43,9 @@ public class AuthenticationAspect {
         String methodName = signature.getName();
         String requestAddress = request.getRequestAddress();
 
-        /*if (requestAddress.equals(permissionService.getGuardianAccount())) {
+        if (requestAddress.equals(permissionService.getGuardianAccount())) {
             return;
-        }*/
+        }
 
         int requestRole = request.getRequestRole();
         if (isContain(requestRole, authentication)) {

@@ -8,7 +8,10 @@ import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.parse.event.CallTransaction;
 import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
-import cn.ledgeryi.sdk.serverapi.data.*;
+import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
+import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
+import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
+import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import org.junit.Before;
@@ -18,7 +21,6 @@ import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class StorageContractTest {
@@ -69,7 +71,7 @@ public class StorageContractTest {
     }
 
     // contract address
-    private static String contractAddress = "9c92acf784a189e9f9620291870c1011e9736a9e";
+    private static String contractAddress = "be03392e325d77d5e931a1996d9df6e1e977955c";
 
     @Test
     public void getContractFromOnChain(){
@@ -91,6 +93,14 @@ public class StorageContractTest {
     public void triggerUsed() {
         List args = Arrays.asList(3);
         String method = "checkUsed(uint32)";
+        ByteString triggerContract = triggerContract(method, args, true);
+        System.out.println(ByteUtil.byteArrayToInt(triggerContract.toByteArray()));
+    }
+
+    @Test//--blank-block
+    public void testGetNow() {
+        List args = Arrays.asList();
+        String method = "getNow()";
         ByteString triggerContract = triggerContract(method, args, true);
         System.out.println(ByteUtil.byteArrayToInt(triggerContract.toByteArray()));
     }
@@ -149,4 +159,26 @@ public class StorageContractTest {
         }
         return result.getCallResult();
     }
+
+    @Test
+    public void testLearn(){//6cb57ba5fcce3f12a78806db647ae4755e24111e
+        DeployContractParam result = null;
+        DeployContractReturn deployContract = null;
+        try {
+            Path source = Paths.get("src","test","resources","Learn.sol");
+            result = ledgerYiApiService.compileContractFromFile(source, "Learn");
+            //RequestUserInfo requestUserInfo = RequestUserInfo.builder().address(ownerAddress).roleId(3).build();
+            deployContract = ledgerYiApiService.deployContract(DecodeUtil.decode(ownerAddress),
+                    DecodeUtil.decode(privateKey), result);
+        } catch (ContractException | CreateContractExecption e) {
+            e.printStackTrace();
+            System.out.println("contract compile error: " + e.getMessage());
+        }
+        System.out.println("name: " + result.getContractName());
+        System.out.println("abi: " + result.getAbi());
+        System.out.println("code: " + result.getContractByteCodes());
+        System.out.println("contract address: " + deployContract.getContractAddress());
+    }
+
+
 }

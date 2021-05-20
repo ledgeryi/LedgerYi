@@ -50,7 +50,13 @@ public class PermissionService implements Service {
     @Getter
     private String nodeMgrAddress;
     @Getter
-    private String roleMgrAddress;
+    private String permissionMgrAddress;
+    @Getter
+    private String proposalManagerContractAddress;
+    @Getter
+    private String adminMgrAddress;
+    @Getter
+    private String adminStorageAddress;
     private String guardianAccount;
     private List<String> masters;
 
@@ -125,7 +131,7 @@ public class PermissionService implements Service {
 
     // check a user has a specified role.
     public boolean hasRole(String requestAddress, int requestRole){
-        if (StringUtils.isEmpty(roleMgrAddress)) {
+        if (StringUtils.isEmpty(permissionMgrAddress)) {
             readAddress();
         }
 
@@ -136,7 +142,7 @@ public class PermissionService implements Service {
 
         List<Object> args = Arrays.asList(requestAddress, requestRole);
         byte[] methodDecode = Hex.decode(AbiUtil.parseMethod("hasRole(address,uint32)", args));
-        ByteString callResult = callConstantContact(roleMgrAddress, methodDecode);
+        ByteString callResult = callConstantContact(permissionMgrAddress, methodDecode);
         if (callResult == null || callResult.toByteArray().length == 0) {
             return false;
         }
@@ -158,8 +164,11 @@ public class PermissionService implements Service {
             String json = FileUtils.readFileToString(file, "UTF-8");
             JSONObject jsonObject = JSON.parseObject(json);
             nodeMgrAddress = jsonObject.getString("nodeManagerContractAddress");
-            roleMgrAddress = jsonObject.getString("roleManagerContractAddress");
+            permissionMgrAddress = jsonObject.getString("permissionManagerContractAddress");
             guardianAccount = jsonObject.getString("guardianAccount");
+            adminMgrAddress = jsonObject.getString("adminManagerContractAddress");
+            adminStorageAddress = jsonObject.getString("adminStorage");
+            proposalManagerContractAddress = jsonObject.getString("proposalManagerContractAddress");
             masters = jsonObject.getJSONArray("masters").toJavaList(String.class);
         } catch (IOException e) {
             log.error("parse contract address fail, error： ", e.getMessage());

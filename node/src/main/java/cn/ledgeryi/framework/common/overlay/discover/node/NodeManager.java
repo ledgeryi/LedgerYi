@@ -1,23 +1,5 @@
 package cn.ledgeryi.framework.common.overlay.discover.node;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import cn.ledgeryi.framework.common.net.udp.handler.EventHandler;
 import cn.ledgeryi.framework.common.net.udp.handler.UdpEvent;
 import cn.ledgeryi.framework.common.net.udp.message.Message;
@@ -29,8 +11,21 @@ import cn.ledgeryi.framework.common.overlay.discover.node.NodeHandler.State;
 import cn.ledgeryi.framework.common.overlay.discover.node.statistics.NodeStatistics;
 import cn.ledgeryi.framework.common.overlay.discover.table.NodeTable;
 import cn.ledgeryi.framework.common.utils.CollectionUtils;
+import cn.ledgeryi.framework.core.api.service.PermissionContractService;
 import cn.ledgeryi.framework.core.config.args.Args;
 import cn.ledgeryi.framework.core.db.Manager;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 @Slf4j(topic = "discover")
 @Component
@@ -46,6 +41,9 @@ public class NodeManager implements EventHandler {
   private Manager dbManager;
   private Consumer<UdpEvent> messageSender;
   private ScheduledExecutorService pongTimer;
+
+  @Autowired
+  private PermissionContractService permissionContractService;
 
   private Args args = Args.getInstance();
   private final List<Node> bootNodes = new ArrayList<>();
@@ -146,6 +144,8 @@ public class NodeManager implements EventHandler {
     NodeHandler ret = nodeHandlerMap.get(key);
     if (ret == null) {
       trimTable();
+      //limit the net access
+      checkPermissionNet(n);
       ret = new NodeHandler(n, this);
       nodeHandlerMap.put(key, ret);
     } else if (ret.getNode().isDiscoveryNode() && !n.isDiscoveryNode()) {
@@ -154,7 +154,21 @@ public class NodeManager implements EventHandler {
     return ret;
   }
 
-  private void trimTable() {
+  private void checkPermissionNet(Node n) {
+    if (!Args.getInstance().isPermissionNet()) {
+      return;
+    }
+
+    if(notExistInNodeContract(n)) {
+        throw new RuntimeException(String.format("have no right to connect for host:%s, port:%d", n.getHost(), n.getPort()));
+    }
+  }
+
+    private boolean notExistInNodeContract(Node node) {
+        return !permissionContractService.beExistsInAccessedNodes(node.getHost(), node.getPort());
+    }
+
+    private void trimTable() {
     if (nodeHandlerMap.size() > NODES_TRIM_THRESHOLD) {
       nodeHandlerMap.values().forEach(handler -> {
         if (!handler.getNode().isConnectible()) {
