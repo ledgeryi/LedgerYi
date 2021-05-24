@@ -101,16 +101,6 @@ public class PermissionTests extends AbstractContractTest {
     }
 
     @Test
-    public void test_addDefaultAdmin() {
-        permissionClient.addDefaultAdmin(caller, caller.getAddress());
-    }
-
-    @Test
-    public void test_addNode() {
-        boolean result = permissionClient.addNewNode(caller,"ada95a8734256b797efcd862e0b208529283ac56", "127.0.0.1", 6668);
-        System.out.println(result);
-    }
-    @Test
     public void test_findNode() {
         System.out.println(permissionClient.queryNodeInfo(caller, "ada95a8734256b797efcd862e0b208529283ac56"));
     }

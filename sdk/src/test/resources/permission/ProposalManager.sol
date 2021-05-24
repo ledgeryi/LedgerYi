@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 pragma solidity ^0.6.9;
 
 import "./ProposalStorage.sol";
-import "./PermissionManager.sol";
 import "./NodeManager.sol";
 import "./AdminManager.sol";
 
@@ -14,7 +13,6 @@ contract ProposalManager {
     mapping(address => ProposalStorage.AdminProposal[]) adminProposalIndexStorage;
 
     ProposalStorage internal proposalStorage;
-    PermissionManager internal permissionManager;
     AdminManager internal adminManager;
     NodeManager internal nodeManager;
 
@@ -25,9 +23,8 @@ contract ProposalManager {
     uint8 internal ADMIN_ADD = 10;
     uint8 internal ADMIN_REMOVE = 11;
 
-    constructor (address _proposalStorage, address _permissionManager, address _adminManager, address _nodeManager) public {
+    constructor (address _proposalStorage, address _adminManager, address _nodeManager) public {
         proposalStorage = ProposalStorage(_proposalStorage);
-        permissionManager = PermissionManager(_permissionManager);
         adminManager = AdminManager(_adminManager);
         nodeManager = NodeManager(_nodeManager);
     }
@@ -75,15 +72,15 @@ contract ProposalManager {
     }
 
     //a proposal for create node
-    function createProposalWithCreateNode(uint _start, uint _end, uint _allVoteCount, address _proposer,
+    function createProposalWithCreateNode(uint _start, uint _end, address _proposer,
         string memory _host, uint16 _port) public onlyAdmin(_proposer) returns (bytes32){
-        return processNodeProposal(_start, _end, NODE_ADD, _allVoteCount, _proposer, _host, _port);
+        return processNodeProposal(_start, _end, NODE_ADD, adminManager.adminCount(), _proposer, _host, _port);
     }
 
     //a proposal for remove node
-    function createProposalWithRemoveNode(uint _start, uint _end, uint _allVoteCount, address _proposer,
+    function createProposalWithRemoveNode(uint _start, uint _end, address _proposer,
         string memory _host, uint16 _port) public onlyAdmin(_proposer) returns (bytes32){
-        return processNodeProposal(_start, _end, NODE_REMOVE, _allVoteCount, _proposer, _host, _port);
+        return processNodeProposal(_start, _end, NODE_REMOVE, adminManager.adminCount(), _proposer, _host, _port);
     }
 
     function processNodeProposal(uint _start, uint _end, uint8 _operatorType, uint _allVoteCount, address _proposer,
@@ -137,14 +134,14 @@ contract ProposalManager {
         return proposalStorage.beNodeProposalApproval(proposalId);
     }
 
-    function createProposalWithCreateAdmin(uint _start, uint _end, uint _allVoteCount, address _proposer,
+    function createProposalWithCreateAdmin(uint _start, uint _end, address _proposer,
         address _adminOwner) public onlyAdmin(_proposer) returns (bytes32) {
-        return processAdminProposal(_start, _end, ADMIN_ADD, _allVoteCount, _proposer, _adminOwner);
+        return processAdminProposal(_start, _end, ADMIN_ADD, adminManager.adminCount(), _proposer, _adminOwner);
     }
 
-    function createProposalWithRemoveAdmin(uint _start, uint _end, uint _allVoteCount, address _proposer,
+    function createProposalWithRemoveAdmin(uint _start, uint _end, address _proposer,
         address _adminOwner) public onlyAdmin(_proposer) returns (bytes32) {
-        return processAdminProposal(_start, _end, ADMIN_REMOVE, _allVoteCount, _proposer, _adminOwner);
+        return processAdminProposal(_start, _end, ADMIN_REMOVE, adminManager.adminCount(), _proposer, _adminOwner);
     }
 
     function processAdminProposal(uint _start, uint _end, uint8 _operatorType, uint _allVoteCount, address _proposer,

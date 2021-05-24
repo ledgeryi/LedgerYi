@@ -83,9 +83,8 @@ public class PermissionGrpcClient {
     public boolean addNewNode(AccountYi caller, String proposer, String host, int port) {
         long currentTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
         //todo find it in contract
-        int allVoterCounter = 1;
 
-        GrpcRequest request = createGrpcRequest(caller, currentTime,  currentTime + 60, allVoterCounter, proposer, host, port);
+        GrpcRequest request = createGrpcRequest(caller, currentTime,  currentTime + 60, proposer, host, port);
         TransactionExtention tx = permissionBlockingStub.createProposalWithCreateNode(request);
 
         return processTransaction(tx, caller);

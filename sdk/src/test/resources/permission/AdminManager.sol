@@ -58,4 +58,7 @@ contract AdminManager {
     function queryAdminInfo(address _owner) public view returns (address, uint8) {
         return adminStorage.queryAdminInfo(_owner);
     }
+    function adminCount() public view returns (uint32) {
+        return adminStorage.adminCount();
+    }
 }

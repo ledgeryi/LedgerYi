@@ -115,6 +115,30 @@ public class PermissionApi extends PermissionGrpc.PermissionImplBase {
     }
 
     @Override
+    public void createProposalWithCreateAdmin(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        //todo
+        super.createProposalWithCreateAdmin(request, responseObserver);
+    }
+
+    @Override
+    public void createProposalWithRemoveAdmin(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        //todo
+        super.createProposalWithRemoveAdmin(request, responseObserver);
+    }
+
+    @Override
+    public void createProposalWithCreateNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        //todo
+        super.createProposalWithCreateNode(request, responseObserver);
+    }
+
+    @Override
+    public void createProposalWithRemoveNode(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
+        //todo
+        super.createProposalWithRemoveNode(request, responseObserver);
+    }
+
+    @Override
     public void queryNodeInfo(GrpcRequest request, StreamObserver<TransactionExtention> responseObserver) {
         String method = "queryNodeInfo(address)";
         callContract(permissionService.getNodeMgrAddress(), method, true, request, responseObserver);
