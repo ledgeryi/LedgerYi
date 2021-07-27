@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.parse.event;
+package cn.ledgeryi.sdk.event;
 
 import cn.ledgeryi.protos.Protocol.TransactionInfo;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract.ABI;

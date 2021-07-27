@@ -4,7 +4,7 @@ import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.protos.Protocol.Transaction.Result.ContractResult;
 import cn.ledgeryi.protos.Protocol.TransactionInfo;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
-import cn.ledgeryi.sdk.parse.event.Log;
+import cn.ledgeryi.sdk.event.Log;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

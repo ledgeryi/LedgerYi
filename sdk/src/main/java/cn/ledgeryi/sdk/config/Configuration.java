@@ -73,7 +73,7 @@ public class Configuration {
     /**
      * Get configuration by a given path.
      */
-    private static Config getByPath(final String configurationPath) {
+    public static Config getByPath(final String configurationPath) {
         if (isBlank(configurationPath)) {
             throw new IllegalArgumentException("Configuration path is required!");
         }

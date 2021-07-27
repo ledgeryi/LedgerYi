@@ -32,7 +32,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.ledgeryi.sdk.parse.event;
+package cn.ledgeryi.sdk.event;
 
 import com.google.common.primitives.UnsignedBytes;
 

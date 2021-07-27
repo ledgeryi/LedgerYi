@@ -1,4 +1,4 @@
-package cn.ledgeryi.sdk.parse.event;
+package cn.ledgeryi.sdk.event;
 
 import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;

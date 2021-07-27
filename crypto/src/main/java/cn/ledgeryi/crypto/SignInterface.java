@@ -18,5 +18,7 @@ public interface SignInterface {
 
   byte[] Base64toBytes(String signature);
 
+  byte[] getPrivKeyBytes();
+
   SignatureInterface sign(byte[] hash);
 }
