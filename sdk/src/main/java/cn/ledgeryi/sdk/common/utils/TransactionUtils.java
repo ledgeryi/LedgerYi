@@ -77,6 +77,16 @@ public class TransactionUtils {
     return transaction;
   }
 
+  public static Protocol.Transaction sign(Protocol.Transaction transaction, SignInterface myKey) {
+    Protocol.Transaction.Builder transactionBuilderSigned = transaction.toBuilder();
+    byte[] hash = Sha256Sm3Hash.hash(transaction.getRawData().toByteArray());
+    SignatureInterface signature = myKey.sign(hash);
+    ByteString bsSign = ByteString.copyFrom(signature.toByteArray());
+    transactionBuilderSigned.setSignature(bsSign);
+    transaction = transactionBuilderSigned.build();
+    return transaction;
+  }
+
   public static byte[] generateContractAddress(Protocol.Transaction tx, byte[] ownerAddress) {
     byte[] txRawDataHash = Sha256Sm3Hash.of(tx.getRawData().toByteArray()).getBytes();
     byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];

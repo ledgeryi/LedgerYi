@@ -1,17 +1,10 @@
 package cn.ledgeryi.sdk.serverapi;
 
 import cn.ledgeryi.api.GrpcAPI;
-import cn.ledgeryi.api.GrpcAPI.Return;
-import cn.ledgeryi.api.GrpcAPI.TransactionExtention;
 import cn.ledgeryi.protos.Protocol;
-import cn.ledgeryi.protos.Protocol.Transaction;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.CreateSmartContract;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.SmartContract;
-import cn.ledgeryi.protos.contract.SmartContractOuterClass.TriggerSmartContract;
-import cn.ledgeryi.sdk.common.AccountYi;
+import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
-import cn.ledgeryi.sdk.common.utils.LedgerYiUtils;
 import cn.ledgeryi.sdk.common.utils.TransactionUtils;
 import cn.ledgeryi.sdk.contract.ContactCompileUtil;
 import cn.ledgeryi.sdk.contract.compiler.entity.Library;
@@ -29,87 +22,70 @@ import org.spongycastle.util.encoders.Hex;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * @author Brian
+ * @date 2021/7/27 10:34
+ */
 @Slf4j
-public class LedgerYiApiService {
+public class LedgerYiPermissionApiService {
 
     private GrpcClient rpcCli;
 
-    public LedgerYiApiService() {
+    public LedgerYiPermissionApiService() {
         rpcCli = GrpcClient.initGrpcClient();
     }
-
-    public AccountYi createDefaultAccount(){
-        return LedgerYiUtils.createAccountYi();
+    public GrpcAPI.MastersList getMasters(RequestUserInfo requestUser){
+        return rpcCli.queryMasters(requestUser);
     }
 
-    public GrpcAPI.MastersList getMasters(){
-        return rpcCli.queryMasters(null);
+    public GrpcAPI.BlockExtention getNowBlock(RequestUserInfo requestUser){
+        return rpcCli.getNowBlock(requestUser);
     }
 
-    public GrpcAPI.BlockExtention getNowBlock(){
-        return rpcCli.getNowBlock(null);
+    public GrpcAPI.BlockExtention getBlock(long blockNum, RequestUserInfo requestUser) {
+        return rpcCli.getBlockByNum(blockNum,requestUser);
     }
 
-    public GrpcAPI.BlockListExtention getBlockByLimitNext(long start, long end){
-        return rpcCli.getBlockByLimitNext(start,end, null);
+    public GrpcAPI.BlockListExtention getBlockByLimitNext(long start, long end, RequestUserInfo requestUser){
+        return rpcCli.getBlockByLimitNext(start,end, requestUser);
     }
 
-    public GrpcAPI.BlockExtention getBlock(long blockNum) {
-        return rpcCli.getBlockByNum(blockNum,null);
+    public Protocol.Transaction getTransactionById(String hash, RequestUserInfo requestUser){
+        return rpcCli.getTransactionById(hash,requestUser);
     }
 
-    public Protocol.Transaction getTransactionById(String hash){
-        return rpcCli.getTransactionById(hash,null);
-    }
-
-    public TransactionInformation getTransactionInfoReadable(String hash){
-        return getTransactionInfoReadable(hash, null);
-    }
-
-    public Protocol.TransactionInfo getTransactionInfoById(String hash){
-        return rpcCli.getTransactionInfoById(hash,null);
-    }
-
-    public GrpcAPI.NumberMessage getTransactionCountByBlockNum(long blockNum){
-        return rpcCli.getTransactionCountByBlockNum(blockNum,null);
-    }
-
-    public GrpcAPI.NodeList getConnectNodes(){
-        return rpcCli.getConnectNodes(null);
-    }
-
-    public Protocol.NodeInfo getNodeInfo(){
-        return rpcCli.getNodeInfo(null);
-    }
-
-    public SmartContract getContract(byte[] address) {
-        return rpcCli.getContract(address,null);
-    }
-
-    public TriggerContractReturn triggerContract(byte[] ownerAddress, byte[] privateKey, TriggerContractParam param) {
-        return triggerContract(ownerAddress,privateKey,param, null);
-    }
-
-    public DeployContractReturn deployContract(byte[] ownerAddress, byte[] privateKey, DeployContractParam param)
-            throws CreateContractExecption {
-        return deployContract(ownerAddress,privateKey,param,null);
-    }
-
-    private TransactionInformation getTransactionInfoReadable(String hash, RequestUserInfo requestUser) {
+    public TransactionInformation getTransactionInfoReadable(String hash, RequestUserInfo requestUser) {
         Protocol.TransactionInfo infoById = getTransactionInfoById(hash,requestUser);
         TransactionInformation information = TransactionInformation.parseTransactionInfo(infoById);
-        SmartContract contract = getContract(infoById.getContractAddress().toByteArray(),requestUser);
+        SmartContractOuterClass.SmartContract contract = getContract(infoById.getContractAddress().toByteArray(),requestUser);
         List<Log> logs = Log.parseLogInfo(infoById.getLogList(), contract.getAbi());
         information.setLogs(logs);
         return information;
     }
 
-    private Protocol.TransactionInfo getTransactionInfoById(String hash, RequestUserInfo requestUser) {
+    public Protocol.TransactionInfo getTransactionInfoById(String hash, RequestUserInfo requestUser) {
         return rpcCli.getTransactionInfoById(hash,requestUser);
     }
 
+    public GrpcAPI.NumberMessage getTransactionCountByBlockNum(long blockNum, RequestUserInfo requestUser){
+        return rpcCli.getTransactionCountByBlockNum(blockNum,requestUser);
+    }
+
+    public GrpcAPI.NodeList getConnectNodes(RequestUserInfo requestUser){
+        return rpcCli.getConnectNodes(requestUser);
+    }
+
+    public Protocol.NodeInfo getNodeInfo(RequestUserInfo requestUser){
+        return rpcCli.getNodeInfo(requestUser);
+    }
+
     /**
-     * compile contract from a file of type 'sol', support 'library'
+     * compile contract from a file of type 'sol',
+     * support 'library'
+     * @param source contract file path
+     * @param contractName contract name
+     * @param library contract library
+     * @throws ContractException
      */
     public DeployContractParam compileContractFromFileNeedLibrary(
             Path source, String contractName, Library library) throws ContractException {
@@ -119,6 +95,9 @@ public class LedgerYiApiService {
     /**
      * compile contract from a file of type 'sol',
      * support 'Contract inheritance', not support 'library'
+     *
+     * @param source contract file path
+     * @param contractName contract name
      */
     public DeployContractParam compileContractFromFile(Path source, String contractName) throws ContractException {
         return ContactCompileUtil.compileContractFromFiles(source,contractName,false,null);
@@ -126,23 +105,33 @@ public class LedgerYiApiService {
 
     /**
      * compile single contract from a file of type 'sol'
+     * @param contract contract content
+     * @return
+     * @throws ContractException
      */
     public DeployContractParam compileSingleContractFromContent(String contract) throws ContractException {
         return ContactCompileUtil.compileSingleContractFromContent(contract);
     }
 
-    public SmartContract getContract(byte[] address, RequestUserInfo requestUser) {
+    public SmartContractOuterClass.SmartContract getContract(byte[] address, RequestUserInfo requestUser) {
         return rpcCli.getContract(address,requestUser);
     }
 
+    /**
+     * call contract
+     * @param ownerAddress the address of contract owner
+     * @param privateKey the private key of contract owner
+     * @param param contract  params
+     * @return TriggerContractReturn
+     */
     public TriggerContractReturn triggerContract(byte[] ownerAddress,
                                                  byte[] privateKey,
                                                  TriggerContractParam param,
                                                  RequestUserInfo requestUser) {
-        TriggerSmartContract triggerContract = triggerCallContract(ownerAddress,
+        SmartContractOuterClass.TriggerSmartContract triggerContract = triggerCallContract(ownerAddress,
                 param.getContractAddress(), param.getCallValue(), param.getData());
 
-        TransactionExtention transactionExtention;
+        GrpcAPI.TransactionExtention transactionExtention;
         if (param.isConstant()) {
             transactionExtention = rpcCli.triggerConstantContract(triggerContract,requestUser);
             int constantResultCount = transactionExtention.getConstantResultCount();
@@ -170,19 +159,28 @@ public class LedgerYiApiService {
         }
     }
 
+    /**
+     * create contract
+     *
+     * @param ownerAddress the address of contract owner
+     * @param privateKey the private key of contract owner
+     * @param param contract  params
+     * @return DeployContractReturn
+     * @throws CreateContractExecption abi is null
+     */
     public DeployContractReturn deployContract(byte[] ownerAddress,
                                                byte[] privateKey,
                                                DeployContractParam param,
                                                RequestUserInfo requestUser)
             throws CreateContractExecption {
-        CreateSmartContract createContract = createContract(ownerAddress, param);
+        SmartContractOuterClass.CreateSmartContract createContract = createContract(ownerAddress, param);
         GrpcAPI.TransactionExtention tx = rpcCli.deployContract(createContract,requestUser);
         boolean result = processTransaction(tx, privateKey,requestUser);
         if (result) {
-            CreateSmartContract createSmartContract;
+            SmartContractOuterClass.CreateSmartContract createSmartContract;
             try {
                 Any parameter = tx.getTransaction().getRawData().getContract().getParameter();
-                createSmartContract = parameter.unpack(CreateSmartContract.class);
+                createSmartContract = parameter.unpack(SmartContractOuterClass.CreateSmartContract.class);
             } catch (InvalidProtocolBufferException e) {
                 log.error("deploy contract, parameter parse fail");
                 return null;
@@ -204,11 +202,11 @@ public class LedgerYiApiService {
         }
     }
 
-    private TriggerSmartContract triggerCallContract( byte[] ownerAddress,
-                                                      byte[] contractAddress,
-                                                      long callValue,
-                                                      byte[] data) {
-        TriggerSmartContract.Builder builder = TriggerSmartContract.newBuilder();
+    private SmartContractOuterClass.TriggerSmartContract triggerCallContract(byte[] ownerAddress,
+                                                                             byte[] contractAddress,
+                                                                             long callValue,
+                                                                             byte[] data) {
+        SmartContractOuterClass.TriggerSmartContract.Builder builder = SmartContractOuterClass.TriggerSmartContract.newBuilder();
         //set call address
         builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         builder.setContractAddress(ByteString.copyFrom(contractAddress));
@@ -217,18 +215,26 @@ public class LedgerYiApiService {
         return builder.build();
     }
 
-    private boolean processTransaction(TransactionExtention transactionExtention, byte[] privateKey,
+//    private SmartContractOuterClass.ClearABIContract createClearABIContract(byte[] ownerAddress, byte[] contractAddress) {
+//        SmartContractOuterClass.ClearABIContract.Builder builder = SmartContractOuterClass.ClearABIContract.newBuilder();
+//        //set call address
+//        builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
+//        builder.setContractAddress(ByteString.copyFrom(contractAddress));
+//        return builder.build();
+//    }
+
+    private boolean processTransaction(GrpcAPI.TransactionExtention transactionExtention, byte[] privateKey,
                                        RequestUserInfo requestUser){
         if (transactionExtention == null) {
             return false;
         }
-        Return ret = transactionExtention.getResult();
+        GrpcAPI.Return ret = transactionExtention.getResult();
         if (!ret.getResult()) {
             log.error("result is false, code: " + ret.getCode());
             log.error("result is false, message: " + ret.getMessage().toStringUtf8());
             return false;
         }
-        Transaction transaction = transactionExtention.getTransaction();
+        Protocol.Transaction transaction = transactionExtention.getTransaction();
         if (transaction == null || transaction.getRawData().getContract() == null) {
             log.error("transaction or contract is null");
             return false;
@@ -237,22 +243,22 @@ public class LedgerYiApiService {
         return rpcCli.broadcastTransaction(transaction,requestUser);
     }
 
-    private CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam)
+    private SmartContractOuterClass.CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam)
             throws CreateContractExecption {
         String contractAbi = contractParam.getAbi();
         if (StringUtils.isEmpty(contractAbi)) {
             log.error("deploy contract, abi is null");
             throw new CreateContractExecption("deploy contract, abi is null");
         }
-        SmartContract.ABI abi = JsonFormatUtil.jsonStr2ABI(contractAbi);
-        SmartContract.Builder builder = SmartContract.newBuilder();
+        SmartContractOuterClass.SmartContract.ABI abi = JsonFormatUtil.jsonStr2ABI(contractAbi);
+        SmartContractOuterClass.SmartContract.Builder builder = SmartContractOuterClass.SmartContract.newBuilder();
         builder.setAbi(abi);
         builder.setName(contractParam.getContractName());
         //set contract owner
         builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         byte[] byteCode = Hex.decode(contractParam.getContractByteCodes());
         builder.setBytecode(ByteString.copyFrom(byteCode));
-        CreateSmartContract.Builder createSmartContractBuilder = CreateSmartContract.newBuilder();
+        SmartContractOuterClass.CreateSmartContract.Builder createSmartContractBuilder = SmartContractOuterClass.CreateSmartContract.newBuilder();
         //set call address
         createSmartContractBuilder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
         createSmartContractBuilder.setNewContract(builder.build());

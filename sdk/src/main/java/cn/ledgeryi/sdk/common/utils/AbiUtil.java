@@ -1,7 +1,7 @@
 package cn.ledgeryi.sdk.common.utils;
 
 import cn.ledgeryi.crypto.utils.Hash;
-import cn.ledgeryi.sdk.parse.event.DataWord;
+import cn.ledgeryi.sdk.event.DataWord;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;

@@ -4,7 +4,6 @@ import cn.ledgeryi.crypto.utils.Hash;
 import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
 import cn.ledgeryi.sdk.common.utils.ByteArray;
 import cn.ledgeryi.sdk.exception.CipherException;
-import cn.ledgeryi.sdk.serverapi.LedgerYiApi;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.PKCS5S2ParametersGenerator;
 import org.bouncycastle.crypto.generators.SCrypt;
