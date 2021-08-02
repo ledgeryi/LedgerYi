@@ -5,7 +5,7 @@ pragma solidity ^0.6.8;
 import "./StringSet.sol";
 import "./AddressSet.sol";
 
-contract TraceSourceProxy {
+contract TracingProxy {
 
     using StringSet for StringSet.Set;
     using AddressSet for AddressSet.Set;

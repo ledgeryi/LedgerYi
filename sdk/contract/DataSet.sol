@@ -56,6 +56,10 @@ library DataSet {
         return dataList._keyInfo._keys;
     }
 
+    function length(DataList storage dataList) public view returns (uint256) {
+        return dataList._datas.length;
+    }
+
 
     /**
      * @dev Add a value to a set. O(1).
