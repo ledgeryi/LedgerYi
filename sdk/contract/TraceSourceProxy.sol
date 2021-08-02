@@ -18,6 +18,8 @@ contract TraceSourceProxy {
 
     string private nameEn;
 
+    uint private createTime;
+
     StringSet.Set private traceLinkNames;
 
     mapping(bytes32 => AddressSet.Set) private traceLinks;
@@ -29,6 +31,7 @@ contract TraceSourceProxy {
 
     constructor (string memory _nameZn, string memory _nameEn, string memory _uid) public {
         owner = msg.sender;
+        createTime = now;
         nameEn = _nameEn;
         nameZn = _nameZn;
         uid = _uid;
@@ -44,6 +47,10 @@ contract TraceSourceProxy {
 
     function getName() external view returns(string memory, string memory) {
         return (nameZn, nameEn);
+    }
+
+    function getCreateTime() external view returns (uint) {
+        return createTime;
     }
 
     function getTraceLinkLength() external view returns(uint256) {
