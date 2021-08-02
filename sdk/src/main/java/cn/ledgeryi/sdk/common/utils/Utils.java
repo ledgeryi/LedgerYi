@@ -19,6 +19,7 @@
 package cn.ledgeryi.sdk.common.utils;
 
 import cn.ledgeryi.sdk.keystore.StringUtils;
+import cn.ledgeryi.sdk.keystore.WalletUtils;
 import com.google.protobuf.Message;
 
 import java.io.Console;
@@ -123,7 +124,7 @@ public class Utils {
         StringUtils.clear(passwd0);
         StringUtils.clear(passwd1);
       }
-      if (LedgerYiApi.passwordValid(password)) {
+      if (WalletUtils.passwordValid(password)) {
         return password;
       }
       if (!checkStrength) {

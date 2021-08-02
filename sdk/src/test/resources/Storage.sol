@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+pragma experimental ABIEncoderV2;
 
 pragma solidity ^0.6.9;
 
@@ -9,6 +10,8 @@ contract Storage {
         uint32 dataId;
         bool used;
     }
+
+    string[] test;
 
     mapping(bytes32 => Data) private dataStore;
 
@@ -24,5 +27,13 @@ contract Storage {
     function checkUsed(uint32 _dataId) public view returns (bool) {
         Data storage tmp = dataStore[keccak256(abi.encode(_dataId))];
         return tmp.used;
+    }
+
+    function addData(string memory data) public {
+        test.push(data);
+    }
+
+    function getData() public view returns(string[] memory) {
+        return test;
     }
 }

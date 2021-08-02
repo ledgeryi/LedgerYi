@@ -2,7 +2,7 @@ package cn.ledgeryi.common.core;
 
 public class Constant {
 
-  public static final String MAINNET_CONF = "config.conf";
+  public static final String MAINNET_CONF = "config-local-test.conf";
 
   // config for transaction
   public static final long TRANSACTION_MAX_BYTE_SIZE = 500 * 1_024L;

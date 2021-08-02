@@ -69,7 +69,7 @@ public class StorageContractTest {
     }
 
     // contract address
-    private static String contractAddress = "9c92acf784a189e9f9620291870c1011e9736a9e";
+    private static String contractAddress = "080d49c962d6d2c92b799c87dda86036b43ee4d8";
 
     @Test
     public void getContractFromOnChain(){
@@ -78,6 +78,44 @@ public class StorageContractTest {
         JSONObject jsonObject = JSONObject.parseObject(JsonFormatUtil.printABI(contract.getAbi()));
         String abi = jsonObject.getString("entrys");
         System.out.println(abi);
+    }
+
+    @Test
+    public void addData() {
+        List<Object> args = Collections.singletonList("b");
+        String method = "addData(string)";
+        triggerContract(method, args,false);
+    }
+
+    @Test
+    public void getData() {
+        List<Object> args = Collections.emptyList();
+        String method = "getData()";
+        ByteString triggerContract = triggerContract(method, args,true);
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("getData",
+                new String[]{}, new String[]{"string[]"});
+        Object[] objects = function.decodeResult(triggerContract.toByteArray());
+        for (Object object : objects) {
+            if (object instanceof String) {
+                String data = (String) object;
+                System.out.println("data: " + data);
+            } else if (object instanceof BigInteger) {
+                BigInteger id = (BigInteger) object;
+                System.out.println("id: " + id);
+            } else if (object instanceof byte[]) {
+                String address = DecodeUtil.createReadableString((byte[]) object);
+                System.out.println("address: " + address);
+            } else if (object instanceof Boolean) {
+                boolean uesd = (Boolean) object;
+                System.out.println("uesd: " + uesd);
+            } else if (object instanceof Object[]) {
+                Object[] object1 = (Object[]) object;
+                for (int i = 0; i < (object1).length; i++) {
+                    Object objects1 = object1[i];
+                    System.out.println("data: " + (String) objects1);
+                }
+            }
+        }
     }
 
     @Test

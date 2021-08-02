@@ -2,6 +2,7 @@ package cn.ledgeryi.sdk.keystore;
 
 import cn.ledgeryi.crypto.utils.Hash;
 import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
+import cn.ledgeryi.sdk.common.utils.Base58;
 import cn.ledgeryi.sdk.common.utils.ByteArray;
 import cn.ledgeryi.sdk.exception.CipherException;
 import org.bouncycastle.crypto.digests.SHA256Digest;
@@ -74,7 +75,7 @@ public class SKeyEncryptor {
       int n, int p) {
 
     SKeyCapsule skey = new SKeyCapsule();
-    skey.setFp(LedgerYiApi.encode58Check(fp));
+    skey.setFp(Base58.encode58Check(fp));
 
     SKeyCapsule.Crypto crypto = new SKeyCapsule.Crypto();
     crypto.setCipher(CIPHER);

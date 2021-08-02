@@ -111,7 +111,7 @@ public class WalletUtils {
     return objectMapper.readValue(source, WalletFile.class);
   }
 
-  private static boolean passwordValid(char[] password) {
+  public static boolean passwordValid(char[] password) {
     if (ArrayUtils.isEmpty(password)) {
       throw new IllegalArgumentException("password is empty");
     }
