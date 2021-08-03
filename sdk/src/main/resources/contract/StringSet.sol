@@ -20,7 +20,7 @@ library StringSet {
      * Returns true if the value was added to the set, that is if it was not
      * already present.
      */
-    function add(Set storage set, string memory value) public returns (bool) {
+    function add(Set storage set, string memory value) internal returns (bool) {
         if (!contains(set, value)) {
             set._values.push(value);
             // The value is stored at length-1, but we add 1 to all indexes and use 0 as a sentinel value
@@ -38,7 +38,7 @@ library StringSet {
      * Returns true if the value was removed from the set, that is if it was
      * present.
      */
-    function remove(Set storage set, string memory value) public returns (bool) {
+    function remove(Set storage set, string memory value) internal returns (bool) {
         // We read and store the value's index to prevent multiple reads from the same storage slot
         uint256 valueIndex = set._indexes[keccak256(abi.encodePacked(value))];
 
@@ -75,14 +75,14 @@ library StringSet {
     /**
      * @dev Returns true if the value is in the set. O(1).
      */
-    function contains(Set storage set, string memory value) public view returns (bool) {
+    function contains(Set storage set, string memory value) internal view returns (bool) {
         return set._indexes[keccak256(abi.encodePacked(value))] != 0;
     }
 
     /**
      * @dev Returns the number of values on the set. O(1).
      */
-    function length(Set storage set) public view returns (uint256) {
+    function length(Set storage set) internal view returns (uint256) {
         return set._values.length;
     }
 
@@ -96,7 +96,7 @@ library StringSet {
      *
      * - `index` must be strictly less than {length}.
      */
-    function at(Set storage set, uint256 index) public view returns (string memory) {
+    function at(Set storage set, uint256 index) internal view returns (string memory) {
         require(set._values.length > index, "EnumerableSet: index out of bounds");
         return set._values[index];
     }

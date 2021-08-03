@@ -109,7 +109,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
         ByteString callResult = callReturn.getCallResult();
         CallTransaction.Function function = CallTransaction.Function.fromSignature("getBaseInfo",
-                new String[]{}, new String[]{"string","string", "uint", "address"});
+                new String[]{}, new String[]{"string","string","string", "uint", "address"});
         Object[] objects = function.decodeResult(callResult.toByteArray());
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return ContractBaseInfo.builder()
