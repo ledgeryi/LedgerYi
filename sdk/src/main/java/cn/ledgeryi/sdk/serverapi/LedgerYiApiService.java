@@ -258,4 +258,27 @@ public class LedgerYiApiService {
         createSmartContractBuilder.setNewContract(builder.build());
         return createSmartContractBuilder.build();
     }
+
+
+    public TransactionExtention deployContractTransaction(byte[] ownerAddress, DeployContractParam param)
+            throws CreateContractExecption {
+        CreateSmartContract createContract = createContract(ownerAddress, param);
+        return rpcCli.deployContract(createContract,null);
+    }
+
+    public TransactionExtention triggerContractTransaction(byte[] ownerAddress,
+                                                 TriggerContractParam param) {
+        TriggerSmartContract triggerContract = triggerCallContract(ownerAddress,
+                param.getContractAddress(), param.getCallValue(), param.getData());
+
+        return rpcCli.triggerContract(triggerContract,null);
+    }
+
+    public boolean processTransaction(TransactionExtention transactionExtention, byte[] privateKey) {
+        return processTransaction(transactionExtention,privateKey,null);
+    }
+
+    public boolean broadcastTransaction(Transaction transaction) {
+        return rpcCli.broadcastTransaction(transaction,null);
+    }
 }

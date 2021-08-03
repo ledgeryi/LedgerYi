@@ -15,6 +15,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Brian
@@ -24,7 +25,8 @@ public class WitnessTests {
 
     private static String privateKey = "ec19148056c4cfc5fc1b1923b8bb657e1e481a8f092415d5af96dd60f3e6806d";
     private static String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
-    private static String contractAddress = "f51c609f6a65b37c36d9d3d8ea927c35e2d6cacd";
+//    private static String contractAddress = "f51c609f6a65b37c36d9d3d8ea927c35e2d6cacd";
+    private static String contractAddress = "e328459523a95ffc2c4f87981b5b07e5a40f890f";
 
 
     private LedgerYiStccApiService ledgerYiStccApiService;
@@ -55,6 +57,33 @@ public class WitnessTests {
     public void getBaseInfos() {
         ContractBaseInfo witnessBaseInfo = ledgerYiStccApiService.getWitnessBaseInfo(ownerAddress, contractAddress);
         System.out.println(witnessBaseInfo.toString());
+    }
+
+    @Test
+    public void addKey() {
+        List<Object> params = Arrays.asList("[\"k1","k2\"]}");
+        boolean result = ledgerYiStccApiService.addWitnessInfo(ownerAddress, privateKey, contractAddress, params);
+        System.out.println(result);
+    }
+
+    @Test
+    public void getKey(){
+        List<String> witnessInfo = ledgerYiStccApiService.getWitnessInfo(ownerAddress, contractAddress);
+        System.out.println(witnessInfo.toString());
+    }
+
+    @Test
+    public void addData(){
+        List<Object> args = Arrays.asList("[\"1","2\"]}");
+        boolean result = ledgerYiStccApiService.addWitnessInfo(ownerAddress, privateKey, contractAddress, args);
+        System.out.println(result);
+    }
+
+    @Test
+    public void getData(){
+        long dataIndex = 0;
+        Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, dataIndex);
+        System.out.println(dataInfo.toString());
     }
 
 }
