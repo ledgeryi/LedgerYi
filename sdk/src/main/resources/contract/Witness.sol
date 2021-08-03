@@ -124,6 +124,7 @@ contract Witness {
         uint256 _key =  dataList.addData(_dataInfos);
         dataWhiteList[keccak256(abi.encodePacked(_key))].setOwner(msg.sender);
         dataWhiteList[keccak256(abi.encodePacked(_key))].addUser(msg.sender);
+        dataWhiteList[keccak256(abi.encodePacked(_key))].status = true;
         return _key;
     }
 
@@ -151,5 +152,17 @@ contract Witness {
     function getUserFromDataWhiteList(uint256 _index, uint256 _userIndex) external view returns (address) {
         require(_index < dataList._datas.length, "Data index out of bounds");
         return dataWhiteList[keccak256(abi.encodePacked(_index))].at(_userIndex);
+    }
+
+    function disableDataWhite(uint256 _index) external onlyContractOwner {
+        dataWhiteList[keccak256(abi.encodePacked(_index))].status = false;
+    }
+
+    function enableDataWhite(uint256 _index) external onlyContractOwner {
+        dataWhiteList[keccak256(abi.encodePacked(_index))].status =  true;
+    }
+
+    function getStatusOfDataWhite(uint256 _index) external onlyContractOwner view returns (bool) {
+        return dataWhiteList[keccak256(abi.encodePacked(_index))].status;
     }
 }

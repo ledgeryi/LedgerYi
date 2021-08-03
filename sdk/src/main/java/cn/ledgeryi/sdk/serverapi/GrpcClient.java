@@ -47,7 +47,7 @@ public class GrpcClient {
         return blockingStubFull.getMasters(setRequestUser(requestUser));
     }
 
-    public boolean broadcastTransaction(Transaction signaturedTransaction, RequestUserInfo requestUser) {
+    public Return broadcastTransaction(Transaction signaturedTransaction, RequestUserInfo requestUser) {
         GrpcRequest.Builder builder = setRequestUser(requestUser).toBuilder();
         builder.setParam(Any.pack(signaturedTransaction));
         int repeatTimes = BROADCAST_TRANSACTION_REPEAT_TIMES;
@@ -65,7 +65,7 @@ public class GrpcClient {
         if (!response.getResult()) {
             log.error("broadcast tx, code: {}, message: {}" + response.getCode(), response.getMessage().toStringUtf8());
         }
-        return response.getResult();
+        return response;
     }
 
     public BlockExtention getNowBlock(RequestUserInfo requestUser) {

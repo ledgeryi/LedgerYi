@@ -366,7 +366,7 @@ public class Manager {
     /**
      * push transaction into pending.
      */
-    public boolean pushTransaction(final TransactionCapsule tx)
+    public Protocol.TransactionInfo pushTransaction(final TransactionCapsule tx)
             throws ValidateSignatureException, ContractValidateException, DupTransactionException, TaposException,
             TooBigTransactionException, TransactionExpirationException, ReceiptCheckErrException, ContractExeException, VMIllegalException {
 
@@ -374,6 +374,7 @@ public class Manager {
             pushTransactionQueue.add(tx);
         }
 
+        Protocol.TransactionInfo transactionInfo;
         try {
             if (!tx.validateSignature()) {
                 throw new ValidateSignatureException("trans sig validate failed");
@@ -385,7 +386,7 @@ public class Manager {
                 }
 
                 try (ISession tmpSession = revokingStore.buildSession()) {
-                    processTransaction(tx, null);
+                    transactionInfo = processTransaction(tx, null);
                     pendingTransactions.add(tx);
                     tmpSession.merge();
                 } catch (Exception e) {
@@ -398,7 +399,7 @@ public class Manager {
         }
         log.info("Verify transaction Success. Hash:{}, From:{} Will be broadcast transaction",
                 tx.getTransactionId(), ByteUtil.toHexString(TransactionCapsule.getOwnerAddress(tx)));
-        return true;
+        return transactionInfo;
     }
 
     /**

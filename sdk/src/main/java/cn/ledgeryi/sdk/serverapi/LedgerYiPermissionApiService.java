@@ -240,7 +240,7 @@ public class LedgerYiPermissionApiService {
             return false;
         }
         transaction = TransactionUtils.sign(transaction, privateKey);
-        return rpcCli.broadcastTransaction(transaction,requestUser);
+        return rpcCli.broadcastTransaction(transaction,requestUser).getResult();
     }
 
     private SmartContractOuterClass.CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam)

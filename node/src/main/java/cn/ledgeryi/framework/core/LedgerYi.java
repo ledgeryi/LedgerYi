@@ -157,9 +157,9 @@ public class LedgerYi {
         dbManager.getTransactionIdCache().put(tx.getTransactionId(), true);
       }
 
-      dbManager.pushTransaction(tx);
+      TransactionInfo transactionInfo = dbManager.pushTransaction(tx);
       ledgerYiNetService.broadcast(message);
-      return builder.setResult(true).setCode(response_code.SUCCESS).build();
+      return builder.setResult(true).setCode(response_code.SUCCESS).setContractResult(transactionInfo.getContractResult(0)).build();
     } catch (ValidateSignatureException e) {
       log.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.SIGERROR)

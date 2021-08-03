@@ -156,12 +156,12 @@ public class LedgerYiApiService {
         } else {
             transactionExtention = rpcCli.triggerContract(triggerContract,requestUser);
         }
-        boolean result = processTransaction(transactionExtention, privateKey,requestUser);
-        if (result){
+        Return aReturn = processTransactionWhitReturn(transactionExtention, privateKey, requestUser);
+        if (aReturn.getResult()){
             return TriggerContractReturn.builder()
                     .isConstant(false)
                     .contractAddress(DecodeUtil.createReadableString(param.getContractAddress()))
-                    .callResult(ByteString.EMPTY)
+                    .callResult(aReturn.getContractResult())
                     .transactionId(DecodeUtil.createReadableString(transactionExtention.getTxid()))
                     .build();
         } else {
@@ -234,7 +234,28 @@ public class LedgerYiApiService {
             return false;
         }
         transaction = TransactionUtils.sign(transaction, privateKey);
-        return rpcCli.broadcastTransaction(transaction,requestUser);
+        Return aReturn = rpcCli.broadcastTransaction(transaction, requestUser);
+        return aReturn.getResult();
+    }
+
+    private Return processTransactionWhitReturn(TransactionExtention transactionExtention, byte[] privateKey,
+                                       RequestUserInfo requestUser){
+        if (transactionExtention == null) {
+            return Return.getDefaultInstance();
+        }
+        Return ret = transactionExtention.getResult();
+        if (!ret.getResult()) {
+            log.error("result is false, code: " + ret.getCode());
+            log.error("result is false, message: " + ret.getMessage().toStringUtf8());
+            return Return.getDefaultInstance();
+        }
+        Transaction transaction = transactionExtention.getTransaction();
+        if (transaction == null || transaction.getRawData().getContract() == null) {
+            log.error("transaction or contract is null");
+            return Return.getDefaultInstance();
+        }
+        transaction = TransactionUtils.sign(transaction, privateKey);
+        return rpcCli.broadcastTransaction(transaction, requestUser);
     }
 
     private CreateSmartContract createContract(byte[] ownerAddress, DeployContractParam contractParam)
@@ -278,7 +299,7 @@ public class LedgerYiApiService {
         return processTransaction(transactionExtention,privateKey,null);
     }
 
-    public boolean broadcastTransaction(Transaction transaction) {
+    public Return broadcastTransaction(Transaction transaction) {
         return rpcCli.broadcastTransaction(transaction,null);
     }
 }

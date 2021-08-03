@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.spongycastle.util.Strings;
 
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -128,9 +129,12 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @return 数据对应的链上索引，从0开始
      */
-    public boolean addWitnessInfo(String callAddress, String privateKey, String contractAddress,List<Object> args) {
+    public boolean addWitnessInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
         String method = "addDataKey(string[])";
-        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
+        TriggerContractReturn triggerContractReturn =
+                triggerContract(callAddress, privateKey, contractAddress, method, args);
+        ByteString contractResult = triggerContractReturn.getCallResult();
+        return ByteUtil.byteArrayToLong(contractResult.toByteArray()) == 0;
     }
 
     /**
@@ -161,14 +165,30 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
+     * 促存证数据上链
+     * @param callAddress 合约调用者
+     * @param privateKey 调用者私钥
+     * @param contractAddress 合约地址
+     * @param args 存证数据
+     * @return 存证数据链上索引
+     */
+    public long saveDataInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
+        String method = "saveDataInfo(string[])";
+        TriggerContractReturn triggerContractReturn =
+                triggerContract(callAddress, privateKey, contractAddress, method, args);
+        ByteString contractResult = triggerContractReturn.getCallResult();
+        return ByteUtil.byteArrayToLong(contractResult.toByteArray());
+    }
+
+    /**
      * 获取存证数据
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      * @param dataIndex 数据对应的链上索引，从0开始
      */
     public Map<String,String> getDataInfo(String callAddress, String contractAddress, long dataIndex) {
-        List<String> keys = Collections.emptyList();
-        List<String> values = Collections.emptyList();
+        List<String> keys = new ArrayList<>();
+        List<String> values = new ArrayList<>();
         String method = "getDataInfo(uint256)";
         List<Object> args = Collections.singletonList(dataIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -277,7 +297,9 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     public boolean addUserToContractWhiteList(String callAddress, String privateKey, String contractAddress, String user) {
         String method = "addUserToContractWhiteList(address)";
         List<Object> args = Collections.singletonList(user);
-        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
+        TriggerContractReturn contractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
+        ByteString contractResult = contractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
     }
 
     /**
@@ -290,8 +312,10 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     public boolean removeUserToContractWhiteList(String callAddress, String privateKey, String contractAddress, String user) {
         String method = "removeUserFromContractWhiteList(address)";
         List<Object> args = Collections.singletonList(user);
-        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
-    }
+        TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = contractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
+}
 
     /**
      * 获取合约白名单成员
@@ -299,15 +323,15 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      */
     public List<String> getUsersFromContractWhiteList(String callAddress, String contractAddress) {
-        List<String> users = Collections.emptyList();
+        List<String> users = new ArrayList<>();
         long size = getUserSizeOfContractWhiteList(callAddress, contractAddress);
         String method = "getUserFromContractWhiteList(uint256)";
-        List<Object> args = Collections.emptyList();
         for (long i = 0; i < size; i++) {
+            List<Object> args = Collections.singletonList(i);
             TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
             ByteString callResult = callReturn.getCallResult();
-            String userAddress = Strings.fromByteArray(callResult.toByteArray()).trim();
-            users.add(userAddress);
+            String userAddress = DecodeUtil.createReadableString(callResult.toByteArray());
+            users.add(userAddress.substring(24,64));
         }
         return users;
     }
@@ -324,7 +348,9 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                                           String contractAddress, long dataIndex, String user){
         String method = "addUserToDataWhiteList(uint256,address)";
         List<Object> args = Arrays.asList(dataIndex,user);
-        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
+        TriggerContractReturn contractReturn= triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = contractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
 
     }
 
@@ -340,7 +366,9 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                                              String contractAddress,long dataIndex, String user){
         String method = "removeUserFromDataWhiteList(uint256,address)";
         List<Object> args = Arrays.asList(dataIndex,user);
-        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
+        TriggerContractReturn triggerContractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = triggerContractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
     }
 
     /**
@@ -349,17 +377,60 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      */
     public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress, long dataIndex) {
-        List<String> users = Collections.emptyList();
+        List<String> users = new ArrayList<>();
         long size = getUserSizeOfDataWhiteList(callAddress, contractAddress, dataIndex);
         String method = "getUserFromDataWhiteList(uint256,uint256)";
         for (long i = 0; i < size; i++) {
             List<Object> args = Arrays.asList(dataIndex, i);
             TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
             ByteString callResult = callReturn.getCallResult();
-            String userAddress = Strings.fromByteArray(callResult.toByteArray()).trim();
-            users.add(userAddress);
+            String userAddress = DecodeUtil.createReadableString(callResult.toByteArray());
+            users.add(userAddress.substring(24,64));
         }
         return users;
+    }
+
+    /**
+     * 获取存证数据白名单启动状态
+     * @param callAddress 合约调用者
+     * @param contractAddress 合约地址
+     */
+    public boolean getStatusOfDataWhite(String callAddress, String contractAddress, long dataIndex) {
+        String method = "getStatusOfDataWhite(uint256)";
+        List<Object> args = Collections.singletonList(dataIndex);
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("getStatusOfDataWhite",
+                new String[]{}, new String[]{"bool"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
+        if (objects.length == 1 && objects[0] instanceof Boolean) {
+            return (Boolean)objects[0];
+        }
+        return false;
+    }
+
+    /**
+     * 禁用存证数据白名单
+     * @param callAddress 合约拥有者
+     * @param privateKey 合约拥有者私钥
+     * @param contractAddress 合约地址
+     */
+    public boolean disableStatusOfDataWhite(String callAddress, String privateKey, String contractAddress, long dataIndex) {
+        String method = "disableDataWhite(uint256)";
+        List<Object> args = Collections.singletonList(dataIndex);
+        return null == triggerContract(callAddress,privateKey,contractAddress,method,args);
+    }
+
+    /**
+     * 启用存证数据白名单
+     * @param callAddress 合约拥有者
+     * @param privateKey 合约拥有者私钥
+     * @param contractAddress 合约地址
+     */
+    public boolean enableStatusOfDataWhite(String callAddress, String privateKey, String contractAddress, long dataIndex) {
+        String method = "enableDataWhite(uint256)";
+        List<Object> args = Collections.singletonList(dataIndex);
+        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
     }
 
     private long getUserSizeOfDataWhiteList(String callAddress, String contractAddress, long dataIndex) {

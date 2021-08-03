@@ -207,6 +207,7 @@ message Return {
   bool result = 1;
   response_code code = 2;
   bytes message = 3;
+  bytes contractResult = 4;
 }
 
 message BlockReference {
