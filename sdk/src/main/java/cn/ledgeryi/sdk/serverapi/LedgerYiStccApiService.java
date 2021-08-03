@@ -37,7 +37,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * 部署存证合约
      * @param ownerAddress 部署者地址
      * @param privateKey 部署者私钥
-     * @param args 合约参数
+     * @param args 合约参数：创建人、合约中文名称、合约英文名称
      */
     public DeployContractReturn deployWitnessContract(String ownerAddress, String privateKey, List<Object> args) {
         DeployContractReturn deployContract = null;
@@ -60,14 +60,14 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * 部署溯源代理合约
      * @param ownerAddress 部署者地址
      * @param privateKey 部署者私钥
-     * @param args 合约参数
+     * @param args 合约参数：创建人、合约中文名称、合约英文名称、唯一溯源标识
      */
     public DeployContractReturn deployTracingProxyContract(String ownerAddress, String privateKey, List<Object> args) {
         DeployContractReturn deployContract = null;
         try {
-            Path source = Paths.get("src","resources","TracingProxy.sol");
+            Path source = Paths.get("src","main/resources/contract","TracingProxy.sol");
             DeployContractParam param = compileContractFromFile(source,"TracingProxy");
-            param.setConstructor("constructor(string,string,string)");
+            param.setConstructor("constructor(string,string,string,string)");
             param.setArgs(args);
             deployContract = deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), param);
         } catch (ContractException | CreateContractExecption e) {
@@ -81,12 +81,12 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * 部署溯源合约
      * @param ownerAddress 部署者地址
      * @param privateKey 部署者私钥
-     * @param args 合约参数
+     * @param args 合约参数：唯一溯源标识、溯源登记信息组名称
      */
     public DeployContractReturn deployTracingContract(String ownerAddress, String privateKey, List<Object> args) {
         DeployContractReturn deployContract = null;
         try {
-            Path source = Paths.get("src","resources","Tracing.sol");
+            Path source = Paths.get("src","main/resources/contract","Tracing.sol");
             DeployContractParam param = compileContractFromFile(source,"Tracing");
             param.setConstructor("constructor(string,string)");
             param.setArgs(args);
@@ -104,14 +104,19 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      */
     public ContractBaseInfo getTracingBaseInfo(String callAddress, String contractAddress) {
-        Object[] objects = getBaseInfo(callAddress,contractAddress);
+        String method = "getBaseInfo()";
+        List<Object> args = Collections.emptyList();
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("getBaseInfo",
+                new String[]{}, new String[]{"string","string","uint", "address"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return ContractBaseInfo.builder()
-                .creator((String) objects[0])
-                .groupName((String) objects[1])
-                .uid((String) objects[2])
-                .createTime(formatter.format(objects[3]))
-                .owner(DecodeUtil.createReadableString((byte[]) objects[4]))
+                .groupName((String) objects[0])
+                .uid((String) objects[1])
+                .createTime(formatter.format(objects[2]))
+                .owner(DecodeUtil.createReadableString((byte[]) objects[3]))
                 .build();
     }
 
@@ -121,7 +126,13 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      */
     public ContractBaseInfo getWitnessBaseInfo(String callAddress, String contractAddress) {
-        Object[] objects = getBaseInfo(callAddress,contractAddress);
+        String method = "getBaseInfo()";
+        List<Object> args = Collections.emptyList();
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("getBaseInfo",
+                new String[]{}, new String[]{"string","string","string", "uint", "address"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return ContractBaseInfo.builder()
                 .creator((String) objects[0])
@@ -132,14 +143,28 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                 .build();
     }
 
-    private Object[] getBaseInfo(String callAddress, String contractAddress) {
+    /**
+     * 存证合约基础信息：合约创建者、合约英文名称、合约中文名称、创建时间、合约拥有者地址
+     * @param callAddress 合约调用者
+     * @param contractAddress 合约地址
+     */
+    public ContractBaseInfo getTracingProxyBaseInfo(String callAddress, String contractAddress) {
         String method = "getBaseInfo()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
         ByteString callResult = callReturn.getCallResult();
         CallTransaction.Function function = CallTransaction.Function.fromSignature("getBaseInfo",
-                new String[]{}, new String[]{"string","string","string", "uint", "address"});
-        return function.decodeResult(callResult.toByteArray());
+                new String[]{}, new String[]{"string","string","string", "string", "uint", "address"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return ContractBaseInfo.builder()
+                .creator((String) objects[0])
+                .nameEn((String) objects[1])
+                .nameZn((String) objects[2])
+                .uid((String) objects[3])
+                .createTime(formatter.format(objects[4]))
+                .owner(DecodeUtil.createReadableString((byte[]) objects[5]))
+                .build();
     }
 
     /**
@@ -151,10 +176,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      */
     public boolean addWitnessInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
         String method = "addDataKey(string[])";
-        TriggerContractReturn triggerContractReturn =
-                triggerContract(callAddress, privateKey, contractAddress, method, args);
-        ByteString contractResult = triggerContractReturn.getCallResult();
-        return ByteUtil.byteArrayToLong(contractResult.toByteArray()) == 0;
+        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
     }
 
     /**
@@ -449,7 +471,17 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
     }
 
-
+    /**
+     * 新增溯源环节
+     * @param callAddress 调用者地址
+     * @param privateKey 调用者私钥
+     * @param contractAddress 合约地址
+     * @param args 溯源环境名称
+     */
+    public boolean addTraceLink(String callAddress, String privateKey, String contractAddress, List<Object> args) {
+        String method = "addTraceLink(string[])";
+        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
+    }
 
     private long getUserSizeOfDataWhiteList(String callAddress, String contractAddress, long dataIndex) {
         String method = "getUserSizeOfDataWhiteList(uint256)";

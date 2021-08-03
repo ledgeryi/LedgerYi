@@ -11,6 +11,8 @@ contract TracingProxy {
     using StringSet for StringSet.Set;
     using AddressSet for AddressSet.Set;
 
+    string private creater;
+
     address private owner;
 
     string private uid;
@@ -30,12 +32,21 @@ contract TracingProxy {
         _;
     }
 
-    constructor (string memory _nameZn, string memory _nameEn, string memory _uid) public {
+    constructor (string memory _creater, string memory _nameZn, string memory _nameEn, string memory _uid) public {
+        creater = _creater;
         owner = msg.sender;
         createTime = now;
         nameEn = _nameEn;
         nameZn = _nameZn;
         uid = _uid;
+    }
+
+    function getBaseInfo() external view returns (string memory, string memory, string memory, string memory, uint, address) {
+        return (creater, nameEn, nameZn, uid, createTime, owner);
+    }
+
+    function getCreater() external view returns (string memory) {
+        return creater;
     }
 
     function getOwner() external view returns (address) {
@@ -52,6 +63,12 @@ contract TracingProxy {
 
     function getCreateTime() external view returns (uint) {
         return createTime;
+    }
+
+    function addTraceLink(string[] memory _linkNames) external {
+        for (uint256 i = 0; i < _linkNames.length; i++) {
+            traceLinkNames.add(_linkNames[i]);
+        }
     }
 
     function getTraceLinkLength() external view returns(uint256) {
