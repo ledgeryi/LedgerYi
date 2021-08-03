@@ -13,7 +13,6 @@ import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.spongycastle.util.Strings;
 
 import java.math.BigInteger;
 import java.nio.file.Path;
@@ -63,7 +62,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 部署者私钥
      * @param args 合约参数
      */
-    public DeployContractReturn deployTracingProxyContract(String ownerAddress, String privateKey, ArrayList<Object> args) {
+    public DeployContractReturn deployTracingProxyContract(String ownerAddress, String privateKey, List<Object> args) {
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","resources","TracingProxy.sol");
@@ -84,7 +83,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 部署者私钥
      * @param args 合约参数
      */
-    public DeployContractReturn deployTracingContract(String ownerAddress, String privateKey, ArrayList<Object> args) {
+    public DeployContractReturn deployTracingContract(String ownerAddress, String privateKey, List<Object> args) {
         DeployContractReturn deployContract = null;
         try {
             Path source = Paths.get("src","resources","Tracing.sol");
@@ -100,18 +99,29 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 存证合约基础信息
+     * 溯源合约基础信息：创建者、溯源登记信息组名称、唯一溯源标识、创建时间、合约拥有者地址
+     * @param callAddress 合约调用者
+     * @param contractAddress 合约地址
+     */
+    public ContractBaseInfo getTracingBaseInfo(String callAddress, String contractAddress) {
+        Object[] objects = getBaseInfo(callAddress,contractAddress);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return ContractBaseInfo.builder()
+                .creator((String) objects[0])
+                .groupName((String) objects[1])
+                .uid((String) objects[2])
+                .createTime(formatter.format(objects[3]))
+                .owner(DecodeUtil.createReadableString((byte[]) objects[4]))
+                .build();
+    }
+
+    /**
+     * 存证合约基础信息：合约创建者、合约英文名称、合约中文名称、创建时间、合约拥有者地址
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
     public ContractBaseInfo getWitnessBaseInfo(String callAddress, String contractAddress) {
-        String method = "getBaseInfo()";
-        List<Object> args = Collections.emptyList();
-        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
-        ByteString callResult = callReturn.getCallResult();
-        CallTransaction.Function function = CallTransaction.Function.fromSignature("getBaseInfo",
-                new String[]{}, new String[]{"string","string","string", "uint", "address"});
-        Object[] objects = function.decodeResult(callResult.toByteArray());
+        Object[] objects = getBaseInfo(callAddress,contractAddress);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return ContractBaseInfo.builder()
                 .creator((String) objects[0])
@@ -122,8 +132,18 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                 .build();
     }
 
+    private Object[] getBaseInfo(String callAddress, String contractAddress) {
+        String method = "getBaseInfo()";
+        List<Object> args = Collections.emptyList();
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("getBaseInfo",
+                new String[]{}, new String[]{"string","string","string", "uint", "address"});
+        return function.decodeResult(callResult.toByteArray());
+    }
+
     /**
-     * 新增存证数据
+     * 存证合约、溯源合约：新增存证信息名称
      * @param callAddress 合约调用者
      * @param privateKey 调用者私钥
      * @param contractAddress 合约地址
@@ -138,7 +158,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 存证合约的存证信息
+     * 存证合约、溯源合约：获取存证信息名称
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
@@ -165,7 +185,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 促存证数据上链
+     * 存证合约、溯源合约：数据上链
      * @param callAddress 合约调用者
      * @param privateKey 调用者私钥
      * @param contractAddress 合约地址
@@ -181,14 +201,28 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 获取存证数据
+     * 存证合约、溯源合约：获取最新的存证数据
+     * @param callAddress 合约调用者
+     * @param contractAddress 合约地址
+     */
+    public Map<String,String> getLatestDataInfo(String callAddress, String contractAddress) {
+        String method = "getDataInfo()";
+        List<Object> args = Collections.emptyList();
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("getDataInfo",
+                new String[]{}, new String[]{"string[]","string[]"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
+        return dataIntegration(objects);
+    }
+
+    /**
+     * 存证合约、溯源合约：获取存证数据
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      * @param dataIndex 数据对应的链上索引，从0开始
      */
     public Map<String,String> getDataInfo(String callAddress, String contractAddress, long dataIndex) {
-        List<String> keys = new ArrayList<>();
-        List<String> values = new ArrayList<>();
         String method = "getDataInfo(uint256)";
         List<Object> args = Collections.singletonList(dataIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -196,6 +230,12 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         CallTransaction.Function function = CallTransaction.Function.fromSignature("getDataInfo",
                 new String[]{"uint256"}, new String[]{"string[]","string[]"});
         Object[] objects = function.decodeResult(callResult.toByteArray());
+        return dataIntegration(objects);
+    }
+
+    private Map<String,String> dataIntegration(Object[] objects){
+        List<String> keys = new ArrayList<>();
+        List<String> values = new ArrayList<>();
         if (objects.length == 2) {
             if (objects[0] instanceof Object[]) {
                 Object[] temp = (Object[])objects[0];
@@ -220,31 +260,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 获取存证数据的共享列表
-     * @param callAddress 合约调用者
-     * @param contractAddress 合约地址
-     * @param dataIndex 存证数据索引，从0开始
-     */
-    public List<String> getContractShareList(String callAddress, String contractAddress, long dataIndex) {
-        String method = "getUserSizeOfDataWhiteList(uint256)";
-        List<Object> args = Collections.singletonList(dataIndex);
-        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
-        ByteString callResult = callReturn.getCallResult();
-        long shareListLength = ByteUtil.byteArrayToLong(callResult.toByteArray());
-        List<String> shares = new ArrayList<>();
-        for (long index = 0; index < shareListLength; index++) {
-            method = "getUserFromDataWhiteList(uint256,uint256)";
-            args = Arrays.asList(dataIndex,index);
-            callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
-            callResult = callReturn.getCallResult();
-            String address = DecodeUtil.createReadableString(callResult.toByteArray());
-            shares.add(address);
-        }
-        return shares;
-    }
-
-    /**
-     * 获取合约白名单启动状态
+     * 存证合约、溯源合约：获取合约白名单启动状态
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
@@ -263,7 +279,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 禁用合约白名单
+     * 存证合约、溯源合约：禁用合约白名单
      * @param callAddress 合约拥有者
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
@@ -275,7 +291,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 启用合约白名单
+     * 存证合约、溯源合约：启用合约白名单
      * @param callAddress 合约拥有者
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
@@ -287,7 +303,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 向合约白名单添加用户
+     * 存证合约、溯源合约：向合约白名单添加用户
      * @param callAddress 合约拥有者
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
@@ -303,7 +319,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 从合约白名单移除用户
+     * 存证合约、溯源合约：从合约白名单移除用户
      * @param callAddress 合约拥有者
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
@@ -318,7 +334,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
 }
 
     /**
-     * 获取合约白名单成员
+     * 存证合约、溯源合约：获取合约白名单成员
      * @param callAddress 调用者地址
      * @param contractAddress 合约地址
      */
@@ -337,7 +353,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 向某次存证数据白名单添加用户
+     * 存证合约、溯源合约：向某次存证数据白名单添加用户
      * @param callAddress 数据拥有者地址
      * @param privateKey 数据拥有者私钥
      * @param contractAddress 合约地址
@@ -355,7 +371,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 向某次存证数据白名单移除用户
+     * 存证合约、溯源合约：向某次存证数据白名单移除用户
      * @param callAddress 数据拥有者地址
      * @param privateKey 数据拥有者私钥
      * @param contractAddress 合约地址
@@ -372,7 +388,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 获取某次存证数据白名单成员
+     * 存证合约、溯源合约：获取某次存证数据白名单成员
      * @param callAddress 调用者地址
      * @param contractAddress 合约地址
      */
@@ -391,7 +407,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 获取存证数据白名单启动状态
+     * 存证合约、溯源合约：获取存证数据白名单启动状态
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
@@ -410,7 +426,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 禁用存证数据白名单
+     * 存证合约、溯源合约：禁用存证数据白名单
      * @param callAddress 合约拥有者
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
@@ -422,7 +438,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 启用存证数据白名单
+     * 存证合约、溯源合约：启用存证数据白名单
      * @param callAddress 合约拥有者
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
@@ -432,6 +448,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         List<Object> args = Collections.singletonList(dataIndex);
         return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
     }
+
+
 
     private long getUserSizeOfDataWhiteList(String callAddress, String contractAddress, long dataIndex) {
         String method = "getUserSizeOfDataWhiteList(uint256)";

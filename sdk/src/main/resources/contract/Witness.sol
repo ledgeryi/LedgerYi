@@ -135,6 +135,13 @@ contract Witness {
         return dataList.getData(_index);
     }
 
+    function getDataInfo() external view returns (string[] memory, string[] memory) {
+        uint256 _index = dataList._datas.length - 1;
+        //AddressSet.WhiteList storage whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
+        require(!dataWhiteList[keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
+        return dataList.getData(_index);
+    }
+
     function addUserToDataWhiteList(uint256 _index, address _user) external onlyDataOwner(_index) returns (bool) {
         return dataWhiteList[keccak256(abi.encodePacked(_index))].addUser(_user);
     }

@@ -24,4 +24,6 @@ public class ContractBaseInfo {
     String createTime;
     //溯源唯一标识
     String uid;
+    //溯源登记信息组名称
+    String groupName;
 }
