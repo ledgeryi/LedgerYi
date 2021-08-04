@@ -287,16 +287,28 @@ public class LedgerYiApiService {
         return rpcCli.deployContract(createContract,null);
     }
 
-    public TransactionExtention triggerContractTransaction(byte[] ownerAddress,
-                                                 TriggerContractParam param) {
+    public TransactionExtention triggerContractTransaction(byte[] ownerAddress, TriggerContractParam param) {
         TriggerSmartContract triggerContract = triggerCallContract(ownerAddress,
                 param.getContractAddress(), param.getCallValue(), param.getData());
-
         return rpcCli.triggerContract(triggerContract,null);
     }
 
-    public boolean processTransaction(TransactionExtention transactionExtention, byte[] privateKey) {
-        return processTransaction(transactionExtention,privateKey,null);
+    public Transaction sigTransaction(TransactionExtention transactionExtention, byte[] privateKey){
+        if (transactionExtention == null) {
+            return null;
+        }
+        Return ret = transactionExtention.getResult();
+        if (!ret.getResult()) {
+            log.error("result is false, code: " + ret.getCode());
+            log.error("result is false, message: " + ret.getMessage().toStringUtf8());
+            return null;
+        }
+        Transaction transaction = transactionExtention.getTransaction();
+        if (transaction == null || transaction.getRawData().getContract() == null) {
+            log.error("transaction or contract is null");
+            return null;
+        }
+        return TransactionUtils.sign(transaction, privateKey);
     }
 
     public Return broadcastTransaction(Transaction transaction) {

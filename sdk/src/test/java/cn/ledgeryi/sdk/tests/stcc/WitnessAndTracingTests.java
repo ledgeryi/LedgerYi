@@ -3,9 +3,13 @@ package cn.ledgeryi.sdk.tests.stcc;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
+import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
+import cn.ledgeryi.sdk.exception.CallContractExecption;
+import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.serverapi.LedgerYiStccApiService;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
+import cn.ledgeryi.sdk.serverapi.data.stcc.TriggerResult;
 import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +42,7 @@ public class WitnessAndTracingTests {
     }
 
     @Test//部署存证合约
-    public void deployWitnessContract(){
+    public void deployWitnessContract() throws CreateContractExecption, ContractException {
         List<Object> params = Arrays.asList("创建者HQ","合约中文名称","合约英文名称");
         DeployContractReturn deployContractReturn = ledgerYiStccApiService.deployWitnessContract(ownerAddress, privateKey, params);
         String contractAddress = deployContractReturn.getContractAddress();
@@ -46,7 +50,7 @@ public class WitnessAndTracingTests {
     }
 
     @Test//部署溯源合约
-    public void deployTracingContract(){
+    public void deployTracingContract() throws CreateContractExecption, ContractException {
         List<Object> params = Arrays.asList("fwerfwejg8u387t38","溯源登记信息组名称");
         DeployContractReturn deployContractReturn = ledgerYiStccApiService.deployTracingContract(ownerAddress, privateKey, params);
         String contractAddress = deployContractReturn.getContractAddress();
@@ -133,12 +137,12 @@ public class WitnessAndTracingTests {
     }
 
     @Test
-    public void addData(){
-        List<Object> args = Arrays.asList("[\"e","f\"]");
+    public void addData() throws CallContractExecption {
+        List<Object> args = Arrays.asList("[\"g","h\"]");
         ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
         privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
-        long result = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, args);
-        System.out.println(result);
+        TriggerResult result = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, args);
+        System.out.println(result.getCallResult());
     }
 
     @Test

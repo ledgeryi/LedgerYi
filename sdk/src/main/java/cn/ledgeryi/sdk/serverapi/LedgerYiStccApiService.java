@@ -1,18 +1,20 @@
 package cn.ledgeryi.sdk.serverapi;
 
+import cn.ledgeryi.sdk.common.crypto.Sha256Sm3Hash;
 import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.event.CallTransaction;
+import cn.ledgeryi.sdk.exception.CallContractExecption;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
+import cn.ledgeryi.sdk.serverapi.data.stcc.TriggerResult;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 
 import java.math.BigInteger;
 import java.nio.file.Path;
@@ -39,20 +41,16 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 部署者私钥
      * @param args 合约参数：创建人、合约中文名称、合约英文名称
      */
-    public DeployContractReturn deployWitnessContract(String ownerAddress, String privateKey, List<Object> args) {
-        DeployContractReturn deployContract = null;
-        Assert.assertTrue("args size unequal to 3",args.size() == 3);
-        try {
-            Path source = Paths.get("src","main/resources/contract","Witness.sol");
-            DeployContractParam param = compileContractFromFile(source,"Witness");
-            param.setConstructor("constructor(string,string,string)");
-            param.setArgs(args);
-            deployContract = deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), param);
-        } catch (ContractException | CreateContractExecption e) {
-            e.printStackTrace();
-            log.error("contract compile error: " + e.getMessage());
+    public DeployContractReturn deployWitnessContract(String ownerAddress, String privateKey, List<Object> args)
+            throws CreateContractExecption, ContractException {
+        if (args.size() != 3){
+            throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
-        return deployContract;
+        Path source = Paths.get("src","main/resources/contract","Witness.sol");
+        DeployContractParam param = compileContractFromFile(source,"Witness");
+        param.setConstructor("constructor(string,string,string)");
+        param.setArgs(args);
+        return deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), param);
     }
 
 
@@ -62,19 +60,16 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 部署者私钥
      * @param args 合约参数：创建人、合约中文名称、合约英文名称、唯一溯源标识
      */
-    public DeployContractReturn deployTracingProxyContract(String ownerAddress, String privateKey, List<Object> args) {
-        DeployContractReturn deployContract = null;
-        try {
-            Path source = Paths.get("src","main/resources/contract","TracingProxy.sol");
-            DeployContractParam param = compileContractFromFile(source,"TracingProxy");
-            param.setConstructor("constructor(string,string,string,string)");
-            param.setArgs(args);
-            deployContract = deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), param);
-        } catch (ContractException | CreateContractExecption e) {
-            e.printStackTrace();
-            log.error("contract compile error: " + e.getMessage());
+    public DeployContractReturn deployTracingProxyContract(String ownerAddress, String privateKey, List<Object> args)
+            throws CreateContractExecption, ContractException {
+        if (args.size() != 4){
+            throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
-        return deployContract;
+        Path source = Paths.get("src","main/resources/contract","TracingProxy.sol");
+        DeployContractParam param = compileContractFromFile(source,"TracingProxy");
+        param.setConstructor("constructor(string,string,string,string)");
+        param.setArgs(args);
+        return deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), param);
     }
 
     /**
@@ -83,19 +78,16 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 部署者私钥
      * @param args 合约参数：唯一溯源标识、溯源登记信息组名称
      */
-    public DeployContractReturn deployTracingContract(String ownerAddress, String privateKey, List<Object> args) {
-        DeployContractReturn deployContract = null;
-        try {
-            Path source = Paths.get("src","main/resources/contract","Tracing.sol");
-            DeployContractParam param = compileContractFromFile(source,"Tracing");
-            param.setConstructor("constructor(string,string)");
-            param.setArgs(args);
-            deployContract = deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), param);
-        } catch (ContractException | CreateContractExecption e) {
-            e.printStackTrace();
-            log.error("contract compile error: " + e.getMessage());
+    public DeployContractReturn deployTracingContract(String ownerAddress, String privateKey, List<Object> args)
+            throws CreateContractExecption, ContractException {
+        if (args.size() != 2){
+            throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
-        return deployContract;
+        Path source = Paths.get("src","main/resources/contract","Tracing.sol");
+        DeployContractParam param = compileContractFromFile(source,"Tracing");
+        param.setConstructor("constructor(string,string)");
+        param.setArgs(args);
+        return deployContract(DecodeUtil.decode(ownerAddress), DecodeUtil.decode(privateKey), param);
     }
 
     /**
@@ -174,9 +166,10 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @return 数据对应的链上索引，从0开始
      */
-    public boolean addWitnessInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
+    public String addWitnessInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
         String method = "addDataKey(string[])";
-        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
+        TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
+        return triggerContractReturn == null ? "" : triggerContractReturn.getTransactionId();
     }
 
     /**
@@ -203,27 +196,58 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             }
         }
         return Collections.emptyList();
-
     }
 
     /**
-     * 存证合约、溯源合约：数据上链
+     * 存证合约：数据上链
+     * @param callAddress 合约调用者
+     * @param privateKey 调用者私钥
+     * @param contractAddress 合约地址
+     * @param args 存证数据
+     * @return 存证数据链上索引
+     * @throws CallContractExecption
+     */
+    public TriggerResult saveDataInfo(String callAddress, String privateKey, String contractAddress, List<Object> args)
+            throws CallContractExecption {
+        try {
+            String method = "saveDataInfo(string[])";
+            TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
+            ByteString contractResult = triggerContractReturn.getCallResult();
+            //Sha256Sm3Hash hash = Sha256Sm3Hash.of(contractResult.toByteArray());
+            //String storeId = DecodeUtil.createReadableString(hash.getBytes());
+            //System.out.println(storeId);
+            String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
+            return TriggerResult.builder().callResult(storeId).txId(triggerContractReturn.getTransactionId()).build();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new CallContractExecption("Data storage failed");
+        }
+    }
+
+    /**
+     * 存证合约：数据上链（对存证数据对齐验证）
      * @param callAddress 合约调用者
      * @param privateKey 调用者私钥
      * @param contractAddress 合约地址
      * @param args 存证数据
      * @return 存证数据链上索引
      */
-    public long saveDataInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
-        try {
-            String method = "saveDataInfo(string[])";
-            TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
-            ByteString contractResult = triggerContractReturn.getCallResult();
-            return ByteUtil.byteArrayToLong(contractResult.toByteArray());
-        } catch (Exception e) {
-            return -1;
+    public TriggerResult saveDataInfo(String callAddress, String privateKey, String contractAddress, Map<String,String> args)
+            throws CallContractExecption {
+        List<Object> params = new ArrayList<>();
+        List<String> keys = getWitnessInfo(callAddress, contractAddress);
+        if (args.size() != keys.size()){
+            throw new CallContractExecption("Data storage failed, data length is inconsistent");
         }
-
+        Set<String> keySets = args.keySet();
+        for (String key : keySets) {
+            if (keys.contains(key)) {
+                params.add(args.get(key));
+            } else {
+                throw new CallContractExecption("Data storage failed, data keys not include key:" + key);
+            }
+        }
+        return saveDataInfo(callAddress,privateKey,contractAddress,params);
     }
 
     /**

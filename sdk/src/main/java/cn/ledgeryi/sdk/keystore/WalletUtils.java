@@ -46,7 +46,7 @@ public class WalletUtils {
     return walletFile;
   }
 
-  public static String createKeyStoreFile(String password)
+  private static String createKeyStoreFile(String password)
           throws CipherException, IOException {
     WalletFile walletFile = createWalletFile(password);
     return store2Keystore(walletFile);

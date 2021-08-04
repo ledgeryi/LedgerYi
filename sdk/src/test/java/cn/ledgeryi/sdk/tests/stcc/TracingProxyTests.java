@@ -3,6 +3,8 @@ package cn.ledgeryi.sdk.tests.stcc;
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
+import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
+import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.serverapi.LedgerYiStccApiService;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
@@ -31,7 +33,7 @@ public class TracingProxyTests {
     }
 
     @Test//部署溯源代理合约
-    public void deployProxyTracingContract(){
+    public void deployProxyTracingContract() throws CreateContractExecption, ContractException {
         List<Object> params = Arrays.asList("创建人","合约中文名称","合约英文名称","fwerfwejg8u387t38");
         DeployContractReturn deployContractReturn = ledgerYiStccApiService.deployTracingProxyContract(ownerAddress, privateKey, params);
         String contractAddress = deployContractReturn.getContractAddress();
@@ -39,7 +41,7 @@ public class TracingProxyTests {
     }
 
     @Test//部署溯源合约
-    public void deployTracingContract() {
+    public void deployTracingContract() throws CreateContractExecption, ContractException {
         List<Object> args = Arrays.asList("fwerfwejg8u387t38","溯源登记信息组壹");
         DeployContractReturn deployContractReturn = ledgerYiStccApiService.deployTracingContract(ownerAddress,privateKey,args);
         String contractAddress = deployContractReturn.getContractAddress();
