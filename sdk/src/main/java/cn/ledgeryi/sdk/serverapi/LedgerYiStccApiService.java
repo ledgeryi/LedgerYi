@@ -472,19 +472,115 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 新增溯源环节
+     * 溯源代理合约：新增溯源环节
      * @param callAddress 调用者地址
      * @param privateKey 调用者私钥
-     * @param contractAddress 合约地址
-     * @param args 溯源环境名称
+     * @param proxyContractAddress 代理合约地址
+     * @param args 溯源环节名称
      */
-    public boolean addTraceLink(String callAddress, String privateKey, String contractAddress, List<Object> args) {
+    public boolean addTraceLink(String callAddress, String privateKey, String proxyContractAddress, List<Object> args) {
         String method = "addTraceLink(string[])";
-        return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
+        return null != triggerContract(callAddress,privateKey,proxyContractAddress,method,args);
+    }
+
+    /**
+     * 溯源代理合约：向某一溯源环节中新增溯源合约
+     * @param callAddress 调用者地址
+     * @param privateKey 调用者私钥
+     * @param proxyContractAddress 代理合约地址
+     * @param linkName 溯源环节名称
+     * @param traceContract 溯源合约
+     */
+    public boolean addContractToTraceLink(String callAddress, String privateKey,
+                                          String proxyContractAddress, String linkName,
+                                          String traceContract) {
+        String method = "addContractToTraceLink(string,address)";
+        List<Object> args = Arrays.asList(linkName,traceContract);
+        triggerContract(callAddress,privateKey,proxyContractAddress,method,args);
+        TriggerContractReturn callReturn = triggerContract(callAddress,privateKey,proxyContractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("addContractToTraceLink",
+                new String[]{}, new String[]{"bool"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
+        if (objects.length == 1 && objects[0] instanceof Boolean) {
+            return (Boolean)objects[0];
+        }
+        return false;
+    }
+
+    /**
+     * 溯源代理合约：获取环节名称
+     * @param callAddress  调用者地址
+     * @param proxyContractAddress 代理合约地址
+     */
+    public ArrayList<String> getTraceLinkNames(String callAddress, String proxyContractAddress){
+        String method = "getTraceLinkLength()";
+        List<Object> args = Collections.emptyList();
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,proxyContractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        long traceLinkNameSize = ByteUtil.byteArrayToLong(callResult.toByteArray());
+        method = "getTraceLinkName(uint256)";
+        ArrayList<String> linkNames = new ArrayList<>();
+        for (long dataIndex = 0; dataIndex < traceLinkNameSize; dataIndex++) {
+            args = Collections.singletonList(dataIndex);
+            callReturn = triggerConstantContract(callAddress,proxyContractAddress,method,args);
+            String linkName = new String(callReturn.getCallResult().toByteArray()).trim();
+            linkNames.add(linkName);
+        }
+        return linkNames;
+    }
+
+    /**
+     * 溯源代理合约：某一个溯源环节包含的溯源合约总数
+     * @param callAddress  调用者地址
+     * @param proxyContractAddress 代理合约地址
+     * @param linkName 溯源环节名称
+     */
+    public long getTraceContractSize(String callAddress, String proxyContractAddress, String linkName) {
+        String method = "getTraceContractSize(string)";
+        return getSize(callAddress,proxyContractAddress,method,linkName);
+    }
+
+    /**
+     * 溯源代理合约：从某一个溯源环节中获取某一个溯源合约
+     * @param callAddress 调用者地址
+     * @param proxyContractAddress 代理合约地址
+     * @param linkName 溯源环节名称
+     * @param contractIndex 合约索引，从0开始
+     * @return 溯源合约地址
+     */
+    public String getContractInTraceLink(String callAddress, String proxyContractAddress,
+                                              String linkName, long contractIndex) {
+        String method = "getTraceContractAddress(string,uint256)";
+        List<Object> args = Arrays.asList(linkName,contractIndex);
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,proxyContractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        String address = DecodeUtil.createReadableString(callResult.toByteArray());
+        return address.substring(24,64);
+    }
+
+    /**
+     * 溯源代理合约：从某一个溯源环节中获取所有溯源合约
+     * @param callAddress 调用者地址
+     * @param proxyContractAddress 代理合约地址
+     * @param linkName 溯源环节名称
+     */
+    public List<String> getAllContactsOfTraceLink(String callAddress, String proxyContractAddress, String linkName) {
+        ArrayList<String> contracts = new ArrayList<>();
+        long contractSize = getTraceContractSize(callAddress, proxyContractAddress, linkName);
+        for (long index = 0; index < contractSize; index++) {
+            String contract = getContractInTraceLink(callAddress, proxyContractAddress, linkName, index);
+            contracts.add(contract);
+        }
+        return contracts;
     }
 
     private long getUserSizeOfDataWhiteList(String callAddress, String contractAddress, long dataIndex) {
         String method = "getUserSizeOfDataWhiteList(uint256)";
+        return getSize(callAddress,contractAddress,method,dataIndex);
+    }
+
+    private long getSize(String callAddress, String contractAddress, String method, Object dataIndex) {
         List<Object> args = Collections.singletonList(dataIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
         ByteString callResult = callReturn.getCallResult();

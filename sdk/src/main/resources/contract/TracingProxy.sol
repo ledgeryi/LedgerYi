@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+pragma experimental ABIEncoderV2;
 
 pragma solidity ^0.6.9;
 
@@ -87,7 +88,7 @@ contract TracingProxy {
         return traceLinks[keccak256(abi.encodePacked(_linkName))].at(_index);
     }
 
-    function addTraceLink(string memory _linkName, address _traceContract) onlyOwner external returns (bool) {
+    function addContractToTraceLink(string memory _linkName, address _traceContract) onlyOwner external returns (bool) {
         traceLinkNames.add(_linkName);
         Tracing tracing = Tracing(_traceContract);
         string memory _uid = tracing.getUid();
