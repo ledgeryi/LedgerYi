@@ -26,8 +26,8 @@ public class WitnessAndTracingTests {
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
-    private static String witnessContractAddress = "d269c207098b5bbb25dd5d4f4c7dffbad2fb6f66";
-    private static String tracingContractAddress = "8c0e1ec353efd354a001018202cc1acf834c5d6f";
+    private static String witnessContractAddress = "104b8027cc44b650dc269c99075c44640c628ad2";
+    private static String tracingContractAddress = "17fd519e5fb8dd03d1ff8fb49cee728a1be27419";
 
     private static String contractAddress = tracingContractAddress;
 
@@ -70,7 +70,7 @@ public class WitnessAndTracingTests {
 
     @Test
     public void disableStatusOfContractWhite() {
-        String contractAddress = witnessContractAddress;
+        //String contractAddress = witnessContractAddress;
         ledgerYiStccApiService.disableStatusOfContractWhite(ownerAddress, privateKey, contractAddress);
     }
 
@@ -84,22 +84,25 @@ public class WitnessAndTracingTests {
         // address: fbb859ffc4a0a2274fd35b121cd5a22d8946bf72
         // privateKey: 7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0
 
-        // address: 338f60e4d99feea0764ad49264dfd6dc3ed1d724
-        // privateKey: 3f177d8a0f3725b34b7866f080e43696b4612c4f295cf277fae7a9721ed770d1
-        String user = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
+        // address: 309ae8dc03a1ff131cc75bf5d0f91eee67d8eff0
+        // privateKey: 8751b33e109daca1737415ccb3b34a6bb7eef98bbd0949311d3b3faeaa3c08db
+        //String contractAddress = witnessContractAddress;
+        String user = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
         boolean result = ledgerYiStccApiService.addUserToContractWhiteList(ownerAddress, privateKey, contractAddress, user);
         System.out.println(result);
     }
 
     @Test
     public void removeUserFromContractWhiteList() {
-        String user = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
+        //String contractAddress = witnessContractAddress;
+        String user = "309ae8dc03a1ff131cc75bf5d0f91eee67d8eff0";
         boolean result = ledgerYiStccApiService.removeUserToContractWhiteList(ownerAddress, privateKey, contractAddress, user);
         System.out.println(result);
     }
 
     @Test
     public void getUsersFromContractWhiteList() {
+        //String contractAddress = witnessContractAddress;
         List<String> usersFromContractWhiteList = ledgerYiStccApiService.getUsersFromContractWhiteList(ownerAddress, contractAddress);
         System.out.println(usersFromContractWhiteList);
     }
@@ -131,7 +134,9 @@ public class WitnessAndTracingTests {
 
     @Test
     public void addData(){
-        List<Object> args = Arrays.asList("[\"a","b\"]");
+        List<Object> args = Arrays.asList("[\"e","f\"]");
+        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
+        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
         long result = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, args);
         System.out.println(result);
     }
@@ -139,23 +144,26 @@ public class WitnessAndTracingTests {
     @Test
     public void getData(){
         long dataIndex = 0;
+        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
+        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
         Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, dataIndex);
         System.out.println(dataInfo.toString());
     }
 
     @Test
     public void getLatestData(){
+        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
         Map<String, String> dataInfo = ledgerYiStccApiService.getLatestDataInfo(ownerAddress, contractAddress);
         System.out.println(dataInfo.toString());
     }
 
     @Test
     public void addUserToDataWhiteList() {
-//        address: fbb859ffc4a0a2274fd35b121cd5a22d8946bf72
-//        privateKey: 7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0
+        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
+        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
 
-//        address: 338f60e4d99feea0764ad49264dfd6dc3ed1d724
-//        privateKey: 3f177d8a0f3725b34b7866f080e43696b4612c4f295cf277fae7a9721ed770d1
+//        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
+//        privateKey = "3f177d8a0f3725b34b7866f080e43696b4612c4f295cf277fae7a9721ed770d1";
         long dataIndex = 0;
         String user = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
         boolean result = ledgerYiStccApiService.addUserToDataWhiteList(ownerAddress, privateKey, contractAddress, dataIndex, user);
@@ -172,7 +180,9 @@ public class WitnessAndTracingTests {
     @Test
     public void removeUserFromDataWhiteList(){
         long dataIndex = 0;
-        String user = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
+        String user = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
+        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
+        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
         boolean result = ledgerYiStccApiService.removeUserToDataWhiteList(ownerAddress, privateKey, contractAddress, dataIndex, user);
         System.out.println(result);
     }

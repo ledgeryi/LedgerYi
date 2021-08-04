@@ -37,17 +37,9 @@ contract Tracing {
 
     modifier onlyDataOwner(uint256 _index) {
         require(_index < dataList._datas.length, "Data index out of bounds");
-        AddressSet.WhiteList storage whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
-        require(msg.sender == whiteList.owner, "Caller is not data owner");
+        require(msg.sender == dataWhiteList[keccak256(abi.encodePacked(_index))].owner, "Caller is not data owner");
         _;
     }
-
-//    modifier onlyDataWhiteListMember(uint256 _index) {
-//        require(_index < dataList._datas.length, "Data index out of bounds");
-//        AddressSet.WhiteList storage whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
-//        require(!whiteList.status || whiteList.contains(msg.sender), "Caller is not in whiteList");
-//        _;
-//    }
 
     constructor (string memory _uid, string memory _groupName) public {
         uid = _uid;
@@ -88,7 +80,7 @@ contract Tracing {
     }
 
     function addUserToContractWhiteList(address _user) external onlyContractOwner returns (bool) {
-        require(contractWhiteList.status, "The status of white list is disabel");
+        require(contractWhiteList.status, "The status of white list is disable");
         return contractWhiteList.addUser(_user);
     }
 
@@ -101,9 +93,9 @@ contract Tracing {
         return contractWhiteList.length();
     }
 
-    function getUserFromDataWhiteList(uint256 _index, uint256 _userIndex) external view returns (address) {
-        require(_index < dataList._datas.length, "Data index out of bounds");
-        return dataWhiteList[keccak256(abi.encodePacked(_index))].at(_userIndex);
+    function getUserFromContractWhiteList(uint256 _index) external view returns (address) {
+        require(_index < contractWhiteList.length(), "User index out of bounds");
+        return contractWhiteList.at(_index);
     }
 
     function addDataKey(string[] memory _dataKeys) external onlyContractWhiteListMember {
@@ -126,14 +118,12 @@ contract Tracing {
 
     function getDataInfo() external view returns (string[] memory, string[] memory) {
         uint256 _index = dataList._datas.length - 1;
-        //AddressSet.WhiteList storage whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
         require(!dataWhiteList[keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
         return dataList.getData(_index);
     }
 
-    function getDataInfo(uint256 _index) external view /*onlyDataWhiteListMember(_index)*/ returns (string[] memory, string[] memory) {
+    function getDataInfo(uint256 _index) external view returns (string[] memory, string[] memory) {
         require(_index < dataList._datas.length, "Data index out of bounds");
-        //AddressSet.WhiteList storage whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
         require(!dataWhiteList[keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
         return dataList.getData(_index);
     }
@@ -152,9 +142,9 @@ contract Tracing {
         return dataWhiteList[keccak256(abi.encodePacked(_index))].length();
     }
 
-    function getUserFromDataWhiteList(uint256 _index) external view returns (address) {
+    function getUserFromDataWhiteList(uint256 _index, uint256 _userIndex) external view returns (address) {
         require(_index < dataList._datas.length, "Data index out of bounds");
-        return dataWhiteList[keccak256(abi.encodePacked(_index))].at(_index);
+        return dataWhiteList[keccak256(abi.encodePacked(_index))].at(_userIndex);
     }
 
     function disableDataWhite(uint256 _index) external onlyContractOwner {

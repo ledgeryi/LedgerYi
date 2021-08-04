@@ -215,11 +215,15 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 存证数据链上索引
      */
     public long saveDataInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
-        String method = "saveDataInfo(string[])";
-        TriggerContractReturn triggerContractReturn =
-                triggerContract(callAddress, privateKey, contractAddress, method, args);
-        ByteString contractResult = triggerContractReturn.getCallResult();
-        return ByteUtil.byteArrayToLong(contractResult.toByteArray());
+        try {
+            String method = "saveDataInfo(string[])";
+            TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
+            ByteString contractResult = triggerContractReturn.getCallResult();
+            return ByteUtil.byteArrayToLong(contractResult.toByteArray());
+        } catch (Exception e) {
+            return -1;
+        }
+
     }
 
     /**
@@ -581,10 +585,15 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     private long getSize(String callAddress, String contractAddress, String method, Object dataIndex) {
-        List<Object> args = Collections.singletonList(dataIndex);
-        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
-        ByteString callResult = callReturn.getCallResult();
-        return ByteUtil.byteArrayToLong(callResult.toByteArray());
+        try {
+            List<Object> args = Collections.singletonList(dataIndex);
+            TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+            ByteString callResult = callReturn.getCallResult();
+            return ByteUtil.byteArrayToLong(callResult.toByteArray());
+        } catch (Exception e) {
+            return 0L;
+        }
+
     }
 
     private long getUserSizeOfContractWhiteList(String callAddress, String contractAddress) {

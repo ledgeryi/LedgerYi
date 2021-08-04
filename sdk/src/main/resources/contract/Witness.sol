@@ -38,17 +38,9 @@ contract Witness {
 
     modifier onlyDataOwner(uint256 _index) {
         require(_index < dataList._datas.length, "Data index out of bounds");
-        AddressSet.WhiteList storage whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
-        require(msg.sender == whiteList.owner, "Caller is not data owner");
+        require(msg.sender == dataWhiteList[keccak256(abi.encodePacked(_index))].owner, "Caller is not data owner");
         _;
     }
-
-//    modifier onlyDataWhiteListMember(uint256 _index) {
-//        require(_index < dataList._datas.length, "Data index out of bounds");
-//        AddressSet.WhiteList storage _whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
-//        require(!_whiteList.status || _whiteList.contains(msg.sender), "Caller is not in whiteList");
-//        _;
-//    }
 
     constructor (string memory _creater, string memory _nameZn, string memory _nameEn) public {
         createTime = now;
@@ -128,16 +120,14 @@ contract Witness {
         return _key;
     }
 
-    function getDataInfo(uint256 _index) external view /*onlyDataWhiteListMember(_index)*/ returns (string[] memory, string[] memory) {
+    function getDataInfo(uint256 _index) external view returns (string[] memory, string[] memory) {
         require(_index < dataList._datas.length, "Data index out of bounds");
-        //AddressSet.WhiteList memory _whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
         require(!dataWhiteList[keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
         return dataList.getData(_index);
     }
 
     function getDataInfo() external view returns (string[] memory, string[] memory) {
         uint256 _index = dataList._datas.length - 1;
-        //AddressSet.WhiteList storage whiteList = dataWhiteList[keccak256(abi.encodePacked(_index))];
         require(!dataWhiteList[keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
         return dataList.getData(_index);
     }
