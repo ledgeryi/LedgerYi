@@ -126,8 +126,8 @@ public class WitnessAndTracingTests {
     @Test
     public void addKey() {
         List<Object> params = Arrays.asList("[\"k1","k2\"]");
-        boolean result = ledgerYiStccApiService.addWitnessInfo(ownerAddress, privateKey, contractAddress, params);
-        System.out.println(result);
+        String xtId = ledgerYiStccApiService.addWitnessInfo(ownerAddress, privateKey, contractAddress, params);
+        System.out.println(xtId);
     }
 
     @Test

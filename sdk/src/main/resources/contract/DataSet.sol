@@ -48,12 +48,23 @@ library DataSet {
         return (dataList._keyInfo._keys, _dataList);
     }
 
+    function addKeys(DataList storage dataList, string[] memory _values) internal {
+        uint256 paramLength = _values.length;
+        for (uint i = 0; i < paramLength; i++){
+            addKey(dataList, _values[i]);
+        }
+    }
+
     function addKey(DataList storage dataList, string memory value) internal returns (bool) {
         return add(dataList._keyInfo, value);
     }
 
     function getKey(DataList storage dataList) internal view returns (string[] memory) {
         return dataList._keyInfo._keys;
+    }
+
+    function keyLength(DataList storage dataList) internal view returns(uint256) {
+        return getKey(dataList).length;
     }
 
     function length(DataList storage dataList) public view returns (uint256) {
