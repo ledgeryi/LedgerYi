@@ -206,14 +206,15 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 存证数据链上索引
      * @throws CallContractExecption
      */
-    public TriggerResult saveDataInfo(String callAddress, String privateKey, String contractAddress, List<Object> args)
+    public String saveDataInfo(String callAddress, String privateKey, String contractAddress, List<Object> args)
             throws CallContractExecption {
         try {
             String method = "saveDataInfo(string[])";
             TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
             ByteString contractResult = triggerContractReturn.getCallResult();
-            String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
-            return TriggerResult.builder().callResult(storeId).txId(triggerContractReturn.getTransactionId()).build();
+            return String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
+            //String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
+            //return TriggerResult.builder().callResult(storeId).txId(triggerContractReturn.getTransactionId()).build();
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new CallContractExecption("Data storage failed");
@@ -228,7 +229,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param args 存证数据
      * @return 存证数据链上索引
      */
-    public TriggerResult saveDataInfo(String callAddress, String privateKey, String contractAddress, Map<String,String> args)
+    public String saveDataInfo(String callAddress, String privateKey, String contractAddress, Map<String,String> args)
             throws CallContractExecption {
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
@@ -256,7 +257,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 存证数据链上索引
      * @throws CallContractExecption
      */
-    public TriggerResult saveDataInfo(String callAddress,
+    public String saveDataInfo(String callAddress,
                                       String privateKey,
                                       String contractAddress,
                                       String traceId,
@@ -267,8 +268,9 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             List<Object> params = Arrays.asList(traceId, args);
             TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, params);
             ByteString contractResult = triggerContractReturn.getCallResult();
-            String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
-            return TriggerResult.builder().callResult(storeId).txId(triggerContractReturn.getTransactionId()).build();
+            return String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
+            //String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
+            //TriggerResult.builder().callResult(storeId).txId(triggerContractReturn.getTransactionId()).build();
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new CallContractExecption("Data storage failed");
@@ -284,9 +286,9 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param args 存证数据
      * @return 存证数据链上索引
      */
-    public TriggerResult saveDataInfo(String callAddress, String privateKey,
-                                      String traceId, //todo
-                                      String contractAddress, Map<String,String> args)
+    public String saveDataInfo(String callAddress, String privateKey,
+                               String contractAddress, String traceId,
+                               Map<String,String> args)
             throws CallContractExecption {
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
@@ -301,7 +303,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                 throw new CallContractExecption("Data storage failed, data keys not include key:" + key);
             }
         }
-        return saveDataInfo(callAddress,privateKey,contractAddress,params);
+        return saveDataInfo(callAddress,privateKey,contractAddress,traceId,params);
     }
 
     /**
@@ -826,7 +828,6 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         } catch (Exception e) {
             return 0L;
         }
-
     }
 
     private long getUserSizeOfContractWhiteList(String callAddress, String contractAddress) {

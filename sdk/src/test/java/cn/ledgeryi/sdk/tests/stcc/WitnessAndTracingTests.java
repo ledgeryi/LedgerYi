@@ -141,8 +141,8 @@ public class WitnessAndTracingTests {
         List<Object> args = Arrays.asList("[\"g","h\"]");
         ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
         privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
-        TriggerResult result = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, args);
-        System.out.println(result.getCallResult());
+        String storeID = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, args);
+        System.out.println(storeID);
     }
 
     @Test
