@@ -9,7 +9,6 @@ import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.serverapi.LedgerYiStccApiService;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
-import cn.ledgeryi.sdk.serverapi.data.stcc.TriggerResult;
 import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,21 +18,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 存证合约、溯源合约测试类
+ * 存证合约测试
  * @author Brian
  * @date 2021/8/2 18:43
  */
-public class WitnessAndTracingTests {
+public class WitnessTests {
 
     private static String privateKey = "ec19148056c4cfc5fc1b1923b8bb657e1e481a8f092415d5af96dd60f3e6806d";
     private static String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
-    private static String witnessContractAddress = "104b8027cc44b650dc269c99075c44640c628ad2";
-    private static String tracingContractAddress = "17fd519e5fb8dd03d1ff8fb49cee728a1be27419";
-
-    private static String contractAddress = tracingContractAddress;
+    private static String contractAddress = "5787c36ec82f048b98eb5e74d182327c20b14d3a";
 
 
     @Before
@@ -49,14 +45,6 @@ public class WitnessAndTracingTests {
         System.out.println("合约地址： " + contractAddress);
     }
 
-    @Test//部署溯源合约
-    public void deployTracingContract() throws CreateContractExecption, ContractException {
-        List<Object> params = Arrays.asList("fwerfwejg8u387t38","溯源登记信息组名称");
-        DeployContractReturn deployContractReturn = ledgerYiStccApiService.deployTracingContract(ownerAddress, privateKey, params);
-        String contractAddress = deployContractReturn.getContractAddress();
-        System.out.println("合约地址： " + contractAddress);
-    }
-
     @Test
     public void getContractFromOnChain(){
         SmartContractOuterClass.SmartContract contract = ledgerYiStccApiService.getContract(DecodeUtil.decode(contractAddress));
@@ -67,67 +55,16 @@ public class WitnessAndTracingTests {
     }
 
     @Test
-    public void getStatusOfContractWhite() {
-        boolean status = ledgerYiStccApiService.getStatusOfContractWhite(ownerAddress, contractAddress);
-        System.out.println(status);
-    }
-
-    @Test
-    public void disableStatusOfContractWhite() {
-        //String contractAddress = witnessContractAddress;
-        ledgerYiStccApiService.disableStatusOfContractWhite(ownerAddress, privateKey, contractAddress);
-    }
-
-    @Test
-    public void enableStatusOfContractWhite() {
-        ledgerYiStccApiService.enableStatusOfContractWhite(ownerAddress, privateKey, contractAddress);
-    }
-
-    @Test
-    public void addUserToContractWhiteList() {
-        // address: fbb859ffc4a0a2274fd35b121cd5a22d8946bf72
-        // privateKey: 7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0
-
-        // address: 309ae8dc03a1ff131cc75bf5d0f91eee67d8eff0
-        // privateKey: 8751b33e109daca1737415ccb3b34a6bb7eef98bbd0949311d3b3faeaa3c08db
-        //String contractAddress = witnessContractAddress;
-        String user = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
-        boolean result = ledgerYiStccApiService.addUserToContractWhiteList(ownerAddress, privateKey, contractAddress, user);
-        System.out.println(result);
-    }
-
-    @Test
-    public void removeUserFromContractWhiteList() {
-        //String contractAddress = witnessContractAddress;
-        String user = "309ae8dc03a1ff131cc75bf5d0f91eee67d8eff0";
-        boolean result = ledgerYiStccApiService.removeUserToContractWhiteList(ownerAddress, privateKey, contractAddress, user);
-        System.out.println(result);
-    }
-
-    @Test
-    public void getUsersFromContractWhiteList() {
-        //String contractAddress = witnessContractAddress;
-        List<String> usersFromContractWhiteList = ledgerYiStccApiService.getUsersFromContractWhiteList(ownerAddress, contractAddress);
-        System.out.println(usersFromContractWhiteList);
-    }
-
-    @Test
     public void getWitnessBaseInfos() {
-        ContractBaseInfo witnessBaseInfo = ledgerYiStccApiService.getWitnessBaseInfo(ownerAddress, witnessContractAddress);
-        System.out.println(witnessBaseInfo.toString());
-    }
-
-    @Test
-    public void getTracingBaseInfos() {
-        ContractBaseInfo witnessBaseInfo = ledgerYiStccApiService.getTracingBaseInfo(ownerAddress, tracingContractAddress);
+        ContractBaseInfo witnessBaseInfo = ledgerYiStccApiService.getWitnessBaseInfo(ownerAddress, contractAddress);
         System.out.println(witnessBaseInfo.toString());
     }
 
     @Test
     public void addKey() {
-        List<Object> params = Arrays.asList("[\"k1","k2\"]");
-        String xtId = ledgerYiStccApiService.addWitnessInfo(ownerAddress, privateKey, contractAddress, params);
-        System.out.println(xtId);
+        List<Object> keys = Arrays.asList("k1","k2");
+        boolean result = ledgerYiStccApiService.addWitnessInfo(ownerAddress, privateKey, contractAddress, keys);
+        System.out.println(result);
     }
 
     @Test
@@ -137,10 +74,8 @@ public class WitnessAndTracingTests {
     }
 
     @Test
-    public void addData() throws CallContractExecption {
-        List<Object> args = Arrays.asList("[\"g","h\"]");
-        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
-        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
+    public void addDataToWitness() throws CallContractExecption {
+        List<Object> args = Arrays.asList("g","h");
         String storeID = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, args);
         System.out.println(storeID);
     }
@@ -148,8 +83,6 @@ public class WitnessAndTracingTests {
     @Test
     public void getData(){
         long dataIndex = 0;
-        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
-        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
         Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, dataIndex);
         System.out.println(dataInfo.toString());
     }
@@ -163,8 +96,8 @@ public class WitnessAndTracingTests {
 
     @Test
     public void addUserToDataWhiteList() {
-        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
-        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
+//        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
+//        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
 
 //        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
 //        privateKey = "3f177d8a0f3725b34b7866f080e43696b4612c4f295cf277fae7a9721ed770d1";
@@ -185,8 +118,8 @@ public class WitnessAndTracingTests {
     public void removeUserFromDataWhiteList(){
         long dataIndex = 0;
         String user = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
-        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
-        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
+//        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
+//        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
         boolean result = ledgerYiStccApiService.removeUserToDataWhiteList(ownerAddress, privateKey, contractAddress, dataIndex, user);
         System.out.println(result);
     }

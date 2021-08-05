@@ -12,6 +12,7 @@ import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
 import cn.ledgeryi.sdk.serverapi.data.stcc.TriggerResult;
+import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -163,12 +164,12 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 合约调用者
      * @param privateKey 调用者私钥
      * @param contractAddress 合约地址
-     * @return 数据对应的链上索引，从0开始
      */
-    public String addWitnessInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
+    public boolean addWitnessInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
         String method = "addDataKey(string[])";
-        TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
-        return triggerContractReturn == null ? "" : triggerContractReturn.getTransactionId();
+        List<Object> params = Collections.singletonList(JSONObject.toJSON(args));
+        TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, params);
+        return triggerContractReturn != null;
     }
 
     /**
@@ -203,14 +204,15 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 调用者私钥
      * @param contractAddress 合约地址
      * @param args 存证数据
-     * @return 存证数据链上索引
+     * @return 存证数据链上索引，从0开始
      * @throws CallContractExecption
      */
     public String saveDataInfo(String callAddress, String privateKey, String contractAddress, List<Object> args)
             throws CallContractExecption {
         try {
             String method = "saveDataInfo(string[])";
-            TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
+            List<Object> params = Collections.singletonList(JSONObject.toJSON(args));
+            TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, params);
             ByteString contractResult = triggerContractReturn.getCallResult();
             return String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
             //String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
@@ -227,7 +229,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 调用者私钥
      * @param contractAddress 合约地址
      * @param args 存证数据
-     * @return 存证数据链上索引
+     * @return 存证数据链上索引，从0开始
      */
     public String saveDataInfo(String callAddress, String privateKey, String contractAddress, Map<String,String> args)
             throws CallContractExecption {
@@ -254,7 +256,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param traceId 溯源ID
      * @param args 存证数据
-     * @return 存证数据链上索引
+     * @return 存证数据链上索引，从0开始
      * @throws CallContractExecption
      */
     public String saveDataInfo(String callAddress,
@@ -265,7 +267,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             throws CallContractExecption {
         try {
             String method = "saveDataInfo(string,string[])";
-            List<Object> params = Arrays.asList(traceId, args);
+            List<Object> params = Arrays.asList(traceId, JSONObject.toJSON(args));
             TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, params);
             ByteString contractResult = triggerContractReturn.getCallResult();
             return String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
@@ -284,7 +286,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param traceId 溯源ID
      * @param contractAddress 合约地址
      * @param args 存证数据
-     * @return 存证数据链上索引
+     * @return 存证数据链上索引，从0开始
      */
     public String saveDataInfo(String callAddress, String privateKey,
                                String contractAddress, String traceId,
@@ -494,8 +496,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param user 被添加的用户
      */
     public boolean addUserToDataWhiteList(String callAddress, String privateKey,
-                                          String contractAddress, long dataIndex,
-                                          String traceId, String user){
+                                          String contractAddress, String traceId,
+                                          long dataIndex, String user){
         String method = "addUserToDataWhiteList(string,uint256,address)";
         List<Object> args = Arrays.asList(traceId,dataIndex,user);
         TriggerContractReturn contractReturn= triggerContract(callAddress,privateKey,contractAddress,method,args);

@@ -68,6 +68,9 @@ public class DBConfig {
   @Getter
   @Setter
   private static boolean isEccCryptoEngine = true;
+  @Getter
+  @Setter
+  private static int longRunningTime;
 
   public static String getOutputDirectoryByDbName(String dbName) {
     String path = getPathByDbName(dbName);

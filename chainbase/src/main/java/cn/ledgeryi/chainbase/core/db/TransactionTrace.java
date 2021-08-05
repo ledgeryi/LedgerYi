@@ -45,8 +45,12 @@ public class TransactionTrace {
   private InternalTransaction.TxType txType;
   private Runtime runtime;
   private ForkUtils forkUtils;
+  private long txStartTimeInMs;
   @Getter
   private TransactionContext transactionContext;
+  @Getter
+  @Setter
+  private TimeResultType timeResultType = TimeResultType.NORMAL;
 
   public TransactionTrace(TransactionCapsule tx, StoreFactory storeFactory, Runtime runtime) {
     this.tx = tx;
@@ -83,6 +87,7 @@ public class TransactionTrace {
 
   //pre transaction check
   public void init(BlockCapsule blockCap) {
+    txStartTimeInMs = System.currentTimeMillis();
     transactionContext = new TransactionContext(blockCap, tx, storeFactory, false);
   }
 
@@ -106,6 +111,13 @@ public class TransactionTrace {
 
   public void exec() throws ContractExeException, ContractValidateException {
     runtime.execute(transactionContext);
+    if (InternalTransaction.TxType.TX_PRECOMPILED_TYPE != txType) {
+      if (ContractResult.OUT_OF_TIME.equals(receipt.getResult())) {
+        setTimeResultType(TimeResultType.OUT_OF_TIME);
+      } else if (System.currentTimeMillis() - txStartTimeInMs > DBConfig.getLongRunningTime()) {
+        setTimeResultType(TimeResultType.LONG_RUNNING);
+      }
+    }
   }
 
   public void finalization() {
