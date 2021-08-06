@@ -371,7 +371,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         TriggerContractReturn callReturn = triggerConstantContract(callAddress, contractAddress, method, args);
         ByteString callResult = callReturn.getCallResult();
         CallTransaction.Function function = CallTransaction.Function.fromSignature("getDataInfo",
-                new String[]{"string,uint256"}, new String[]{"string[]","string[]"});
+                new String[]{"string","uint256"}, new String[]{"string[]","string[]"});
         Object[] objects = function.decodeResult(callResult.toByteArray());
         return dataIntegration(objects);
     }

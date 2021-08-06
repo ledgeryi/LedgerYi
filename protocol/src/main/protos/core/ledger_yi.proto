@@ -104,7 +104,9 @@ message Transaction {
       ILLEGAL_OPERATION = 7;
       STACK_OVERFLOW = 8;
       JVM_STACK_OVER_FLOW = 9;
-      UNKNOWN = 10;
+      OUT_OF_TIME = 10;
+      UNKNOWN = 11;
+
     }
     code ret = 2;
     ContractResult contractRet = 3;

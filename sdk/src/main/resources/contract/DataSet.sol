@@ -23,6 +23,14 @@ library DataSet {
         Data[] _datas;
     }
 
+    function addTraceData(DataList storage dataList, string[] memory _keys, string[] memory _datas) internal returns (uint256) {
+        require(_keys.length == _datas.length, "The data length is inconsistent");
+        dataList._datas.push(Data());
+        uint256 size = dataList._datas.length;
+        addData(dataList._datas[size - 1], _keys, _datas);
+        return size - 1;
+    }
+
     function addData(DataList storage dataList, string[] memory _data) internal returns (uint256) {
         require(_data.length == dataList._keyInfo._keys.length, "The data length is inconsistent");
         dataList._datas.push(Data());
@@ -46,6 +54,16 @@ library DataSet {
             _dataList[i] = dataList._datas[_index]._data[keccak256(abi.encodePacked(dataList._keyInfo._keys[i]))];
         }
         return (dataList._keyInfo._keys, _dataList);
+    }
+
+    function getTraceData(DataList storage dataList, string[] memory _keys, uint256 _index) internal view returns (string[] memory, string[] memory) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        uint256 size = _keys.length;
+        string[] memory _dataList = new string[](size);
+        for (uint256 i = 0; i < size; i++) {
+            _dataList[i] = dataList._datas[_index]._data[keccak256(abi.encodePacked(_keys[i]))];
+        }
+        return (_keys, _dataList);
     }
 
     function addKeys(DataList storage dataList, string[] memory _values) internal {

@@ -2,6 +2,7 @@ package cn.ledgeryi.framework.core.db;
 
 import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
+import cn.ledgeryi.chainbase.core.db.TransactionTrace;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,9 +37,10 @@ public class PendingManager implements AutoCloseable {
     }
     tmpTransactions.clear();
 
-    /*for (TransactionCapsule tx : dbManager.getPoppedTransactions()) {
+    for (TransactionCapsule tx : dbManager.getPoppedTransactions()) {
       try {
-        if (tx.getTxTrace() != null) {
+        if (tx.getTxTrace() != null &&
+                tx.getTxTrace().getTimeResultType().equals(TransactionTrace.TimeResultType.NORMAL)) {
           dbManager.getRepushTransactions().put(tx);
         }
       } catch (InterruptedException e) {
@@ -46,6 +48,6 @@ public class PendingManager implements AutoCloseable {
         Thread.currentThread().interrupt();
       }
     }
-    dbManager.getPoppedTransactions().clear();*/
+    dbManager.getPoppedTransactions().clear();
   }
 }

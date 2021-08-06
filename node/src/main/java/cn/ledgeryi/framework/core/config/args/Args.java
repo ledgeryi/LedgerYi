@@ -123,6 +123,11 @@ public class Args {
   private boolean fastForward = false;
 
   @Getter
+  @Setter
+  @Parameter(names = {"--long-running-time"})
+  private int longRunningTime = 10;
+
+  @Getter
   private Storage storage;
 
   /*@Getter
@@ -873,6 +878,7 @@ public class Args {
     DBConfig.setDebug(cfgArgs.isDebug());
     DBConfig.setActuatorSet(cfgArgs.getActuatorSet());
     DBConfig.setEccCryptoEngine(cfgArgs.isEcc());
+    DBConfig.setLongRunningTime(cfgArgs.getLongRunningTime());
   }
 
   /**

@@ -13,10 +13,7 @@ import cn.ledgeryi.chainbase.core.db2.core.SnapshotManager;
 import cn.ledgeryi.chainbase.core.store.*;
 import cn.ledgeryi.common.core.Constant;
 import cn.ledgeryi.common.core.exception.*;
-import cn.ledgeryi.common.utils.ByteArray;
-import cn.ledgeryi.common.utils.ByteUtil;
-import cn.ledgeryi.common.utils.Pair;
-import cn.ledgeryi.common.utils.Sha256Hash;
+import cn.ledgeryi.common.utils.*;
 import cn.ledgeryi.consenus.Consensus;
 import cn.ledgeryi.consenus.base.Param;
 import cn.ledgeryi.contract.utils.TransactionRegister;
@@ -34,6 +31,12 @@ import cn.ledgeryi.protos.Protocol.Transaction.Contract;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Longs;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,7 +49,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import static cn.ledgeryi.chainbase.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
 
@@ -59,6 +64,8 @@ public class Manager {
     private AccountStore accountStore;
     @Autowired
     private TransactionStore transactionStore;
+    @Autowired(required = false)
+    private TransactionCache transactionCache;
     @Autowired
     private BlockStore blockStore;
     @Autowired
@@ -145,6 +152,57 @@ public class Manager {
                     }
                 }
             };
+
+    public void initCacheTxs() {
+        log.info("begin to init txs cache.");
+        int dbVersion = Args.getInstance().getStorage().getDbVersion();
+        if (dbVersion != 2) {
+            return;
+        }
+        long start = System.currentTimeMillis();
+        long headNum = dynamicPropertiesStore.getLatestBlockHeaderNumber();
+        long recentBlockCount = recentBlockStore.size();
+        ListeningExecutorService service = MoreExecutors
+                .listeningDecorator(Executors.newFixedThreadPool(50));
+        List<ListenableFuture<?>> futures = new ArrayList<>();
+        AtomicLong blockCount = new AtomicLong(0);
+        AtomicLong emptyBlockCount = new AtomicLong(0);
+        LongStream.rangeClosed(headNum - recentBlockCount + 1, headNum).forEach(
+                blockNum -> futures.add(service.submit(() -> {
+                    try {
+                        blockCount.incrementAndGet();
+                        BlockCapsule blockCapsule = getBlockByNum(blockNum);
+                        if (blockCapsule.getTransactions().isEmpty()) {
+                            emptyBlockCount.incrementAndGet();
+                        }
+                        blockCapsule.getTransactions().stream()
+                                .map(tc -> tc.getTransactionId().getBytes())
+                                .map(bytes -> Maps.immutableEntry(bytes, Longs.toByteArray(blockNum)))
+                                .forEach(e -> transactionCache
+                                        .put(e.getKey(), new BytesCapsule(e.getValue())));
+                    } catch (ItemNotFoundException | BadItemException e) {
+                        log.info("init txs cache error.");
+                        throw new IllegalStateException("init txs cache error.");
+                    }
+                })));
+
+        ListenableFuture<?> future = Futures.allAsList(futures);
+        try {
+            future.get();
+            service.shutdown();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            log.info(e.getMessage());
+        }
+
+        log.info("end to init txs cache. trxids:{}, block count:{}, empty block count:{}, cost:{}",
+                transactionCache.size(),
+                blockCount.get(),
+                emptyBlockCount.get(),
+                System.currentTimeMillis() - start
+        );
+    }
 
     public MasterStore getMasterStore() {
         return this.masterStore;
@@ -236,6 +294,7 @@ public class Manager {
         }
         forkController.init(this);
 
+        initCacheTxs();
         revokingStore.enable();
         validateSignService = Executors.newFixedThreadPool(Args.getInstance().getValidateSignThreadNum());
 
@@ -360,6 +419,14 @@ public class Manager {
     }
 
     private boolean containsTransaction(TransactionCapsule transactionCapsule) {
+        if (transactionCache != null) {
+            /*Iterator<Map.Entry<byte[], BytesCapsule>> iterator = transactionCache.iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<byte[], BytesCapsule> next = iterator.next();
+                System.out.println(DecodeUtil.createReadableString(next.getKey()));
+            }*/
+            return transactionCache.has(transactionCapsule.getTransactionId().getBytes());
+        }
         return transactionStore.has(transactionCapsule.getTransactionId().getBytes());
     }
 
@@ -525,8 +592,8 @@ public class Manager {
             DupTransactionException, TransactionExpirationException, BadNumberBlockException,
             BadBlockException, NonCommonBlockException, ReceiptCheckErrException, AuthorizeException {
         long start = System.currentTimeMillis();
-        PendingManager pm = new PendingManager(this, block);
-        try {
+        //PendingManager pm = new PendingManager(this, block);
+        try (PendingManager pm = new PendingManager(this, block))  {
             if (!block.generatedByMyself) {
                 if (!block.validateSignature(this.dynamicPropertiesStore, this.accountStore)) {
                     log.error("The signature is not validated.");
@@ -573,9 +640,9 @@ public class Manager {
             log.error(throwable.getMessage(), throwable);
             khaosDb.removeBlk(block.getBlockId());
             throw throwable;
-        } finally {
+        }/* finally {
             pm.close();
-        }
+        }*/
         //clear ownerAddressSet
         synchronized (pushTransactionQueue) {
             if (CollectionUtils.isNotEmpty(ownerAddressSet)) {
@@ -707,6 +774,12 @@ public class Manager {
             this.transactionHistoryStore.put(txCap.getTransactionId().getBytes(), transactionInfo);
         }
 
+        transactionStore.put(txCap.getTransactionId().getBytes(), txCap);
+
+        Optional.ofNullable(transactionCache)
+                .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(),
+                        new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
+
         return transactionInfo.getInstance();
     }
 
@@ -736,10 +809,10 @@ public class Manager {
         while (iterator.hasNext()) {
 
             // check timeout
-      /*if (System.currentTimeMillis() > timeout) {
-        log.warn("Processing transaction time exceeds the producing time.");
-        break;
-      }*/
+            if (System.currentTimeMillis() > timeout) {
+                log.warn("Processing transaction time exceeds the producing time.");
+                break;
+            }
 
             TransactionCapsule tx = iterator.next();
 

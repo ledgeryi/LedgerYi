@@ -112,12 +112,21 @@ contract Tracing {
         return keys._values;
     }
 
+    // function saveDataInfo(string memory _traceUid, string[] memory _dataInfos) external onlyContractWhiteListMember returns (uint256) {
+    //     require(keys.length() != 0, "Store infos is empty");
+    //     if (keys.length() != dataList[keccak256(abi.encodePacked(_traceUid))].keyLength()) {
+    //         dataList[keccak256(abi.encodePacked(_traceUid))].addKeys(keys._values);
+    //     }
+    //     uint256 _key = dataList[keccak256(abi.encodePacked(_traceUid))].addData(_dataInfos);
+    //     dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].setOwner(msg.sender);
+    //     dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].addUser(msg.sender);
+    //     dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].status = true;
+    //     return _key;
+    // }
+
     function saveDataInfo(string memory _traceUid, string[] memory _dataInfos) external onlyContractWhiteListMember returns (uint256) {
         require(keys.length() != 0, "Store infos is empty");
-        if (keys.length() != dataList[keccak256(abi.encodePacked(_traceUid))].keyLength()) {
-            dataList[keccak256(abi.encodePacked(_traceUid))].addKeys(keys._values);
-        }
-        uint256 _key = dataList[keccak256(abi.encodePacked(_traceUid))].addData(_dataInfos);
+        uint256 _key = dataList[keccak256(abi.encodePacked(_traceUid))].addTraceData(keys._values, _dataInfos);
         dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].setOwner(msg.sender);
         dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].addUser(msg.sender);
         dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].status = true;
@@ -127,13 +136,13 @@ contract Tracing {
     function getDataInfo(string memory _traceUid) external view returns (string[] memory, string[] memory) {
         uint256 _index = dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length - 1;
         require(!dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
-        return dataList[keccak256(abi.encodePacked(_traceUid))].getData(_index);
+        return dataList[keccak256(abi.encodePacked(_traceUid))].getTraceData(keys._values,_index);
     }
 
     function getDataInfo(string memory _traceUid, uint256 _index) external view returns (string[] memory, string[] memory) {
         require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
         require(!dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
-        return dataList[keccak256(abi.encodePacked(_traceUid))].getData(_index);
+        return dataList[keccak256(abi.encodePacked(_traceUid))].getTraceData(keys._values,_index);
     }
 
     function addUserToDataWhiteList(string memory _traceUid, uint256 _index, address _user) external onlyDataOwner(_traceUid,_index) returns (bool) {

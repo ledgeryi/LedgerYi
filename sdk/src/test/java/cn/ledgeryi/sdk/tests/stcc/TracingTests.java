@@ -26,7 +26,7 @@ public class TracingTests {
     private static String privateKey = "ec19148056c4cfc5fc1b1923b8bb657e1e481a8f092415d5af96dd60f3e6806d";
     private static String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
 
-    private static String contractAddress = "8d55a69ffb8919fc3fb8f874e12c74304d7afa60";;
+    private static String contractAddress = "0fe1e8ff282b72749e531facde5d2bc65d5a793d";;
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
@@ -101,7 +101,7 @@ public class TracingTests {
 
     @Test
     public void addKey() {
-        List<Object> keys = Arrays.asList("k5");
+        List<Object> keys = Arrays.asList("k1","k2");
         boolean result = ledgerYiStccApiService.addWitnessInfo(ownerAddress, privateKey, contractAddress, keys);
         System.out.println(result);
     }
@@ -114,7 +114,7 @@ public class TracingTests {
 
     @Test
     public void addDataToTracing() throws CallContractExecption {
-        List<Object> args = Arrays.asList("1","2","3","4");
+        List<Object> args = Arrays.asList("3","4");
         String traceId = "001";
         String storeID = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, traceId, args);
         System.out.println(storeID);
@@ -123,7 +123,7 @@ public class TracingTests {
     @Test
     public void getData(){
         String traceId = "001";
-        long dataIndex = 0;
+        long dataIndex = 1;
         Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, traceId, dataIndex);
         System.out.println(dataInfo.toString());
     }
@@ -131,7 +131,7 @@ public class TracingTests {
     @Test
     public void getLatestData(){
         String traceId = "001";
-        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
+        //ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
         Map<String, String> dataInfo = ledgerYiStccApiService.getLatestDataInfo(ownerAddress, contractAddress, traceId);
         System.out.println(dataInfo.toString());
     }
