@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -121,9 +122,23 @@ public class TracingTests {
     }
 
     @Test
+    public void addMapDataToTracing() throws CallContractExecption {
+        HashMap<String, String> map = new HashMap<>();
+        List<String> witnessInfo = ledgerYiStccApiService.getWitnessInfo(ownerAddress, contractAddress);
+        long value = 5;
+        for (String key : witnessInfo) {
+            value++;
+            map.put(key, String.valueOf(value));
+        }
+        String traceId = "001";
+        String storeId = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, traceId, map);
+        System.out.println(storeId);
+    }
+
+    @Test
     public void getData(){
         String traceId = "001";
-        long dataIndex = 1;
+        long dataIndex = 2;
         Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, traceId, dataIndex);
         System.out.println(dataInfo.toString());
     }

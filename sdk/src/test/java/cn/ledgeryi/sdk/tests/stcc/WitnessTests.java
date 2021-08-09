@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -81,8 +82,21 @@ public class WitnessTests {
     }
 
     @Test
+    public void addMapDataToWitness() throws CallContractExecption {
+        HashMap<String, String> map = new HashMap<>();
+        List<String> witnessInfo = ledgerYiStccApiService.getWitnessInfo(ownerAddress, contractAddress);
+        long value = 0;
+        for (String key : witnessInfo) {
+            value++;
+            map.put(key, String.valueOf(value));
+        }
+        String storeId = ledgerYiStccApiService.saveDataInfo(ownerAddress, privateKey, contractAddress, map);
+        System.out.println(storeId);
+    }
+
+    @Test
     public void getData(){
-        long dataIndex = 0;
+        long dataIndex = 1;
         Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, dataIndex);
         System.out.println(dataInfo.toString());
     }
