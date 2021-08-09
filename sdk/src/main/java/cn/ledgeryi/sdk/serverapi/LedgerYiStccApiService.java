@@ -214,8 +214,6 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, params);
             ByteString contractResult = triggerContractReturn.getCallResult();
             return String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
-            //String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
-            //return TriggerResult.builder().callResult(storeId).txId(triggerContractReturn.getTransactionId()).build();
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new CallContractExecption("Data storage failed");
@@ -308,8 +306,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 溯源合约：存证数据串改验证
-     * @param callAddress 调用者
+     * 溯源合约：存证数据串改验证（需要验证权限）
+     * @param callAddress 调用者，需要有数据获取权限
      * @param contractAddress 合约地址
      * @param traceId 溯源ID
      * @param dataVersion 被验证的数据版本（数据链上索引）
@@ -323,17 +321,90 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
-     * 存证合约：存证数据串改验证
-     * @param callAddress 调用者
+     * 溯源合约：存证数据串改验证（不需要验证权限）
+     * @param callAddress 调用者，不需要有数据获取权限
+     * @param contractAddress 合约地址
+     * @param traceId 溯源ID
+     * @param dataVersion 被验证的数据版本（数据链上索引）
+     * @param data 被验证的数据
+     * @return 返回验证结果
+     */
+    public boolean traceDataVerifyPermissionless(String callAddress, String contractAddress,
+                                   String traceId, long dataVersion, Map<String,String> data) throws CallContractExecption {
+        String method = "dataVerify(string,uint256,string[])";
+        List<Object> params = new ArrayList<>();
+        List<String> keys = getWitnessInfo(callAddress, contractAddress);
+        if (data.size() != keys.size()){
+            throw new CallContractExecption("Data storage failed, data length is inconsistent");
+        }
+        Set<String> keySets = data.keySet();
+        for (String key : keySets) {
+            if (keys.contains(key)) {
+                params.add(data.get(key));
+            } else {
+                throw new CallContractExecption("Data storage failed, data keys not include key:" + key);
+            }
+        }
+        List<Object> args = Arrays.asList(traceId,dataVersion,params);
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("dataVerify",
+                new String[]{"string","uint256","string[]"}, new String[]{"bool"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
+        if (objects.length == 1 && objects[0] instanceof Boolean) {
+            return (Boolean)objects[0];
+        }
+        return false;
+    }
+
+    /**
+     * 存证合约：存证数据串改验证（需要验证权限）
+     * @param callAddress 调用者，需要有数据获取权限
      * @param contractAddress 合约地址
      * @param dataVersion 被验证的数据版本（数据链上索引）
      * @param data 被验证的数据
      * @return 返回验证结果
      */
     public boolean witnessDataVerify(String callAddress, String contractAddress,
-                                   long dataVersion, Map<String,String> data){
+                                     long dataVersion, Map<String,String> data){
         Map<String, String> dataInfo = getDataInfo(callAddress, contractAddress, dataVersion);
         return data != null && data.equals(dataInfo);
+    }
+
+    /**
+     * 存证合约：存证数据串改验证，不需要有数据获取权限
+     * @param callAddress 调用者，不需要有数据获取权限
+     * @param contractAddress 合约地址
+     * @param dataVersion 被验证的数据版本（数据链上索引）
+     * @param data 被验证的数据
+     * @return 返回验证结果
+     */
+    public boolean witnessDataVerifyPermissionless(String callAddress, String contractAddress,
+                                   long dataVersion, Map<String,String> data) throws CallContractExecption {
+        String method = "dataVerify(uint256,string[])";
+        List<Object> params = new ArrayList<>();
+        List<String> keys = getWitnessInfo(callAddress, contractAddress);
+        if (data.size() != keys.size()){
+            throw new CallContractExecption("Data storage failed, data length is inconsistent");
+        }
+        Set<String> keySets = data.keySet();
+        for (String key : keySets) {
+            if (keys.contains(key)) {
+                params.add(data.get(key));
+            } else {
+                throw new CallContractExecption("Data storage failed, data keys not include key:" + key);
+            }
+        }
+        List<Object> args = Arrays.asList(dataVersion,params);
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        CallTransaction.Function function = CallTransaction.Function.fromSignature("dataVerify",
+                new String[]{"uint256","string[]"}, new String[]{"bool"});
+        Object[] objects = function.decodeResult(callResult.toByteArray());
+        if (objects.length == 1 && objects[0] instanceof Boolean) {
+            return (Boolean)objects[0];
+        }
+        return false;
     }
 
     /**

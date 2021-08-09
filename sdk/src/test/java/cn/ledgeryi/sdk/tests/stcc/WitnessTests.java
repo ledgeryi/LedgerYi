@@ -30,7 +30,7 @@ public class WitnessTests {
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
-    private static String contractAddress = "5787c36ec82f048b98eb5e74d182327c20b14d3a";
+    private static String contractAddress = "0e94bab5376a345e2e1f8121dae64a8733088807";
 
 
     @Before
@@ -111,14 +111,29 @@ public class WitnessTests {
     @Test
     public void witnessDataVerify() {
         Map data = new HashMap();
-        data.put("k1","1");
         data.put("k2","2");
+        data.put("k1","1");
         long dataVersion = 1;
         boolean contains = ledgerYiStccApiService.witnessDataVerify(ownerAddress,contractAddress,dataVersion,data);
         if(contains){
             System.out.println("两个Map对象相同");
         }else{
             System.out.println("这不是两个相同的Map对象");
+        }
+    }
+
+    @Test
+    public void witnessDataVerifyPermissionless() {
+        Map data = new HashMap();
+        data.put("k1","g");
+        data.put("k2","h");
+        long dataVersion = 0;
+        try {
+            boolean contains = ledgerYiStccApiService.witnessDataVerifyPermissionless(ownerAddress,
+                    contractAddress,dataVersion,data);
+            System.out.println(contains);
+        } catch (CallContractExecption callContractExecption) {
+            callContractExecption.printStackTrace();
         }
     }
 

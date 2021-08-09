@@ -112,25 +112,19 @@ contract Tracing {
         return keys._values;
     }
 
-    // function saveDataInfo(string memory _traceUid, string[] memory _dataInfos) external onlyContractWhiteListMember returns (uint256) {
-    //     require(keys.length() != 0, "Store infos is empty");
-    //     if (keys.length() != dataList[keccak256(abi.encodePacked(_traceUid))].keyLength()) {
-    //         dataList[keccak256(abi.encodePacked(_traceUid))].addKeys(keys._values);
-    //     }
-    //     uint256 _key = dataList[keccak256(abi.encodePacked(_traceUid))].addData(_dataInfos);
-    //     dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].setOwner(msg.sender);
-    //     dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].addUser(msg.sender);
-    //     dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].status = true;
-    //     return _key;
-    // }
-
     function saveDataInfo(string memory _traceUid, string[] memory _dataInfos) external onlyContractWhiteListMember returns (uint256) {
         require(keys.length() != 0, "Store infos is empty");
+        require(keys.length() == _dataInfos.length, "The data length is inconsistent");
         uint256 _key = dataList[keccak256(abi.encodePacked(_traceUid))].addTraceData(keys._values, _dataInfos);
         dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].setOwner(msg.sender);
         dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].addUser(msg.sender);
         dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_key))].status = true;
         return _key;
+    }
+
+    function dataVerify(string memory _traceUid, uint256 _index,string[] memory _dataInfos) external view returns (bool) {
+        require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
+        return dataList[keccak256(abi.encodePacked(_traceUid))].traceDataVerify(keys._values, _index, _dataInfos);
     }
 
     function getDataInfo(string memory _traceUid) external view returns (string[] memory, string[] memory) {

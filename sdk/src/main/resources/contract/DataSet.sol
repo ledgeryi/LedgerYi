@@ -66,6 +66,36 @@ library DataSet {
         return (_keys, _dataList);
     }
 
+    function witnessDataVerify(DataList storage dataList, uint256 _index, string[] memory _values) internal view returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        uint256 size = dataList._keyInfo._keys.length;
+        if (size != _values.length) {
+            return false;
+        }
+        for (uint256 i = 0; i < size; i++) {
+            string memory _value = dataList._datas[_index]._data[keccak256(abi.encodePacked(dataList._keyInfo._keys[i]))];
+            if (keccak256(abi.encodePacked(_value)) != keccak256(abi.encodePacked(_values[i]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function traceDataVerify(DataList storage dataList, uint256 _index, string[] memory _keys, string[] memory _values) internal view returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        uint256 size = _keys.length;
+        if (size != _values.length) {
+            return false;
+        }
+        for (uint256 i = 0; i < size; i++) {
+            string memory _value = dataList._datas[_index]._data[keccak256(abi.encodePacked(_keys[i]))];
+            if (keccak256(abi.encodePacked(_value)) != keccak256(abi.encodePacked(_values[i]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     function addKeys(DataList storage dataList, string[] memory _values) internal {
         uint256 paramLength = _values.length;
         for (uint i = 0; i < paramLength; i++){

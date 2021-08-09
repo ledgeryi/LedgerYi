@@ -120,6 +120,11 @@ contract Witness {
         return _key;
     }
 
+    function dataVerify(uint256 _index,string[] memory _dataInfos) external view returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        return dataList.witnessDataVerify(_index, _dataInfos);
+    }
+
     function getDataInfo(uint256 _index) external view returns (string[] memory, string[] memory) {
         require(_index < dataList._datas.length, "Data index out of bounds");
         require(!dataWhiteList[keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");

@@ -167,6 +167,23 @@ public class TracingTests {
     }
 
     @Test
+    public void traceDataVerifyPermissionless() {
+        Map data = new HashMap();
+        data.put("k1","6");
+        data.put("k2","7");
+        String traceId = "001";
+        long dataVersion = 2;
+        boolean verify = false;
+        try {
+            verify = ledgerYiStccApiService.traceDataVerifyPermissionless(ownerAddress,
+                    contractAddress, traceId, dataVersion, data);
+        } catch (CallContractExecption callContractExecption) {
+            callContractExecption.printStackTrace();
+        }
+        System.out.println(verify);
+    }
+
+    @Test
     public void addUserToDataWhiteList() {
 //        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
 //        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
