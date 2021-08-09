@@ -109,6 +109,20 @@ public class WitnessTests {
     }
 
     @Test
+    public void witnessDataVerify() {
+        Map data = new HashMap();
+        data.put("k1","1");
+        data.put("k2","2");
+        long dataVersion = 1;
+        boolean contains = ledgerYiStccApiService.witnessDataVerify(ownerAddress,contractAddress,dataVersion,data);
+        if(contains){
+            System.out.println("两个Map对象相同");
+        }else{
+            System.out.println("这不是两个相同的Map对象");
+        }
+    }
+
+    @Test
     public void addUserToDataWhiteList() {
 //        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
 //        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
@@ -156,5 +170,4 @@ public class WitnessTests {
         long dataIndex = 0;
         ledgerYiStccApiService.enableStatusOfDataWhite(ownerAddress, privateKey, contractAddress, dataIndex);
     }
-
 }

@@ -11,7 +11,6 @@ import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
 import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
 import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
-import cn.ledgeryi.sdk.serverapi.data.stcc.TriggerResult;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -306,6 +305,35 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             }
         }
         return saveDataInfo(callAddress,privateKey,contractAddress,traceId,params);
+    }
+
+    /**
+     * 溯源合约：存证数据串改验证
+     * @param callAddress 调用者
+     * @param contractAddress 合约地址
+     * @param traceId 溯源ID
+     * @param dataVersion 被验证的数据版本（数据链上索引）
+     * @param data 被验证的数据
+     * @return 返回验证结果
+     */
+    public boolean traceDataVerify(String callAddress, String contractAddress,
+                                     String traceId, long dataVersion, Map<String,String> data){
+        Map<String, String> dataInfo = getDataInfo(callAddress, contractAddress, traceId, dataVersion);
+        return data != null && data.equals(dataInfo);
+    }
+
+    /**
+     * 存证合约：存证数据串改验证
+     * @param callAddress 调用者
+     * @param contractAddress 合约地址
+     * @param dataVersion 被验证的数据版本（数据链上索引）
+     * @param data 被验证的数据
+     * @return 返回验证结果
+     */
+    public boolean witnessDataVerify(String callAddress, String contractAddress,
+                                   long dataVersion, Map<String,String> data){
+        Map<String, String> dataInfo = getDataInfo(callAddress, contractAddress, dataVersion);
+        return data != null && data.equals(dataInfo);
     }
 
     /**
