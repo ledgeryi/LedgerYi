@@ -27,6 +27,29 @@ public class DecodeUtil {
     return true;
   }
 
+//  public static void main(String[] args) {
+//    String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
+//    System.out.println(validAddress(ownerAddress));
+//  }
+
+  public static boolean validAddress(String input) {
+    byte[] address = null;
+    boolean result = true;
+    try {
+      if (input.length() == ADDRESS_SIZE) {
+        address = ByteArray.fromHexString(input);
+      } else {
+        result = false;
+      }
+      if (result) {
+        result = addressValid(address);
+      }
+    } catch (Exception e) {
+      result = false;
+    }
+    return result;
+  }
+
   public static String createReadableString(byte[] bytes) {
     return ByteArray.toHexString(bytes);
   }
