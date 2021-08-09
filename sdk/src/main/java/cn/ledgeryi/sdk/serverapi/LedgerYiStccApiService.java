@@ -4,6 +4,7 @@ import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
 import cn.ledgeryi.sdk.event.CallTransaction;
+import cn.ledgeryi.sdk.exception.AddressException;
 import cn.ledgeryi.sdk.exception.CallContractExecption;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
 import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
@@ -41,7 +42,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param args 合约参数：创建人、合约中文名称、合约英文名称
      */
     public DeployContractReturn deployWitnessContract(String ownerAddress, String privateKey, List<Object> args)
-            throws CreateContractExecption, ContractException {
+            throws CreateContractExecption, ContractException, AddressException {
+        verifyAddress(ownerAddress);
         if (args.size() != 3){
             throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
@@ -60,7 +62,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param args 合约参数：创建人、合约中文名称、合约英文名称、唯一溯源标识
      */
     public DeployContractReturn deployTracingProxyContract(String ownerAddress, String privateKey, List<Object> args)
-            throws CreateContractExecption, ContractException {
+            throws CreateContractExecption, ContractException, AddressException {
+        verifyAddress(ownerAddress);
         if (args.size() != 4){
             throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
@@ -78,7 +81,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param args 合约参数：唯一溯源标识、溯源登记信息组名称
      */
     public DeployContractReturn deployTracingContract(String ownerAddress, String privateKey, List<Object> args)
-            throws CreateContractExecption, ContractException {
+            throws CreateContractExecption, ContractException, AddressException {
+        verifyAddress(ownerAddress);
         if (args.size() != 2){
             throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
@@ -94,7 +98,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
-    public ContractBaseInfo getTracingBaseInfo(String callAddress, String contractAddress) {
+    public ContractBaseInfo getTracingBaseInfo(String callAddress, String contractAddress) throws AddressException {
         String method = "getBaseInfo()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -116,7 +120,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
-    public ContractBaseInfo getWitnessBaseInfo(String callAddress, String contractAddress) {
+    public ContractBaseInfo getWitnessBaseInfo(String callAddress, String contractAddress) throws AddressException {
         String method = "getBaseInfo()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -139,7 +143,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
-    public ContractBaseInfo getTracingProxyBaseInfo(String callAddress, String contractAddress) {
+    public ContractBaseInfo getTracingProxyBaseInfo(String callAddress, String contractAddress) throws AddressException {
         String method = "getBaseInfo()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -164,7 +168,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 调用者私钥
      * @param contractAddress 合约地址
      */
-    public boolean addWitnessInfo(String callAddress, String privateKey, String contractAddress, List<Object> args) {
+    public boolean addWitnessInfo(String callAddress, String privateKey,
+                                  String contractAddress, List<Object> args) throws AddressException {
         String method = "addDataKey(string[])";
         List<Object> params = Collections.singletonList(JSONObject.toJSON(args));
         TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, params);
@@ -176,7 +181,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
-    public List<String> getWitnessInfo(String callAddress, String contractAddress) {
+    public List<String> getWitnessInfo(String callAddress, String contractAddress) throws AddressException {
         String method = "getDataKey()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -216,7 +221,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             return String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new CallContractExecption("Data storage failed");
+            throw new CallContractExecption("Data storage failed, error: " + e.getMessage());
         }
     }
 
@@ -229,7 +234,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 存证数据链上索引，从0开始
      */
     public String saveDataInfo(String callAddress, String privateKey, String contractAddress, Map<String,String> args)
-            throws CallContractExecption {
+            throws CallContractExecption, AddressException {
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
         if (args.size() != keys.size()){
@@ -256,23 +261,19 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 存证数据链上索引，从0开始
      * @throws CallContractExecption
      */
-    public String saveDataInfo(String callAddress,
-                                      String privateKey,
-                                      String contractAddress,
-                                      String traceId,
-                                      List<Object> args)
-            throws CallContractExecption {
+    public String saveDataInfo(String callAddress, String privateKey,
+                               String contractAddress, String traceId,
+                               List<Object> args) throws CallContractExecption {
         try {
             String method = "saveDataInfo(string,string[])";
             List<Object> params = Arrays.asList(traceId, JSONObject.toJSON(args));
-            TriggerContractReturn triggerContractReturn = triggerContract(callAddress, privateKey, contractAddress, method, params);
+            TriggerContractReturn triggerContractReturn = triggerContract(callAddress,
+                    privateKey, contractAddress, method, params);
             ByteString contractResult = triggerContractReturn.getCallResult();
             return String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
-            //String storeId = String.valueOf(ByteUtil.byteArrayToLong(contractResult.toByteArray()));
-            //TriggerResult.builder().callResult(storeId).txId(triggerContractReturn.getTransactionId()).build();
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new CallContractExecption("Data storage failed");
+            throw new CallContractExecption("Data storage failed, error: " + e.getMessage());
         }
     }
 
@@ -287,8 +288,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      */
     public String saveDataInfo(String callAddress, String privateKey,
                                String contractAddress, String traceId,
-                               Map<String,String> args)
-            throws CallContractExecption {
+                               Map<String,String> args) throws CallContractExecption, AddressException {
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
         if (args.size() != keys.size()){
@@ -315,7 +315,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 返回验证结果
      */
     public boolean traceDataVerify(String callAddress, String contractAddress,
-                                     String traceId, long dataVersion, Map<String,String> data){
+                                     String traceId, long dataVersion, Map<String,String> data) throws AddressException {
         Map<String, String> dataInfo = getDataInfo(callAddress, contractAddress, traceId, dataVersion);
         return data != null && data.equals(dataInfo);
     }
@@ -330,7 +330,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 返回验证结果
      */
     public boolean traceDataVerifyPermissionless(String callAddress, String contractAddress,
-                                   String traceId, long dataVersion, Map<String,String> data) throws CallContractExecption {
+                                   String traceId, long dataVersion, Map<String,String> data) throws CallContractExecption, AddressException {
         String method = "dataVerify(string,uint256,string[])";
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
@@ -366,7 +366,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 返回验证结果
      */
     public boolean witnessDataVerify(String callAddress, String contractAddress,
-                                     long dataVersion, Map<String,String> data){
+                                     long dataVersion, Map<String,String> data) throws AddressException {
         Map<String, String> dataInfo = getDataInfo(callAddress, contractAddress, dataVersion);
         return data != null && data.equals(dataInfo);
     }
@@ -380,7 +380,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 返回验证结果
      */
     public boolean witnessDataVerifyPermissionless(String callAddress, String contractAddress,
-                                   long dataVersion, Map<String,String> data) throws CallContractExecption {
+                                   long dataVersion, Map<String,String> data) throws CallContractExecption, AddressException {
         String method = "dataVerify(uint256,string[])";
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
@@ -412,7 +412,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
-    public Map<String,String> getLatestDataInfo(String callAddress, String contractAddress) {
+    public Map<String,String> getLatestDataInfo(String callAddress, String contractAddress) throws AddressException {
         String method = "getDataInfo()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -429,7 +429,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param traceId 溯源ID
      */
-    public Map<String,String> getLatestDataInfo(String callAddress, String contractAddress, String traceId) {
+    public Map<String,String> getLatestDataInfo(String callAddress, String contractAddress,
+                                                String traceId) throws AddressException {
         String method = "getDataInfo(string)";
         List<Object> args = Collections.singletonList(traceId);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -446,7 +447,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param dataIndex 数据对应的链上索引（数据版本号），从0开始
      */
-    public Map<String,String> getDataInfo(String callAddress, String contractAddress, long dataIndex) {
+    public Map<String,String> getDataInfo(String callAddress, String contractAddress,
+                                          long dataIndex) throws AddressException {
         String method = "getDataInfo(uint256)";
         List<Object> args = Collections.singletonList(dataIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -464,7 +466,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param traceId 溯源ID
      * @param dataIndex 数据对应的链上索引（数据版本号），从0开始
      */
-    public Map<String,String> getDataInfo(String callAddress, String contractAddress, String traceId, long dataIndex) {
+    public Map<String,String> getDataInfo(String callAddress, String contractAddress,
+                                          String traceId, long dataIndex) throws AddressException {
         String method = "getDataInfo(string,uint256)";
         List<Object> args = Arrays.asList(traceId, dataIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress, contractAddress, method, args);
@@ -480,7 +483,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
      */
-    public boolean getStatusOfContractWhite(String callAddress, String contractAddress) {
+    public boolean getStatusOfContractWhite(String callAddress, String contractAddress) throws AddressException {
         String method = "getStatusOfContractWhite()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -500,7 +503,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
      */
-    public boolean disableStatusOfContractWhite(String callAddress, String privateKey, String contractAddress) {
+    public boolean disableStatusOfContractWhite(String callAddress, String privateKey,
+                                                String contractAddress) throws AddressException {
         String method = "disableContractWhite()";
         List<Object> args = Collections.emptyList();
         return null == triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -512,7 +516,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
      */
-    public boolean enableStatusOfContractWhite(String callAddress, String privateKey, String contractAddress) {
+    public boolean enableStatusOfContractWhite(String callAddress, String privateKey,
+                                               String contractAddress) throws AddressException {
         String method = "enableContractWhite()";
         List<Object> args = Collections.emptyList();
         return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -526,7 +531,9 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param user 被添加的用户地址
      * @return
      */
-    public boolean addUserToContractWhiteList(String callAddress, String privateKey, String contractAddress, String user) {
+    public boolean addUserToContractWhiteList(String callAddress, String privateKey,
+                                              String contractAddress, String user) throws AddressException {
+        verifyAddress(user);
         String method = "addUserToContractWhiteList(address)";
         List<Object> args = Collections.singletonList(user);
         TriggerContractReturn contractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
@@ -541,7 +548,9 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param user 被移除的用户地址
      */
-    public boolean removeUserToContractWhiteList(String callAddress, String privateKey, String contractAddress, String user) {
+    public boolean removeUserToContractWhiteList(String callAddress, String privateKey,
+                                                 String contractAddress, String user) throws AddressException {
+        verifyAddress(user);
         String method = "removeUserFromContractWhiteList(address)";
         List<Object> args = Collections.singletonList(user);
         TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -554,7 +563,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress 调用者地址
      * @param contractAddress 合约地址
      */
-    public List<String> getUsersFromContractWhiteList(String callAddress, String contractAddress) {
+    public List<String> getUsersFromContractWhiteList(String callAddress,
+                                                      String contractAddress) throws AddressException {
         List<String> users = new ArrayList<>();
         long size = getUserSizeOfContractWhiteList(callAddress, contractAddress);
         String method = "getUserFromContractWhiteList(uint256)";
@@ -577,7 +587,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param user 被添加的用户
      */
     public boolean addUserToDataWhiteList(String callAddress, String privateKey,
-                                          String contractAddress, long dataIndex, String user){
+                                          String contractAddress, long dataIndex, String user) throws AddressException {
+        verifyAddress(user);
         String method = "addUserToDataWhiteList(uint256,address)";
         List<Object> args = Arrays.asList(dataIndex,user);
         TriggerContractReturn contractReturn= triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -596,7 +607,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      */
     public boolean addUserToDataWhiteList(String callAddress, String privateKey,
                                           String contractAddress, String traceId,
-                                          long dataIndex, String user){
+                                          long dataIndex, String user) throws AddressException {
+        verifyAddress(user);
         String method = "addUserToDataWhiteList(string,uint256,address)";
         List<Object> args = Arrays.asList(traceId,dataIndex,user);
         TriggerContractReturn contractReturn= triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -613,7 +625,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param user 被移除的用户
      */
     public boolean removeUserToDataWhiteList(String callAddress, String privateKey,
-                                             String contractAddress,long dataIndex, String user){
+                                             String contractAddress,long dataIndex, String user) throws AddressException {
+        verifyAddress(user);
         String method = "removeUserFromDataWhiteList(uint256,address)";
         List<Object> args = Arrays.asList(dataIndex,user);
         TriggerContractReturn triggerContractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -632,7 +645,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      */
     public boolean removeUserToDataWhiteList(String callAddress, String privateKey,
                                              String contractAddress,String traceId,
-                                             long dataIndex, String user){
+                                             long dataIndex, String user) throws AddressException {
+        verifyAddress(user);
         String method = "removeUserFromDataWhiteList(string,uint256,address)";
         List<Object> args = Arrays.asList(traceId,dataIndex,user);
         TriggerContractReturn triggerContractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -646,7 +660,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param dataIndex 数据索引（版本号）
      */
-    public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress, long dataIndex) {
+    public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress,
+                                                  long dataIndex) throws AddressException {
         List<String> users = new ArrayList<>();
         String method = "getUserSizeOfDataWhiteList(uint256)";
         List<Object> params = Collections.singletonList(dataIndex);
@@ -670,7 +685,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param traceId 溯源ID
      * @param dataIndex 数据索引（版本号）
      */
-    public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress, String traceId, long dataIndex) {
+    public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress,
+                                                  String traceId, long dataIndex) throws AddressException {
         List<String> users = new ArrayList<>();
         String method = "getUserSizeOfDataWhiteList(string,uint256)";
         List<Object> params = Arrays.asList(traceId,dataIndex);
@@ -693,7 +709,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param dataIndex 数据索引（版本号）
      */
-    public boolean getStatusOfDataWhite(String callAddress, String contractAddress, long dataIndex) {
+    public boolean getStatusOfDataWhite(String callAddress, String contractAddress,
+                                        long dataIndex) throws AddressException {
         String method = "getStatusOfDataWhite(uint256)";
         List<Object> args = Collections.singletonList(dataIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -714,7 +731,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param traceId 溯源ID
      * @param dataIndex 数据索引（版本号）
      */
-    public boolean getStatusOfDataWhite(String callAddress, String contractAddress, String traceId, long dataIndex) {
+    public boolean getStatusOfDataWhite(String callAddress, String contractAddress,
+                                        String traceId, long dataIndex) throws AddressException {
         String method = "getStatusOfDataWhite(string,uint256)";
         List<Object> args = Arrays.asList(traceId, dataIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -735,7 +753,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param dataIndex 数据索引（版本号）
      */
-    public boolean disableStatusOfDataWhite(String callAddress, String privateKey, String contractAddress, long dataIndex) {
+    public boolean disableStatusOfDataWhite(String callAddress, String privateKey,
+                                            String contractAddress, long dataIndex) throws AddressException {
         String method = "disableDataWhite(uint256)";
         List<Object> args = Collections.singletonList(dataIndex);
         return null == triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -750,7 +769,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param dataIndex 数据索引（版本号）
      */
     public boolean disableStatusOfDataWhite(String callAddress, String privateKey, String contractAddress,
-                                            String traceId, long dataIndex) {
+                                            String traceId, long dataIndex) throws AddressException {
         String method = "disableDataWhite(string,uint256)";
         List<Object> args = Arrays.asList(traceId, dataIndex);
         return null == triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -763,7 +782,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param dataIndex 数据索引（版本号）
      */
-    public boolean enableStatusOfDataWhite(String callAddress, String privateKey, String contractAddress, long dataIndex) {
+    public boolean enableStatusOfDataWhite(String callAddress, String privateKey,
+                                           String contractAddress, long dataIndex) throws AddressException {
         String method = "enableDataWhite(uint256)";
         List<Object> args = Collections.singletonList(dataIndex);
         return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -778,7 +798,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param dataIndex 数据索引（版本号）
      */
     public boolean enableStatusOfDataWhite(String callAddress, String privateKey, String contractAddress,
-                                           String traceId, long dataIndex) {
+                                           String traceId, long dataIndex) throws AddressException {
         String method = "enableDataWhite(string,uint256)";
         List<Object> args = Arrays.asList(traceId, dataIndex);
         return null != triggerContract(callAddress,privateKey,contractAddress,method,args);
@@ -791,7 +811,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param proxyContractAddress 代理合约地址
      * @param args 溯源环节名称
      */
-    public boolean addTraceLink(String callAddress, String privateKey, String proxyContractAddress, List<Object> args) {
+    public boolean addTraceLink(String callAddress, String privateKey,
+                                String proxyContractAddress, List<Object> args) throws AddressException {
         String method = "addTraceLink(string[])";
         return null != triggerContract(callAddress,privateKey,proxyContractAddress,method,args);
     }
@@ -806,7 +827,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      */
     public boolean addContractToTraceLink(String callAddress, String privateKey,
                                           String proxyContractAddress, String linkName,
-                                          String traceContract) {
+                                          String traceContract) throws AddressException {
         String method = "addContractToTraceLink(string,address)";
         List<Object> args = Arrays.asList(linkName,traceContract);
         triggerContract(callAddress,privateKey,proxyContractAddress,method,args);
@@ -826,7 +847,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param callAddress  调用者地址
      * @param proxyContractAddress 代理合约地址
      */
-    public ArrayList<String> getTraceLinkNames(String callAddress, String proxyContractAddress){
+    public ArrayList<String> getTraceLinkNames(String callAddress, String proxyContractAddress) throws AddressException {
         String method = "getTraceLinkLength()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,proxyContractAddress,method,args);
@@ -864,7 +885,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 溯源合约地址
      */
     public String getContractInTraceLink(String callAddress, String proxyContractAddress,
-                                              String linkName, long contractIndex) {
+                                              String linkName, long contractIndex) throws AddressException {
         String method = "getTraceContractAddress(string,uint256)";
         List<Object> args = Arrays.asList(linkName,contractIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,proxyContractAddress,method,args);
@@ -879,7 +900,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param proxyContractAddress 代理合约地址
      * @param linkName 溯源环节名称
      */
-    public List<String> getAllContactsOfTraceLink(String callAddress, String proxyContractAddress, String linkName) {
+    public List<String> getAllContactsOfTraceLink(String callAddress, String proxyContractAddress,
+                                                  String linkName) throws AddressException {
         ArrayList<String> contracts = new ArrayList<>();
         long contractSize = getTraceContractSize(callAddress, proxyContractAddress, linkName);
         for (long index = 0; index < contractSize; index++) {
@@ -915,10 +937,13 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         return Collections.emptyMap();
     }
 
-    private long getUserSizeOfDataWhiteList(String callAddress, String contractAddress, long dataIndex) {
-        String method = "getUserSizeOfDataWhiteList(uint256)";
-        List<Object> args = Collections.singletonList(dataIndex);
-        return getSize(callAddress,contractAddress,method,args);
+    private void verifyAddress(String ...address) throws AddressException {
+        String[] addresses = address.clone();
+        for (String tmp : addresses) {
+            if (!DecodeUtil.validAddress(tmp)) {
+                throw new AddressException("Invalid address, address: " + tmp);
+            }
+        }
     }
 
     private long getSize(String callAddress, String contractAddress, String method, List<Object> args) {
@@ -931,7 +956,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         }
     }
 
-    private long getUserSizeOfContractWhiteList(String callAddress, String contractAddress) {
+    private long getUserSizeOfContractWhiteList(String callAddress, String contractAddress) throws AddressException {
         String method = "getUserSizeOfContractWhiteList()";
         List<Object> args = Collections.emptyList();
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
@@ -940,17 +965,18 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     private TriggerContractReturn triggerConstantContract(String callAddress, String contractAddress,
-                                                          String method, List<Object> args) {
+                                                          String method, List<Object> args) throws AddressException {
         return triggerContract(callAddress,null,contractAddress,method,args,true);
     }
 
     private TriggerContractReturn triggerContract(String callAddress, String privateKey, String contractAddress,
-                                                  String method, List<Object> args) {
+                                                  String method, List<Object> args) throws AddressException {
         return triggerContract(callAddress,privateKey,contractAddress,method,args,false);
     }
 
     private TriggerContractReturn triggerContract(String callAddress, String privateKey, String contractAddress,
-                                                  String method, List<Object> args, boolean isConstant) {
+                                                  String method, List<Object> args, boolean isConstant) throws AddressException {
+        verifyAddress(callAddress, callAddress);
         TriggerContractParam triggerContractParam = new TriggerContractParam()
                 .setContractAddress(DecodeUtil.decode(contractAddress))
                 .setCallValue(0)

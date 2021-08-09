@@ -8,6 +8,7 @@ import cn.ledgeryi.sdk.serverapi.LedgerYiApiService;
 import cn.ledgeryi.sdk.serverapi.data.RequestUserInfo;
 import cn.ledgeryi.sdk.serverapi.data.TransactionInformation;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,9 +28,11 @@ public class TransactionTest {
 
     @Test
     public void getBlockByNum(){
-        long num = 0;
+        long num = 2900;
         GrpcAPI.BlockExtention block = ledgerYiApiService.getBlock(num);
-        System.out.println(JsonFormatUtil.formatJson(JsonFormat.printToString(block, true)));
+        String jsonBlock = JsonFormat.printToString(block, true);
+        JSONObject jsonObject = JSONObject.parseObject(jsonBlock);
+        System.out.println(JsonFormatUtil.formatJson(jsonBlock));
     }
 
     @Test

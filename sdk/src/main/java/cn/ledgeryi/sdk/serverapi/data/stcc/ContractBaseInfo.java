@@ -1,6 +1,7 @@
 package cn.ledgeryi.sdk.serverapi.data.stcc;
 
 import lombok.Builder;
+import lombok.Data;
 import lombok.ToString;
 
 /**
@@ -9,6 +10,7 @@ import lombok.ToString;
  */
 @Builder
 @ToString
+@Data
 public class ContractBaseInfo {
     //合约名称
     String nameEn;
