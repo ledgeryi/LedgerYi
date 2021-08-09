@@ -20,7 +20,7 @@ public class Configuration {
     private static Config config;
 
     @Getter
-    private static boolean isEcc = true;
+    private static boolean isEcc = false;
 
     private static final String CRYPTO_ENGINE = "crypto.engine";
 
