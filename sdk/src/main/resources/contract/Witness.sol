@@ -138,10 +138,12 @@ contract Witness {
     }
 
     function addUserToDataWhiteList(uint256 _index, address _user) external onlyDataOwner(_index) returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
         return dataWhiteList[keccak256(abi.encodePacked(_index))].addUser(_user);
     }
 
     function removeUserFromDataWhiteList(uint256 _index, address _user) external onlyDataOwner(_index) returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
         require(dataWhiteList[keccak256(abi.encodePacked(_index))].contains(_user), "The user does not exist");
         return dataWhiteList[keccak256(abi.encodePacked(_index))].remove(_user);
     }
@@ -157,14 +159,17 @@ contract Witness {
     }
 
     function disableDataWhite(uint256 _index) external onlyContractOwner {
+        require(_index < dataList._datas.length, "Data index out of bounds");
         dataWhiteList[keccak256(abi.encodePacked(_index))].status = false;
     }
 
     function enableDataWhite(uint256 _index) external onlyContractOwner {
+        require(_index < dataList._datas.length, "Data index out of bounds");
         dataWhiteList[keccak256(abi.encodePacked(_index))].status =  true;
     }
 
     function getStatusOfDataWhite(uint256 _index) external onlyContractOwner view returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
         return dataWhiteList[keccak256(abi.encodePacked(_index))].status;
     }
 }
