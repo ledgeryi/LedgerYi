@@ -110,7 +110,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         return ContractBaseInfo.builder()
                 .groupName((String) objects[0])
                 .uid((String) objects[1])
-                .createTime(formatter.format(objects[2]))
+                .createTime(formatter.format(((BigInteger)objects[2]).multiply(new BigInteger("1000"))))
                 .owner(DecodeUtil.createReadableString((byte[]) objects[3]))
                 .build();
     }
@@ -133,7 +133,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                 .creator((String) objects[0])
                 .nameEn((String) objects[1])
                 .nameZn((String) objects[2])
-                .createTime(formatter.format(objects[3]))
+                .createTime(formatter.format(((BigInteger)objects[3]).multiply(new BigInteger("1000"))))
                 .owner(DecodeUtil.createReadableString((byte[]) objects[4]))
                 .build();
     }

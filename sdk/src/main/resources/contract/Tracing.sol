@@ -48,7 +48,7 @@ contract Tracing {
     constructor (string memory _uid, string memory _groupName) public {
         uid = _uid;
         groupName = _groupName;
-        createTime = now;
+        createTime = block.timestamp;
         owner = msg.sender;
         contractWhiteList.owner = msg.sender;
         contractWhiteList.status = true;

@@ -31,7 +31,7 @@ public class WitnessTests {
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
-    private static String contractAddress = "0e94bab5376a345e2e1f8121dae64a8733088807";
+    private static String contractAddress = "f2145352c5e08de090e0fab203d2bc06f5bd1c70";
 
 
     @Before

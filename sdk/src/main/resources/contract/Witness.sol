@@ -43,7 +43,7 @@ contract Witness {
     }
 
     constructor (string memory _creater, string memory _nameZn, string memory _nameEn) public {
-        createTime = now;
+        createTime = block.timestamp;
         contractWhiteList.owner = msg.sender;
         creater = _creater;
         nameEn = _nameEn;

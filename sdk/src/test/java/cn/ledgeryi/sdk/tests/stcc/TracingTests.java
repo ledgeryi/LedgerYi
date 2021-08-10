@@ -28,7 +28,7 @@ public class TracingTests {
     private static String privateKey = "ec19148056c4cfc5fc1b1923b8bb657e1e481a8f092415d5af96dd60f3e6806d";
     private static String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
 
-    private static String contractAddress = "0fe1e8ff282b72749e531facde5d2bc65d5a793d";;
+    private static String contractAddress = "b08ac4b7e79e16c3e0e63708332a38aea4805f73";
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
