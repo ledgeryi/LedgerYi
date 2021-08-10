@@ -124,7 +124,7 @@ contract Tracing {
 
     function dataVerify(string memory _traceUid, uint256 _index,string[] memory _dataInfos) external view returns (bool) {
         require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
-        return dataList[keccak256(abi.encodePacked(_traceUid))].traceDataVerify(keys._values, _index, _dataInfos);
+        return dataList[keccak256(abi.encodePacked(_traceUid))].traceDataVerify(_index, keys._values, _dataInfos);
     }
 
     function getDataInfo(string memory _traceUid) external view returns (string[] memory, string[] memory) {
