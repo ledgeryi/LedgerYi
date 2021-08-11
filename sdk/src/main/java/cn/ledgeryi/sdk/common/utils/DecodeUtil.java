@@ -50,12 +50,22 @@ public class DecodeUtil {
     return result;
   }
 
+  @Deprecated
   public static String createReadableString(byte[] bytes) {
     return ByteArray.toHexString(bytes);
   }
 
+  @Deprecated
   public static String createReadableString(ByteString string) {
     return createReadableString(string.toByteArray());
+  }
+
+  public static String encode(byte[] bytes) {
+    return ByteArray.toHexString(bytes);
+  }
+
+  public static String encode(ByteString string) {
+    return ByteArray.toHexString(string.toByteArray());
   }
 
   public static byte[] decode(String data){

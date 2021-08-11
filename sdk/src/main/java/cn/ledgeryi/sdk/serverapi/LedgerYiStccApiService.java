@@ -1,5 +1,7 @@
 package cn.ledgeryi.sdk.serverapi;
 
+import cn.ledgeryi.api.GrpcAPI;
+import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
@@ -7,10 +9,7 @@ import cn.ledgeryi.sdk.event.CallTransaction;
 import cn.ledgeryi.sdk.exception.AddressException;
 import cn.ledgeryi.sdk.exception.CallContractExecption;
 import cn.ledgeryi.sdk.exception.CreateContractExecption;
-import cn.ledgeryi.sdk.serverapi.data.DeployContractParam;
-import cn.ledgeryi.sdk.serverapi.data.DeployContractReturn;
-import cn.ledgeryi.sdk.serverapi.data.TriggerContractParam;
-import cn.ledgeryi.sdk.serverapi.data.TriggerContractReturn;
+import cn.ledgeryi.sdk.serverapi.data.*;
 import cn.ledgeryi.sdk.serverapi.data.stcc.ContractBaseInfo;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
@@ -988,5 +987,48 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                 DecodeUtil.decode(privateKey), triggerContractParam);
 
         return result;
+    }
+
+    /**
+     * 查询指定区块的的信息
+     * @param number 区块高度
+     * @return 区块信息
+     */
+    public BlockInfo getBlockInfo(long number) {
+        BlockInfo.BlockInfoBuilder blockInfoBuilder = BlockInfo.builder();
+        GrpcAPI.BlockExtention block = super.getBlock(number);
+        if (block == null) {
+           return blockInfoBuilder.build();
+        }
+        return blockInfoBuilder
+                .hash(DecodeUtil.encode(block.getBlockid()))
+                .number(block.getBlockHeader().getRawData().getNumber())
+                .parentHash(DecodeUtil.encode(block.getBlockHeader().getRawData().getParentHash()))
+                .txSize(block.getTransactionsCount())
+                .timestamp(block.getBlockHeader().getRawData().getTimestamp())
+                .size(block.getSerializedSize())
+                .build();
+    }
+
+    /**
+     * 获取指定范围的区块信息
+     * @param start 起始区块高度，包括
+     * @param end 结束区块高度，不包括
+     * @return 区块信息集合
+     */
+    public List<BlockInfo> getBlocksInfo(long start, long end) {
+        ArrayList<BlockInfo> blocksInfo = new ArrayList<>();
+        GrpcAPI.BlockListExtention blocks = super.getBlockByLimitNext(start, end);
+        blocks.getBlockList().forEach(
+                block -> blocksInfo.add(BlockInfo.builder()
+                        .hash(DecodeUtil.encode(block.getBlockid()))
+                        .number(block.getBlockHeader().getRawData().getNumber())
+                        .parentHash(DecodeUtil.encode(block.getBlockHeader().getRawData().getParentHash()))
+                        .txSize(block.getTransactionsCount())
+                        .timestamp(block.getBlockHeader().getRawData().getTimestamp())
+                        .size(block.getSerializedSize())
+                        .build())
+        );
+        return blocksInfo;
     }
 }
