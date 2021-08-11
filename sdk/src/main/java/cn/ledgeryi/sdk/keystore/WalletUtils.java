@@ -2,7 +2,6 @@ package cn.ledgeryi.sdk.keystore;
 
 import cn.ledgeryi.crypto.ecdsa.ECKey;
 import cn.ledgeryi.crypto.sm2.SM2;
-import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.Utils;
 import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.exception.CipherException;
@@ -21,44 +20,55 @@ import java.io.IOException;
 @Slf4j
 public class WalletUtils {
 
-  private static final ObjectMapper objectMapper = new ObjectMapper();
-  private static final String filePath = "Wallet";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String filePath = "Wallet";
 
-  static {
-    objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-  }
-
-  public static WalletFile createWalletFile(String password)
-          throws CipherException {
-    WalletFile walletFile;
-    if (!passwordValid(password.toCharArray())) {
-      return null;
+    static {
+        objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-    byte[] passwd = StringUtils.char2Byte(password.toCharArray());
-    if (Configuration.isEcc()) {
-      ECKey ecKey = new ECKey(Utils.getRandom());
-      walletFile = Wallet.createStandard(passwd, ecKey);
-    } else {
-      SM2 sm2 = new SM2(Utils.getRandom());
-      walletFile = Wallet.createStandard(passwd, sm2);
-    }
-    return walletFile;
-  }
 
-  public static WalletFile createWalletFile(byte[] password, byte[] priKey) throws CipherException {
-    WalletFile walletFile = null;
-    if (Configuration.isEcc()) {
-      ECKey ecKey = ECKey.fromPrivate(priKey);
-      walletFile = Wallet.createStandard(password, ecKey);
-    } else {
-      SM2 sm2 = SM2.fromPrivate(priKey);
-      walletFile = Wallet.createStandard(password, sm2);
+    public static WalletFile createWalletFile(String password)
+            throws CipherException {
+        WalletFile walletFile;
+        if (!passwordValid(password.toCharArray())) {
+            return null;
+        }
+        byte[] passwd = StringUtils.char2Byte(password.toCharArray());
+        if (Configuration.isEcc()) {
+            ECKey ecKey = new ECKey(Utils.getRandom());
+            walletFile = Wallet.createStandard(passwd, ecKey);
+        } else {
+            SM2 sm2 = new SM2(Utils.getRandom());
+            walletFile = Wallet.createStandard(passwd, sm2);
+        }
+        return walletFile;
     }
-    return walletFile;
-  }
 
-    public String importWallet(char[] password, byte[] priKey) throws CipherException, IOException {
+    public static WalletFile createWalletFile(byte[] password, byte[] priKey) throws CipherException {
+        WalletFile walletFile = null;
+        if (Configuration.isEcc()) {
+            ECKey ecKey = ECKey.fromPrivate(priKey);
+            walletFile = Wallet.createStandard(password, ecKey);
+        } else {
+            SM2 sm2 = SM2.fromPrivate(priKey);
+            walletFile = Wallet.createStandard(password, sm2);
+        }
+        return walletFile;
+    }
+
+    public static WalletFile importWallet(char[] password, byte[] priKey) throws CipherException {
+        if (!passwordValid(password)) {
+            return null;
+        }
+        if (!priKeyValid(priKey)) {
+            return null;
+        }
+        byte[] passwd = StringUtils.char2Byte(password);
+        return createWalletFile(passwd, priKey);
+    }
+
+    public String importWalletAndStore(char[] password, byte[] priKey) throws CipherException, IOException {
         if (!passwordValid(password)) {
             return null;
         }
@@ -71,24 +81,24 @@ public class WalletUtils {
         return store2Keystore(walletFile);
     }
 
-  private static String createKeyStoreFile(String password)
-          throws CipherException, IOException {
-    WalletFile walletFile = createWalletFile(password);
-    return store2Keystore(walletFile);
-  }
+    private static String createKeyStoreFile(String password)
+            throws CipherException, IOException {
+        WalletFile walletFile = createWalletFile(password);
+        return store2Keystore(walletFile);
+    }
 
-  private static boolean priKeyValid(byte[] priKey) {
-    if (ArrayUtils.isEmpty(priKey)) {
-      System.out.println("Warning: PrivateKey is empty !!");
-      return false;
+    private static boolean priKeyValid(byte[] priKey) {
+        if (ArrayUtils.isEmpty(priKey)) {
+            log.warn("Warning: PrivateKey is empty !!");
+            return false;
+        }
+        if (priKey.length != 32) {
+            log.warn("Warning: PrivateKey length need 64 but " + priKey.length + " !!");
+            return false;
+        }
+        // Other rule;
+        return true;
     }
-    if (priKey.length != 32) {
-      System.out.println("Warning: PrivateKey length need 64 but " + priKey.length + " !!");
-      return false;
-    }
-    // Other rule;
-    return true;
-  }
 
 //  public static void main(String[] args) throws CipherException, IOException {
 ////    String keyStoreFile = createKeyStoreFile("1qaz2wsx@");
@@ -100,89 +110,89 @@ public class WalletUtils {
 //    System.out.println(DecodeUtil.createReadableString(bytes));
 //  }
 
-  private static String store2Keystore(WalletFile walletFile) throws IOException {
-    if (walletFile == null) {
-      log.warn("Warning: Store wallet failed, walletFile is null !!");
-      return null;
-    }
-    File file = new File(filePath);
-    if (!file.exists()) {
-      if (!file.mkdir()) {
-        throw new IOException("Make directory failed!");
-      }
-    } else {
-      if (!file.isDirectory()) {
-        if (file.delete()) {
-          if (!file.mkdir()) {
-            throw new IOException("Make directory failed!");
-          }
-        } else {
-          throw new IOException("File exists and can not be deleted!");
+    private static String store2Keystore(WalletFile walletFile) throws IOException {
+        if (walletFile == null) {
+            log.warn("Warning: Store wallet failed, walletFile is null !!");
+            return null;
         }
-      }
+        File file = new File(filePath);
+        if (!file.exists()) {
+            if (!file.mkdir()) {
+                throw new IOException("Make directory failed!");
+            }
+        } else {
+            if (!file.isDirectory()) {
+                if (file.delete()) {
+                    if (!file.mkdir()) {
+                        throw new IOException("Make directory failed!");
+                    }
+                } else {
+                    throw new IOException("File exists and can not be deleted!");
+                }
+            }
+        }
+        return WalletUtils.generateWalletFile(walletFile, file);
     }
-    return WalletUtils.generateWalletFile(walletFile, file);
-  }
 
-  private static String generateWalletFile(WalletFile walletFile, File destinationDirectory)
-          throws IOException {
-    String fileName = getWalletFileName(walletFile);
-    File destination = new File(destinationDirectory, fileName);
-    objectMapper.writeValue(destination, walletFile);
-    return fileName;
-  }
-
-  public static WalletFile importWalletFile(File walletFile, String password)
-          throws IOException, CipherException {
-    WalletFile wallet = loadWalletFile(walletFile);
-    byte[] passwd = StringUtils.char2Byte(password.toCharArray());
-    boolean validPassword = Wallet.validPassword(passwd, wallet);
-    if (validPassword) {
-      throw new CipherException("password check fail");
+    private static String generateWalletFile(WalletFile walletFile, File destinationDirectory)
+            throws IOException {
+        String fileName = getWalletFileName(walletFile);
+        File destination = new File(destinationDirectory, fileName);
+        objectMapper.writeValue(destination, walletFile);
+        return fileName;
     }
-    return wallet;
-  }
 
-  public static String exportAddress(File walletFile) throws IOException {
-    WalletFile wallet = loadWalletFile(walletFile);
-    return wallet.getAddress();
-  }
-
-  public static byte[] exportPrivateKey(File walletFile, String password)
-          throws CipherException, IOException {
-    byte[] pwd = StringUtils.char2Byte(password.toCharArray());
-    WalletFile wallet = loadWalletFile(walletFile);
-    return Wallet.decrypt2PrivateBytes(pwd, wallet);
-  }
-
-  public static WalletFile loadWalletFile(File source) throws IOException {
-    return objectMapper.readValue(source, WalletFile.class);
-  }
-
-  public static boolean passwordValid(char[] password) {
-    if (ArrayUtils.isEmpty(password)) {
-      throw new IllegalArgumentException("password is empty");
+    public static WalletFile importWalletFile(File walletFile, String password)
+            throws IOException, CipherException {
+        WalletFile wallet = loadWalletFile(walletFile);
+        byte[] passwd = StringUtils.char2Byte(password.toCharArray());
+        boolean validPassword = Wallet.validPassword(passwd, wallet);
+        if (validPassword) {
+            throw new CipherException("password check fail");
+        }
+        return wallet;
     }
-    if (password.length < 6) {
-      log.warn("Warning: Password is too short !!");
-      return false;
-    }
-    // Other rule;
-    int level = CheckStrength.checkPasswordStrength(password);
-    if (level <= 4) {
-      log.warn("Your password is too weak!");
-      log.warn("The password should be at least 8 characters.");
-      log.warn("The password should contains uppercase, lowercase, numeric and other.");
-      log.warn("The password should not contain more than 3 duplicate numbers or letters; For example: 1111.");
-      log.warn("The password should not contain more than 3 consecutive Numbers or letters; For example: 1234.");
-      log.warn("The password should not contain weak password combination; For example:");
-      log.warn("ababab, abcabc, password, passw0rd, p@ssw0rd, admin1234, etc.");
-      return false;
-    }
-    return true;
-  }
 
-  private static String getWalletFileName(WalletFile walletFile) {
-    return walletFile.getAddress() + ".json";
-  }
+    public static String exportAddress(File walletFile) throws IOException {
+        WalletFile wallet = loadWalletFile(walletFile);
+        return wallet.getAddress();
+    }
+
+    public static byte[] exportPrivateKey(File walletFile, String password)
+            throws CipherException, IOException {
+        byte[] pwd = StringUtils.char2Byte(password.toCharArray());
+        WalletFile wallet = loadWalletFile(walletFile);
+        return Wallet.decrypt2PrivateBytes(pwd, wallet);
+    }
+
+    public static WalletFile loadWalletFile(File source) throws IOException {
+        return objectMapper.readValue(source, WalletFile.class);
+    }
+
+    public static boolean passwordValid(char[] password) {
+        if (ArrayUtils.isEmpty(password)) {
+            throw new IllegalArgumentException("password is empty");
+        }
+        if (password.length < 6) {
+            log.warn("Warning: Password is too short !!");
+            return false;
+        }
+        // Other rule;
+        int level = CheckStrength.checkPasswordStrength(password);
+        if (level <= 4) {
+            log.warn("Your password is too weak!");
+            log.warn("The password should be at least 8 characters.");
+            log.warn("The password should contains uppercase, lowercase, numeric and other.");
+            log.warn("The password should not contain more than 3 duplicate numbers or letters; For example: 1111.");
+            log.warn("The password should not contain more than 3 consecutive Numbers or letters; For example: 1234.");
+            log.warn("The password should not contain weak password combination; For example:");
+            log.warn("ababab, abcabc, password, passw0rd, p@ssw0rd, admin1234, etc.");
+            return false;
+        }
+        return true;
+    }
+
+    private static String getWalletFileName(WalletFile walletFile) {
+        return walletFile.getAddress() + ".json";
+    }
 }
