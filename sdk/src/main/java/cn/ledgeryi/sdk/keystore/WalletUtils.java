@@ -2,7 +2,7 @@ package cn.ledgeryi.sdk.keystore;
 
 import cn.ledgeryi.crypto.ecdsa.ECKey;
 import cn.ledgeryi.crypto.sm2.SM2;
-import cn.ledgeryi.sdk.common.utils.Base58;
+import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.Utils;
 import cn.ledgeryi.sdk.config.Configuration;
 import cn.ledgeryi.sdk.exception.CipherException;
@@ -52,6 +52,16 @@ public class WalletUtils {
     return store2Keystore(walletFile);
   }
 
+//  public static void main(String[] args) throws CipherException, IOException {
+////    String keyStoreFile = createKeyStoreFile("1qaz2wsx@");
+////    System.out.println(keyStoreFile);
+//    File file = new File("./Wallet/c1fdf6f30dfc8eaeba1bf2161e3b59db3e8e3f02.json");
+//    String address = exportAddress(file);
+//    System.out.println(address);
+//    byte[] bytes = exportPrivateKey(file, "1qaz2wsx@");
+//    System.out.println(DecodeUtil.createReadableString(bytes));
+//  }
+
   private static String store2Keystore(WalletFile walletFile) throws IOException {
     if (walletFile == null) {
       log.warn("Warning: Store wallet failed, walletFile is null !!");
@@ -95,9 +105,9 @@ public class WalletUtils {
     return wallet;
   }
 
-  public static byte[] exportAddress(File walletFile) throws IOException {
+  public static String exportAddress(File walletFile) throws IOException {
     WalletFile wallet = loadWalletFile(walletFile);
-    return Base58.decode58Check(wallet.getAddress());
+    return wallet.getAddress();
   }
 
   public static byte[] exportPrivateKey(File walletFile, String password)
