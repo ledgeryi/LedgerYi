@@ -68,7 +68,7 @@ public class WalletUtils {
         return createWalletFile(passwd, priKey);
     }
 
-    public String importWalletAndStore(char[] password, byte[] priKey) throws CipherException, IOException {
+    public static String importWalletAndStore(char[] password, byte[] priKey) throws CipherException, IOException {
         if (!passwordValid(password)) {
             return null;
         }
@@ -99,16 +99,6 @@ public class WalletUtils {
         // Other rule;
         return true;
     }
-
-//  public static void main(String[] args) throws CipherException, IOException {
-////    String keyStoreFile = createKeyStoreFile("1qaz2wsx@");
-////    System.out.println(keyStoreFile);
-//    File file = new File("./Wallet/c1fdf6f30dfc8eaeba1bf2161e3b59db3e8e3f02.json");
-//    String address = exportAddress(file);
-//    System.out.println(address);
-//    byte[] bytes = exportPrivateKey(file, "1qaz2wsx@");
-//    System.out.println(DecodeUtil.createReadableString(bytes));
-//  }
 
     private static String store2Keystore(WalletFile walletFile) throws IOException {
         if (walletFile == null) {
