@@ -46,10 +46,48 @@ public class WalletUtils {
     return walletFile;
   }
 
+  public static WalletFile createWalletFile(byte[] password, byte[] priKey) throws CipherException {
+    WalletFile walletFile = null;
+    if (Configuration.isEcc()) {
+      ECKey ecKey = ECKey.fromPrivate(priKey);
+      walletFile = Wallet.createStandard(password, ecKey);
+    } else {
+      SM2 sm2 = SM2.fromPrivate(priKey);
+      walletFile = Wallet.createStandard(password, sm2);
+    }
+    return walletFile;
+  }
+
+    public String importWallet(char[] password, byte[] priKey) throws CipherException, IOException {
+        if (!passwordValid(password)) {
+            return null;
+        }
+        if (!priKeyValid(priKey)) {
+            return null;
+        }
+        byte[] passwd = StringUtils.char2Byte(password);
+        WalletFile walletFile = createWalletFile(passwd, priKey);
+        StringUtils.clear(passwd);
+        return store2Keystore(walletFile);
+    }
+
   private static String createKeyStoreFile(String password)
           throws CipherException, IOException {
     WalletFile walletFile = createWalletFile(password);
     return store2Keystore(walletFile);
+  }
+
+  private static boolean priKeyValid(byte[] priKey) {
+    if (ArrayUtils.isEmpty(priKey)) {
+      System.out.println("Warning: PrivateKey is empty !!");
+      return false;
+    }
+    if (priKey.length != 32) {
+      System.out.println("Warning: PrivateKey length need 64 but " + priKey.length + " !!");
+      return false;
+    }
+    // Other rule;
+    return true;
   }
 
 //  public static void main(String[] args) throws CipherException, IOException {
