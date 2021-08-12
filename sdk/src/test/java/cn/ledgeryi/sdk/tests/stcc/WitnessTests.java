@@ -1,6 +1,7 @@
 package cn.ledgeryi.sdk.tests.stcc;
 
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
@@ -14,10 +15,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 存证合约测试
@@ -31,7 +29,7 @@ public class WitnessTests {
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
-    private static String contractAddress = "f2145352c5e08de090e0fab203d2bc06f5bd1c70";
+    private static String contractAddress = "533c6ff2ba6e124c1678d79441f4e77d1c8f60de";
 
 
     @Before
@@ -97,7 +95,7 @@ public class WitnessTests {
 
     @Test
     public void getData() throws AddressException {
-        long dataIndex = 1;
+        long dataIndex = 0;
         Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, dataIndex);
         System.out.println(dataInfo.toString());
     }
@@ -142,11 +140,6 @@ public class WitnessTests {
 
     @Test
     public void addUserToDataWhiteList() throws AddressException {
-//        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
-//        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
-
-//        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
-//        privateKey = "3f177d8a0f3725b34b7866f080e43696b4612c4f295cf277fae7a9721ed770d1";
         long dataIndex = 0;
         String user = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
         boolean result = ledgerYiStccApiService.addUserToDataWhiteList(ownerAddress, privateKey, contractAddress, dataIndex, user);
@@ -154,9 +147,32 @@ public class WitnessTests {
     }
 
     @Test
+    public void addUsersToDataWhiteList() throws AddressException, CallContractExecption {
+        ArrayList<String> users = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            AccountYi account = ledgerYiStccApiService.createDefaultAccount();
+            users.add(account.getAddress());
+        }
+        long dataIndex = 0;
+        boolean result = ledgerYiStccApiService.addUsersToDataWhiteList(ownerAddress, privateKey, contractAddress, dataIndex, users);
+        System.out.println(result);
+    }
+
+    @Test
     public void getUsersFromDataWhiteList() throws AddressException {
         long dataIndex = 0;
         List<String> users = ledgerYiStccApiService.getUsersFromDataWhiteList(ownerAddress, contractAddress, dataIndex);
+        System.out.println(users.size());
+        System.out.println(users.toString());
+    }
+
+    @Test
+    public void getBatchUsersFromDataWhiteList() throws AddressException, CallContractExecption {
+        long dataIndex = 0;
+        int start = 50;
+        int size = 12;
+        List<String> users = ledgerYiStccApiService.getUsersFromDataWhiteList(ownerAddress, contractAddress, dataIndex,start,size);
+        System.out.println(users.size());
         System.out.println(users.toString());
     }
 

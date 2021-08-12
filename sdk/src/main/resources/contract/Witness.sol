@@ -83,7 +83,16 @@ contract Witness {
         return contractWhiteList.status;
     }
 
-    function addUserToContractWhiteList(address _user) external onlyContractOwner returns (bool) {
+    function addUsersToContractWhiteList(address[] memory _users) external onlyContractOwner returns (bool) {
+        require(contractWhiteList.status, "The status of white list is disabel");
+        for (uint256 i = 0; i < _users.length; i++) {
+            require(contractWhiteList.contains(_users[i]), "The user already exist");
+            contractWhiteList.addUser(_users[i]);
+        }
+        return true;
+    }
+
+    function addUserToContractWhiteList(address _user) public onlyContractOwner returns (bool) {
         require(contractWhiteList.status, "The status of white list is disabel");
         return contractWhiteList.addUser(_user);
     }
@@ -95,6 +104,21 @@ contract Witness {
 
     function getUserSizeOfContractWhiteList() external view returns (uint256) {
         return contractWhiteList.length();
+    }
+
+    function getUsersFromContractWhiteList(uint256 _startIndex, uint256 _size) external view returns (address[] memory) {
+        require(_startIndex < contractWhiteList.length(), "Start index out of bounds");
+        uint256 _length = 0;
+        if (_startIndex + _size <= contractWhiteList.length()) {
+            _length = _size;
+        } else {
+            _length = contractWhiteList.length() - _startIndex;
+        }
+        address[] memory users = new address[](_length);
+        for (uint256 i = 0; i < _length; i++) {
+            users[i] = contractWhiteList.at(_startIndex + i);
+        }
+        return users;
     }
 
     function getUserFromContractWhiteList(uint256 _index) external view returns (address) {
@@ -137,7 +161,16 @@ contract Witness {
         return dataList.getData(_index);
     }
 
-    function addUserToDataWhiteList(uint256 _index, address _user) external onlyDataOwner(_index) returns (bool) {
+    function addUsersToDataWhiteList(uint256 _index, address[] memory _users) external onlyDataOwner(_index) returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        for (uint256 i = 0; i < _users.length; i++) {
+            require(!dataWhiteList[keccak256(abi.encodePacked(_index))].contains(_users[i]), "The user already exist");
+            dataWhiteList[keccak256(abi.encodePacked(_index))].addUser(_users[i]);
+        }
+        return true;
+    }
+
+    function addUserToDataWhiteList(uint256 _index, address _user) public onlyDataOwner(_index) returns (bool) {
         require(_index < dataList._datas.length, "Data index out of bounds");
         return dataWhiteList[keccak256(abi.encodePacked(_index))].addUser(_user);
     }
@@ -151,6 +184,23 @@ contract Witness {
     function getUserSizeOfDataWhiteList(uint256 _index) external view returns (uint256) {
         require(_index < dataList._datas.length, "Data index out of bounds");
         return dataWhiteList[keccak256(abi.encodePacked(_index))].length();
+    }
+
+    function getUsersFromDataWhiteList(uint256 _index, uint256 _startIndex, uint256 _size) external view returns (address[] memory) {
+        uint256 _whiteListLength = dataWhiteList[keccak256(abi.encodePacked(_index))].length();
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        require(_startIndex < _whiteListLength, "Start index out of bounds");
+        uint256 _length = 0;
+        if (_startIndex + _size <= _whiteListLength) {
+            _length = _size;
+        } else {
+            _length = _whiteListLength - _startIndex;
+        }
+        address[] memory users = new address[](_length);
+        for (uint256 i = 0; i < _length; i++) {
+            users[i] = dataWhiteList[keccak256(abi.encodePacked(_index))].at(_startIndex + i);
+        }
+        return users;
     }
 
     function getUserFromDataWhiteList(uint256 _index, uint256 _userIndex) external view returns (address) {

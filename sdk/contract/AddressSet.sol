@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 library AddressSet {
 
@@ -20,31 +20,31 @@ library AddressSet {
 
     }
 
-    function setOwner(WhiteList storage whiteList, address _owner) public {
+    function setOwner(WhiteList storage whiteList, address _owner) internal {
         whiteList.owner = _owner;
     }
 
-    function setStatus(WhiteList storage whiteList, bool _status) public {
+    function setStatus(WhiteList storage whiteList, bool _status) internal {
         whiteList.status = _status;
     }
 
-    function addUser(WhiteList storage whiteList, address _user) public returns (bool) {
+    function addUser(WhiteList storage whiteList, address _user) internal returns (bool) {
         return add(whiteList.accessList, _user);
     }
 
-    function contains(WhiteList storage whiteList, address _user) public view returns (bool) {
+    function contains(WhiteList storage whiteList, address _user) internal view returns (bool) {
         return contains(whiteList.accessList, _user);
     }
 
-    function remove(WhiteList storage whiteList, address _user) public returns (bool) {
+    function remove(WhiteList storage whiteList, address _user) internal returns (bool) {
         return remove(whiteList.accessList, _user);
     }
 
-    function length(WhiteList storage whiteList) public view returns (uint256) {
+    function length(WhiteList storage whiteList) internal view returns (uint256) {
         return length(whiteList.accessList);
     }
 
-    function at(WhiteList storage whiteList, uint256 _index) public view returns (address) {
+    function at(WhiteList storage whiteList, uint256 _index) internal view returns (address) {
         return at(whiteList.accessList, _index);
     }
 
@@ -55,7 +55,7 @@ library AddressSet {
      * Returns true if the value was added to the set, that is if it was not
      * already present.
      */
-    function add(Set storage set, address value) public returns (bool) {
+    function add(Set storage set, address value) internal returns (bool) {
         if (!contains(set, value)) {
             set._values.push(value);
             // The value is stored at length-1, but we add 1 to all indexes and use 0 as a sentinel value
@@ -73,7 +73,7 @@ library AddressSet {
      * Returns true if the value was removed from the set, that is if it was
      * present.
      */
-    function remove(Set storage set, address value) public returns (bool) {
+    function remove(Set storage set, address value) internal returns (bool) {
         // We read and store the value's index to prevent multiple reads from the same storage slot
         uint256 valueIndex = set._indexes[keccak256(abi.encodePacked(value))];
 
@@ -110,14 +110,14 @@ library AddressSet {
     /**
      * @dev Returns true if the value is in the set. O(1).
      */
-    function contains(Set storage set, address value) public view returns (bool) {
+    function contains(Set storage set, address value) internal view returns (bool) {
         return set._indexes[keccak256(abi.encodePacked(value))] != 0;
     }
 
     /**
      * @dev Returns the number of values on the set. O(1).
      */
-    function length(Set storage set) public view returns (uint256) {
+    function length(Set storage set) internal view returns (uint256) {
         return set._values.length;
     }
 
@@ -131,7 +131,7 @@ library AddressSet {
      *
      * - `index` must be strictly less than {length}.
      */
-    function at(Set storage set, uint256 index) public view returns (address) {
+    function at(Set storage set, uint256 index) internal view returns (address) {
         require(set._values.length > index, "EnumerableSet: index out of bounds");
         return set._values[index];
     }

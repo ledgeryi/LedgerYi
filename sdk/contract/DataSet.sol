@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma experimental ABIEncoderV2;
 
-pragma solidity ^0.6.8;
+pragma solidity ^0.6.9;
 
 library DataSet {
 
@@ -23,7 +23,15 @@ library DataSet {
         Data[] _datas;
     }
 
-    function addData(DataList storage dataList, string[] memory _data) public returns (uint256) {
+    function addTraceData(DataList storage dataList, string[] memory _keys, string[] memory _datas) internal returns (uint256) {
+        require(_keys.length == _datas.length, "The data length is inconsistent");
+        dataList._datas.push(Data());
+        uint256 size = dataList._datas.length;
+        addData(dataList._datas[size - 1], _keys, _datas);
+        return size - 1;
+    }
+
+    function addData(DataList storage dataList, string[] memory _data) internal returns (uint256) {
         require(_data.length == dataList._keyInfo._keys.length, "The data length is inconsistent");
         dataList._datas.push(Data());
         uint256 size = dataList._datas.length;
@@ -31,14 +39,14 @@ library DataSet {
         return size - 1;
     }
 
-    function addData(Data storage data, string[] memory _keys, string[] memory _values) private {
+    function addData(Data storage data, string[] memory _keys, string[] memory _values) internal {
         uint256 paramLength = _values.length;
         for (uint i = 0; i < paramLength; i++){
             data._data[keccak256(abi.encodePacked(_keys[i]))] = _values[i];
         }
     }
 
-    function getData(DataList storage dataList, uint256 _index) public view returns (string[] memory, string[] memory) {
+    function getData(DataList storage dataList, uint256 _index) internal view returns (string[] memory, string[] memory) {
         require(_index < dataList._datas.length, "Data index out of bounds");
         uint256 size = dataList._keyInfo._keys.length;
         string[] memory _dataList = new string[](size);
@@ -48,12 +56,63 @@ library DataSet {
         return (dataList._keyInfo._keys, _dataList);
     }
 
-    function addKey(DataList storage dataList, string memory value) public returns (bool) {
+    function getTraceData(DataList storage dataList, string[] memory _keys, uint256 _index) internal view returns (string[] memory, string[] memory) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        uint256 size = _keys.length;
+        string[] memory _dataList = new string[](size);
+        for (uint256 i = 0; i < size; i++) {
+            _dataList[i] = dataList._datas[_index]._data[keccak256(abi.encodePacked(_keys[i]))];
+        }
+        return (_keys, _dataList);
+    }
+
+    function witnessDataVerify(DataList storage dataList, uint256 _index, string[] memory _values) internal view returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        uint256 size = dataList._keyInfo._keys.length;
+        if (size != _values.length) {
+            return false;
+        }
+        for (uint256 i = 0; i < size; i++) {
+            string memory _value = dataList._datas[_index]._data[keccak256(abi.encodePacked(dataList._keyInfo._keys[i]))];
+            if (keccak256(abi.encodePacked(_value)) != keccak256(abi.encodePacked(_values[i]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function traceDataVerify(DataList storage dataList, uint256 _index, string[] memory _keys, string[] memory _values) internal view returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        uint256 size = _keys.length;
+        if (size != _values.length) {
+            return false;
+        }
+        for (uint256 i = 0; i < size; i++) {
+            string memory _value = dataList._datas[_index]._data[keccak256(abi.encodePacked(_keys[i]))];
+            if (keccak256(abi.encodePacked(_value)) != keccak256(abi.encodePacked(_values[i]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function addKeys(DataList storage dataList, string[] memory _values) internal {
+        uint256 paramLength = _values.length;
+        for (uint i = 0; i < paramLength; i++){
+            addKey(dataList, _values[i]);
+        }
+    }
+
+    function addKey(DataList storage dataList, string memory value) internal returns (bool) {
         return add(dataList._keyInfo, value);
     }
 
-    function getKey(DataList storage dataList) public view returns (string[] memory) {
+    function getKey(DataList storage dataList) internal view returns (string[] memory) {
         return dataList._keyInfo._keys;
+    }
+
+    function keyLength(DataList storage dataList) internal view returns(uint256) {
+        return getKey(dataList).length;
     }
 
     function length(DataList storage dataList) public view returns (uint256) {
@@ -67,7 +126,7 @@ library DataSet {
      * Returns true if the value was added to the set, that is if it was not
      * already present.
      */
-    function add(Set storage set, string memory value) private returns (bool) {
+    function add(Set storage set, string memory value) internal returns (bool) {
         if (!contains(set, value)) {
             set._keys.push(value);
             // The value is stored at length-1, but we add 1 to all indexes and use 0 as a sentinel value
@@ -85,7 +144,7 @@ library DataSet {
      * Returns true if the value was removed from the set, that is if it was
      * present.
      */
-    function remove(Set storage set, string memory value) private returns (bool) {
+    function remove(Set storage set, string memory value) internal returns (bool) {
         // We read and store the value's index to prevent multiple reads from the same storage slot
         uint256 valueIndex = set._indexes[keccak256(abi.encodePacked(value))];
 
@@ -122,14 +181,14 @@ library DataSet {
     /**
      * @dev Returns true if the value is in the set. O(1).
      */
-    function contains(Set storage set, string memory value) private view returns (bool) {
+    function contains(Set storage set, string memory value) internal view returns (bool) {
         return set._indexes[keccak256(abi.encodePacked(value))] != 0;
     }
 
     /**
      * @dev Returns the number of values on the set. O(1).
      */
-    function length(Set storage set) private view returns (uint256) {
+    function length(Set storage set) internal view returns (uint256) {
         return set._keys.length;
     }
 
@@ -143,7 +202,7 @@ library DataSet {
      *
      * - `index` must be strictly less than {length}.
      */
-    function at(Set storage set, uint256 index) private view returns (string memory) {
+    function at(Set storage set, uint256 index) internal view returns (string memory) {
         require(set._keys.length > index, "EnumerableSet: index out of bounds");
         return set._keys[index];
     }

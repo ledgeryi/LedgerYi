@@ -1,7 +1,6 @@
 package cn.ledgeryi.sdk.serverapi;
 
 import cn.ledgeryi.api.GrpcAPI;
-import cn.ledgeryi.protos.Protocol;
 import cn.ledgeryi.sdk.common.utils.ByteUtil;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
@@ -15,6 +14,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +34,10 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         super();
     }
 
+    private Path getContractPath(String contractName) {
+        return Paths.get(System.getProperty("user.dir") + File.separator + "contract" + File.separator + contractName );
+    }
+
     /**
      * 部署存证合约
      * @param ownerAddress 部署者地址
@@ -46,7 +50,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         if (args.size() != 3){
             throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
-        Path source = Paths.get("src","main/resources/contract","Witness.sol");
+//        Path source = Paths.get("src","main/resources/contract","Witness.sol");
+        Path source = getContractPath("Witness.sol");
         DeployContractParam param = compileContractFromFile(source,"Witness");
         param.setConstructor("constructor(string,string,string)");
         param.setArgs(args);
@@ -66,7 +71,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         if (args.size() != 4){
             throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
-        Path source = Paths.get("src","main/resources/contract","TracingProxy.sol");
+//        Path source = Paths.get("src","main/resources/contract","TracingProxy.sol");
+        Path source = getContractPath("TracingProxy.sol");
         DeployContractParam param = compileContractFromFile(source,"TracingProxy");
         param.setConstructor("constructor(string,string,string,string)");
         param.setArgs(args);
@@ -85,7 +91,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         if (args.size() != 2){
             throw new CreateContractExecption("Data storage failed, data length is inconsistent");
         }
-        Path source = Paths.get("src","main/resources/contract","Tracing.sol");
+//        Path source = Paths.get("src","main/resources/contract","Tracing.sol");
+        Path source = getContractPath("Tracing.sol");
         DeployContractParam param = compileContractFromFile(source,"Tracing");
         param.setConstructor("constructor(string,string)");
         param.setArgs(args);
@@ -528,13 +535,35 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 合约拥有者私钥
      * @param contractAddress 合约地址
      * @param user 被添加的用户地址
-     * @return
      */
     public boolean addUserToContractWhiteList(String callAddress, String privateKey,
                                               String contractAddress, String user) throws AddressException {
         verifyAddress(user);
         String method = "addUserToContractWhiteList(address)";
         List<Object> args = Collections.singletonList(user);
+        TriggerContractReturn contractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
+        ByteString contractResult = contractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
+    }
+
+    /**
+     * 存证合约、溯源合约：向合约白名单添加批量用户
+     * @param callAddress 合约拥有者
+     * @param privateKey 合约拥有者私钥
+     * @param contractAddress 合约地址
+     * @param users 被添加的批量用户地址
+     */
+    public boolean addUsersToContractWhiteList(String callAddress, String privateKey,
+                                              String contractAddress, List<String> users) throws AddressException {
+        if (users.size() > 50) {
+            return false;
+        }
+
+        for (String user : users) {
+            verifyAddress(user);
+        }
+        String method = "addUsersToContractWhiteList(address[])";
+        List<Object> args = Collections.singletonList(JSONObject.toJSON(users));
         TriggerContractReturn contractReturn = triggerContract(callAddress, privateKey, contractAddress, method, args);
         ByteString contractResult = contractReturn.getCallResult();
         return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
@@ -555,13 +584,14 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
         ByteString contractResult = contractReturn.getCallResult();
         return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
-}
+    }
 
     /**
      * 存证合约、溯源合约：获取合约白名单成员
      * @param callAddress 调用者地址
      * @param contractAddress 合约地址
      */
+    @Deprecated
     public List<String> getUsersFromContractWhiteList(String callAddress,
                                                       String contractAddress) throws AddressException {
         List<String> users = new ArrayList<>();
@@ -571,10 +601,44 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             List<Object> args = Collections.singletonList(i);
             TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
             ByteString callResult = callReturn.getCallResult();
-            String userAddress = DecodeUtil.createReadableString(callResult.toByteArray());
+            String userAddress = DecodeUtil.encode(callResult.toByteArray());
             users.add(userAddress.substring(24,64));
         }
         return users;
+    }
+
+    /**
+     * 存证合约、溯源合约：批量获取合约白名单成员，一次最多获取100个
+     * @param callAddress 调用者地址
+     * @param contractAddress 合约地址
+     */
+    public List<String> getUsersFromContractWhiteList(String callAddress,
+                                                      String contractAddress, int start, int size)
+            throws AddressException, CallContractExecption {
+        if (size > 100) {
+            throw new CallContractExecption("The size of users cannot exceed 100");
+        }
+        String method = "getUsersFromContractWhiteList(uint256,uint256)";
+        List<Object> args = Arrays.asList(start, size);
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        CallTransaction.Function function = CallTransaction.Function.fromSignature(
+                "getUsersFromContractWhiteList", new String[]{"uint256","uint256"}, new String[]{"address[]"});
+        Object[] objects = function.decodeResult(callReturn.getCallResult().toByteArray());
+        return parasAddress(objects);
+    }
+
+    /**
+     * 存证合约、溯源合约：获取合约白名单成员数量
+     * @param callAddress 调用者地址
+     * @param contractAddress 合约地址
+     * @return 合约白名单成员数量
+     */
+    public long getUserSizeOfContractWhiteList(String callAddress, String contractAddress) throws AddressException {
+        String method = "getUserSizeOfContractWhiteList()";
+        List<Object> args = Collections.emptyList();
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        ByteString callResult = callReturn.getCallResult();
+        return ByteUtil.byteArrayToLong(callResult.toByteArray());
     }
 
     /**
@@ -583,14 +647,37 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param privateKey 数据拥有者私钥
      * @param contractAddress 合约地址
      * @param dataIndex 数据索引（版本号）
-     * @param user 被添加的用户
+     * @param user 被添加的用户地址
      */
     public boolean addUserToDataWhiteList(String callAddress, String privateKey,
                                           String contractAddress, long dataIndex, String user) throws AddressException {
         verifyAddress(user);
         String method = "addUserToDataWhiteList(uint256,address)";
         List<Object> args = Arrays.asList(dataIndex,user);
-        TriggerContractReturn contractReturn= triggerContract(callAddress,privateKey,contractAddress,method,args);
+        TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = contractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
+    }
+
+    /**
+     * 存证合约：向某次存证数据白名单添加批量用户，一次最多添加50个
+     * @param callAddress 数据拥有者地址
+     * @param privateKey 数据拥有者私钥
+     * @param contractAddress 合约地址
+     * @param dataIndex 数据索引（版本号）
+     * @param users 被添加的批量用户地址
+     */
+    public boolean addUsersToDataWhiteList(String callAddress, String privateKey,
+                                          String contractAddress, long dataIndex, List<String> users) throws AddressException, CallContractExecption {
+        if (users.size() > 50) {
+            throw new CallContractExecption("The size of users cannot exceed 50");
+        }
+        for (String user : users) {
+            verifyAddress(user);
+        }
+        String method = "addUsersToDataWhiteList(uint256,address[])";
+        List<Object> args = Arrays.asList(dataIndex,JSONObject.toJSON(users));
+        TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
         ByteString contractResult = contractReturn.getCallResult();
         return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
     }
@@ -602,7 +689,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param contractAddress 合约地址
      * @param dataIndex 数据索引（版本号）
      * @param traceId 溯源ID
-     * @param user 被添加的用户
+     * @param user 被添加的用户地址
      */
     public boolean addUserToDataWhiteList(String callAddress, String privateKey,
                                           String contractAddress, String traceId,
@@ -610,7 +697,32 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         verifyAddress(user);
         String method = "addUserToDataWhiteList(string,uint256,address)";
         List<Object> args = Arrays.asList(traceId,dataIndex,user);
-        TriggerContractReturn contractReturn= triggerContract(callAddress,privateKey,contractAddress,method,args);
+        TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = contractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
+    }
+
+    /**
+     * 溯源合约：向某次存证数据白名单添加批量用户，一次最多添加50个
+     * @param callAddress 数据拥有者地址
+     * @param privateKey 数据拥有者私钥
+     * @param contractAddress 合约地址
+     * @param dataIndex 数据索引（版本号）
+     * @param traceId 溯源ID
+     * @param users 被添加的批量用户地址
+     */
+    public boolean addUsersToDataWhiteList(String callAddress, String privateKey,
+                                          String contractAddress, String traceId,
+                                          long dataIndex, List<String> users) throws AddressException, CallContractExecption {
+        if (users.size() > 50) {
+            throw new CallContractExecption("The size of users cannot exceed 50");
+        }
+        for (String user : users) {
+            verifyAddress(user);
+        }
+        String method = "addUsersToDataWhiteList(string,uint256,address[])";
+        List<Object> args = Arrays.asList(traceId,dataIndex,JSONObject.toJSON(users));
+        TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
         ByteString contractResult = contractReturn.getCallResult();
         return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
     }
@@ -654,11 +766,44 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
+     * 存证合约：获取某次存证数据白名单成员数量
+     * @param callAddress 调用者地址
+     * @param contractAddress 合约地址
+     * @param dataIndex 数据索引（版本号）
+     */
+    public long getUserSizeOfDataWhiteList(String callAddress, String contractAddress,long dataIndex) {
+        String method = "getUserSizeOfDataWhiteList(uint256)";
+        List<Object> params = Collections.singletonList(dataIndex);
+        return getSize(callAddress,contractAddress,method,params);
+    }
+
+    /**
      * 存证合约：获取某次存证数据白名单成员
      * @param callAddress 调用者地址
      * @param contractAddress 合约地址
      * @param dataIndex 数据索引（版本号）
      */
+    public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress,
+                                                  long dataIndex, int start, int size) throws AddressException, CallContractExecption {
+        if (size > 100) {
+            throw new CallContractExecption("The size of users cannot exceed 100");
+        }
+        String method = "getUsersFromDataWhiteList(uint256,uint256,uint256)";
+        List<Object> args = Arrays.asList(dataIndex, start, size);
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+        CallTransaction.Function function = CallTransaction.Function.fromSignature(
+                "getUsersFromDataWhiteList", new String[]{"uint256","uint256","uint256"}, new String[]{"address[]"});
+        Object[] objects = function.decodeResult(callReturn.getCallResult().toByteArray());
+        return parasAddress(objects);
+    }
+
+    /**
+     * 存证合约：获取某次存证数据白名单成员
+     * @param callAddress 调用者地址
+     * @param contractAddress 合约地址
+     * @param dataIndex 数据索引（版本号）
+     */
+    @Deprecated
     public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress,
                                                   long dataIndex) throws AddressException {
         List<String> users = new ArrayList<>();
@@ -671,10 +816,24 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
             List<Object> args = Arrays.asList(dataIndex, i);
             TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
             ByteString callResult = callReturn.getCallResult();
-            String userAddress = DecodeUtil.createReadableString(callResult.toByteArray());
+            String userAddress = DecodeUtil.encode(callResult.toByteArray());
             users.add(userAddress.substring(24,64));
         }
         return users;
+    }
+
+    /**
+     * 溯源合约：获取某次存证数据白名单成员数量
+     * @param callAddress 调用者地址
+     * @param contractAddress 合约地址
+     * @param traceId 溯源ID
+     * @param dataIndex 数据索引（版本号）
+     */
+    public long getUserSizeOfDataWhiteList(String callAddress, String contractAddress,
+                                           String traceId, long dataIndex) {
+        String method = "getUserSizeOfDataWhiteList(string,uint256)";
+        List<Object> params = Arrays.asList(traceId,dataIndex);
+        return getSize(callAddress,contractAddress,method,params);
     }
 
     /**
@@ -685,18 +844,41 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param dataIndex 数据索引（版本号）
      */
     public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress,
+                                                  String traceId, long dataIndex,
+                                                  int start, int size) throws AddressException, CallContractExecption {
+        if (size > 100) {
+            throw new CallContractExecption("The size of users cannot exceed 100");
+        }
+        String method = "getUsersFromDataWhiteList(string,uint256,uint256,uint256)";
+        List<Object> args = Arrays.asList(traceId, dataIndex, start, size);
+        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
+
+        CallTransaction.Function function = CallTransaction.Function.fromSignature(
+                "getUsersFromDataWhiteList", new String[]{"string","uint256","uint256","uint256"},
+                new String[]{"address[]"});
+        Object[] objects = function.decodeResult(callReturn.getCallResult().toByteArray());
+        return parasAddress(objects);
+    }
+
+    /**
+     * 溯源合约：获取某次存证数据白名单成员
+     * @param callAddress 调用者地址
+     * @param contractAddress 合约地址
+     * @param traceId 溯源ID
+     * @param dataIndex 数据索引（版本号）
+     */
+    @Deprecated
+    public List<String> getUsersFromDataWhiteList(String callAddress, String contractAddress,
                                                   String traceId, long dataIndex) throws AddressException {
         List<String> users = new ArrayList<>();
-        String method = "getUserSizeOfDataWhiteList(string,uint256)";
-        List<Object> params = Arrays.asList(traceId,dataIndex);
-        long size = getSize(callAddress,contractAddress,method,params);
+        long size = getUserSizeOfDataWhiteList(callAddress,contractAddress,traceId,dataIndex);
 
-        method = "getUserFromDataWhiteList(string,uint256,uint256)";
+        String method = "getUserFromDataWhiteList(string,uint256,uint256)";
         for (long i = 0; i < size; i++) {
             List<Object> args = Arrays.asList(traceId, dataIndex, i);
             TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
             ByteString callResult = callReturn.getCallResult();
-            String userAddress = DecodeUtil.createReadableString(callResult.toByteArray());
+            String userAddress = DecodeUtil.encode(callResult.toByteArray());
             users.add(userAddress.substring(24,64));
         }
         return users;
@@ -889,7 +1071,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         List<Object> args = Arrays.asList(linkName,contractIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,proxyContractAddress,method,args);
         ByteString callResult = callReturn.getCallResult();
-        String address = DecodeUtil.createReadableString(callResult.toByteArray());
+        String address = DecodeUtil.encode(callResult.toByteArray());
         return address.substring(24,64);
     }
 
@@ -909,6 +1091,67 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         }
         return contracts;
     }
+
+    /**
+     * 查询指定区块的的信息
+     * @param number 区块高度
+     * @return 区块信息
+     */
+    public BlockInfo getBlockInfo(long number) {
+        BlockInfo.BlockInfoBuilder blockInfoBuilder = BlockInfo.builder();
+        GrpcAPI.BlockExtention block = super.getBlock(number);
+        if (block == null) {
+            return blockInfoBuilder.build();
+        }
+        return blockInfoBuilder
+                .hash(DecodeUtil.encode(block.getBlockid()))
+                .number(block.getBlockHeader().getRawData().getNumber())
+                .parentHash(DecodeUtil.encode(block.getBlockHeader().getRawData().getParentHash()))
+                .txSize(block.getTransactionsCount())
+                .timestamp(block.getBlockHeader().getRawData().getTimestamp())
+                .size(block.getSerializedSize())
+                .build();
+    }
+
+    /**
+     * 获取指定范围的区块信息
+     * @param start 起始区块高度，包括
+     * @param end 结束区块高度，不包括
+     * @return 区块信息集合
+     */
+    public List<BlockInfo> getBlocksInfo(long start, long end) {
+        ArrayList<BlockInfo> blocksInfo = new ArrayList<>();
+        GrpcAPI.BlockListExtention blocks = super.getBlockByLimitNext(start, end);
+        blocks.getBlockList().forEach(
+                block -> blocksInfo.add(BlockInfo.builder()
+                        .hash(DecodeUtil.encode(block.getBlockid()))
+                        .number(block.getBlockHeader().getRawData().getNumber())
+                        .parentHash(DecodeUtil.encode(block.getBlockHeader().getRawData().getParentHash()))
+                        .txSize(block.getTransactionsCount())
+                        .timestamp(block.getBlockHeader().getRawData().getTimestamp())
+                        .size(block.getSerializedSize())
+                        .build())
+        );
+        return blocksInfo;
+    }
+
+    private List<String> parasAddress(Object[] objects) {
+        List<String> addresses = new ArrayList<>();
+        if (objects.length < 0){
+            return addresses;
+        }
+        if (objects[0] instanceof Object[]) {
+            Object[] temp = (Object[])objects[0];
+            for (Object object : temp) {
+                if (object instanceof byte[]) {
+                    String address = DecodeUtil.encode((byte[]) object);
+                    addresses.add(address);
+                }
+            }
+        }
+        return addresses;
+    }
+
 
     private Map<String,String> dataIntegration(Object[] objects){
         List<String> keys = new ArrayList<>();
@@ -955,14 +1198,6 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         }
     }
 
-    private long getUserSizeOfContractWhiteList(String callAddress, String contractAddress) throws AddressException {
-        String method = "getUserSizeOfContractWhiteList()";
-        List<Object> args = Collections.emptyList();
-        TriggerContractReturn callReturn = triggerConstantContract(callAddress,contractAddress,method,args);
-        ByteString callResult = callReturn.getCallResult();
-        return ByteUtil.byteArrayToLong(callResult.toByteArray());
-    }
-
     private TriggerContractReturn triggerConstantContract(String callAddress, String contractAddress,
                                                           String method, List<Object> args) throws AddressException {
         return triggerContract(callAddress,null,contractAddress,method,args,true);
@@ -987,48 +1222,5 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
                 DecodeUtil.decode(privateKey), triggerContractParam);
 
         return result;
-    }
-
-    /**
-     * 查询指定区块的的信息
-     * @param number 区块高度
-     * @return 区块信息
-     */
-    public BlockInfo getBlockInfo(long number) {
-        BlockInfo.BlockInfoBuilder blockInfoBuilder = BlockInfo.builder();
-        GrpcAPI.BlockExtention block = super.getBlock(number);
-        if (block == null) {
-           return blockInfoBuilder.build();
-        }
-        return blockInfoBuilder
-                .hash(DecodeUtil.encode(block.getBlockid()))
-                .number(block.getBlockHeader().getRawData().getNumber())
-                .parentHash(DecodeUtil.encode(block.getBlockHeader().getRawData().getParentHash()))
-                .txSize(block.getTransactionsCount())
-                .timestamp(block.getBlockHeader().getRawData().getTimestamp())
-                .size(block.getSerializedSize())
-                .build();
-    }
-
-    /**
-     * 获取指定范围的区块信息
-     * @param start 起始区块高度，包括
-     * @param end 结束区块高度，不包括
-     * @return 区块信息集合
-     */
-    public List<BlockInfo> getBlocksInfo(long start, long end) {
-        ArrayList<BlockInfo> blocksInfo = new ArrayList<>();
-        GrpcAPI.BlockListExtention blocks = super.getBlockByLimitNext(start, end);
-        blocks.getBlockList().forEach(
-                block -> blocksInfo.add(BlockInfo.builder()
-                        .hash(DecodeUtil.encode(block.getBlockid()))
-                        .number(block.getBlockHeader().getRawData().getNumber())
-                        .parentHash(DecodeUtil.encode(block.getBlockHeader().getRawData().getParentHash()))
-                        .txSize(block.getTransactionsCount())
-                        .timestamp(block.getBlockHeader().getRawData().getTimestamp())
-                        .size(block.getSerializedSize())
-                        .build())
-        );
-        return blocksInfo;
     }
 }

@@ -1,6 +1,7 @@
 package cn.ledgeryi.sdk.tests.stcc;
 
 import cn.ledgeryi.protos.contract.SmartContractOuterClass;
+import cn.ledgeryi.sdk.common.AccountYi;
 import cn.ledgeryi.sdk.common.utils.DecodeUtil;
 import cn.ledgeryi.sdk.common.utils.JsonFormatUtil;
 import cn.ledgeryi.sdk.contract.compiler.exception.ContractException;
@@ -14,10 +15,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 溯源合约测试
@@ -28,7 +26,7 @@ public class TracingTests {
     private static String privateKey = "ec19148056c4cfc5fc1b1923b8bb657e1e481a8f092415d5af96dd60f3e6806d";
     private static String ownerAddress = "42979c83d087b612fdc82c560b3131b9c7f34a76";
 
-    private static String contractAddress = "b08ac4b7e79e16c3e0e63708332a38aea4805f73";
+    private static String contractAddress = "10054e338a80172adbc61e8c524cd4f3ba67390a";
 
     private LedgerYiStccApiService ledgerYiStccApiService;
 
@@ -89,6 +87,18 @@ public class TracingTests {
     }
 
     @Test
+    public void addUsersToContractWhiteList() throws AddressException {
+        ArrayList<String> users = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            AccountYi account = ledgerYiStccApiService.createDefaultAccount();
+            users.add(account.getAddress());
+        }
+
+        boolean result = ledgerYiStccApiService.addUsersToContractWhiteList(ownerAddress, privateKey, contractAddress, users);
+        System.out.println(result);
+    }
+
+    @Test
     public void removeUserFromContractWhiteList() throws AddressException {
         String user = "309ae8dc03a1ff131cc75bf5d0f91eee67d8eff0";
         boolean result = ledgerYiStccApiService.removeUserToContractWhiteList(ownerAddress, privateKey, contractAddress, user);
@@ -97,8 +107,18 @@ public class TracingTests {
 
     @Test
     public void getUsersFromContractWhiteList() throws AddressException {
-        List<String> usersFromContractWhiteList = ledgerYiStccApiService.getUsersFromContractWhiteList(ownerAddress, contractAddress);
-        System.out.println(usersFromContractWhiteList);
+        List<String> users = ledgerYiStccApiService.getUsersFromContractWhiteList(ownerAddress, contractAddress);
+        System.out.println(users.size());
+        System.out.println(users);
+    }
+
+    @Test
+    public void getBatchUsersFromContractWhiteList() throws AddressException, CallContractExecption {
+        int start = 49;
+        int size = 100;
+        List<String> users = ledgerYiStccApiService.getUsersFromContractWhiteList(ownerAddress, contractAddress,start,size);
+        System.out.println(users.size());
+        System.out.println(users);
     }
 
     @Test
@@ -139,7 +159,7 @@ public class TracingTests {
     @Test
     public void getData() throws AddressException {
         String traceId = "001";
-        long dataIndex = 2;
+        long dataIndex = 0;
         Map<String, String> dataInfo = ledgerYiStccApiService.getDataInfo(ownerAddress, contractAddress, traceId, dataIndex);
         System.out.println(dataInfo.toString());
     }
@@ -173,7 +193,7 @@ public class TracingTests {
         data.put("k1","6");
         data.put("k2","7");
         String traceId = "001";
-        long dataVersion = 2;
+        long dataVersion = 1;
         boolean verify = false;
         try {
             verify = ledgerYiStccApiService.traceDataVerifyPermissionless(ownerAddress,
@@ -188,11 +208,6 @@ public class TracingTests {
 
     @Test
     public void addUserToDataWhiteList() throws AddressException {
-//        ownerAddress = "fbb859ffc4a0a2274fd35b121cd5a22d8946bf72";
-//        privateKey = "7d25da08a45bc9a0841171fbf2048e41a9840fcca14184aba06f7769fff89fa0";
-
-//        ownerAddress = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
-//        privateKey = "3f177d8a0f3725b34b7866f080e43696b4612c4f295cf277fae7a9721ed770d1";
         String traceId = "001";
         long dataIndex = 0;
         String user = "338f60e4d99feea0764ad49264dfd6dc3ed1d724";
@@ -202,10 +217,40 @@ public class TracingTests {
     }
 
     @Test
+    public void addUsersToDataWhiteList() throws AddressException, CallContractExecption {
+        String traceId = "001";
+        long dataIndex = 0;
+        ArrayList<String> users = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            AccountYi account = ledgerYiStccApiService.createDefaultAccount();
+            users.add(account.getAddress());
+        }
+        boolean result = ledgerYiStccApiService.addUsersToDataWhiteList(ownerAddress,
+                privateKey, contractAddress, traceId, dataIndex, users);
+        System.out.println(result);
+    }
+
+    @Test
     public void getUsersFromDataWhiteList() throws AddressException {
         String traceId = "001";
         long dataIndex = 0;
+        long start = System.currentTimeMillis();
         List<String> users = ledgerYiStccApiService.getUsersFromDataWhiteList(ownerAddress, contractAddress, traceId, dataIndex);
+        System.out.println(System.currentTimeMillis() - start);
+        System.out.println(users.size());
+        System.out.println(users.toString());
+    }
+
+    @Test
+    public void getBatchUsersFromDataWhiteList() throws AddressException, CallContractExecption {
+        String traceId = "001";
+        long dataIndex = 0;
+        int start = 0;
+        int size = 100;
+        long startTime = System.currentTimeMillis();
+        List<String> users = ledgerYiStccApiService.getUsersFromDataWhiteList(ownerAddress, contractAddress, traceId, dataIndex, start, size);
+        System.out.println(System.currentTimeMillis() - startTime);
+        System.out.println(users.size());
         System.out.println(users.toString());
     }
 
@@ -224,7 +269,7 @@ public class TracingTests {
     @Test
     public void getStatusOfDataWhite() throws AddressException {
         String traceId = "001";
-        long dataIndex = 0;
+        long dataIndex = 1;
         boolean statusOfDataWhite = ledgerYiStccApiService.getStatusOfDataWhite(ownerAddress,
                 contractAddress, traceId, dataIndex);
         System.out.println(statusOfDataWhite);
@@ -233,14 +278,14 @@ public class TracingTests {
     @Test
     public void disableStatusOfDataWhite() throws AddressException {
         String traceId = "001";
-        long dataIndex = 0;
+        long dataIndex = 1;
         ledgerYiStccApiService.disableStatusOfDataWhite(ownerAddress, privateKey, contractAddress, traceId, dataIndex);
     }
 
     @Test
     public void enableStatusOfDataWhite() throws AddressException {
         String traceId = "001";
-        long dataIndex = 0;
+        long dataIndex = 1;
         ledgerYiStccApiService.enableStatusOfDataWhite(ownerAddress, privateKey, contractAddress, traceId, dataIndex);
     }
 }
