@@ -343,9 +343,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         if (data.size() != keys.size()){
             throw new CallContractExecption("Data storage failed, data length is inconsistent");
         }
-        Set<String> keySets = data.keySet();
-        for (String key : keySets) {
-            if (keys.contains(key)) {
+        for (String key : keys) {
+            if (data.containsKey(key)) {
                 params.add(data.get(key));
             } else {
                 throw new CallContractExecption("Data storage failed, data keys not include key:" + key);
@@ -393,9 +392,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         if (data.size() != keys.size()){
             throw new CallContractExecption("Data storage failed, data length is inconsistent");
         }
-        Set<String> keySets = data.keySet();
-        for (String key : keySets) {
-            if (keys.contains(key)) {
+        for (String key : keys) {
+            if (data.containsKey(key)) {
                 params.add(data.get(key));
             } else {
                 throw new CallContractExecption("Data storage failed, data keys not include key:" + key);
