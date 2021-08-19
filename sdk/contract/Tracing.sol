@@ -166,6 +166,10 @@ contract Tracing {
         return dataList[keccak256(abi.encodePacked(_traceUid))].getTraceData(keys._values,_index);
     }
 
+    function getDataInfoLength(string memory _traceUid) external view returns (uint256) {
+        return dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length;
+    }
+
     function addUsersToDataWhiteList(string memory _traceUid, uint256 _index, address[] memory _users) external onlyDataOwner(_traceUid,_index) returns (bool) {
         for (uint256 i = 0; i < _users.length; i++) {
             require(!dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].contains(_users[i]), "The user already exist");

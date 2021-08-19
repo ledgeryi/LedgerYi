@@ -464,6 +464,19 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
+     * 溯源合约：获取存证数据的总次数
+     * @param callAddress 合约调用者
+     * @param contractAddress 合约地址
+     * @param traceId 溯源ID
+     * @throws AddressException
+     */
+    public long getTraceDataLength(String callAddress, String contractAddress, String traceId) throws AddressException {
+        String method = "getDataInfoLength(string)";
+        List<Object> params = Collections.singletonList(traceId);
+        return getSize(callAddress,contractAddress,method,params);
+    }
+
+    /**
      * 溯源合约：获取某一个版本的存证数据
      * @param callAddress 合约调用者
      * @param contractAddress 合约地址
@@ -1086,6 +1099,22 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         for (long index = 0; index < contractSize; index++) {
             String contract = getContractInTraceLink(callAddress, proxyContractAddress, linkName, index);
             contracts.add(contract);
+        }
+        return contracts;
+    }
+
+    /**
+     * 溯源合约：获取所有环节的所有合约
+     * @param callAddress 调用者地址
+     * @param proxyContractAddress 代理合约地址
+     * @throws AddressException
+     */
+    public Map<String, List<String>> getAllContractsOfTrace(String callAddress, String proxyContractAddress)
+            throws AddressException {
+        Map<String, List<String>> contracts = new HashMap<>();
+        for (String linkName : getTraceLinkNames(callAddress, proxyContractAddress)) {
+            List<String> traceContracts = getAllContactsOfTraceLink(callAddress,proxyContractAddress,linkName);
+            contracts.put(linkName,traceContracts);
         }
         return contracts;
     }

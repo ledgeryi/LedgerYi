@@ -120,8 +120,6 @@ contract Tracing {
         return users;
     }
 
-
-
     function getUserFromContractWhiteList(uint256 _index) external view returns (address) {
         require(_index < contractWhiteList.length(), "User index out of bounds");
         return contractWhiteList.at(_index);
@@ -146,7 +144,7 @@ contract Tracing {
         return _key;
     }
 
-    function dataVerify(string memory _traceUid, uint256 _index,string[] memory _dataInfos) external view returns (bool) {
+    function dataVerify(string memory _traceUid, uint256 _index, string[] memory _dataInfos) external view returns (bool) {
         require(0 != dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Trace id invalid");
         require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
         return dataList[keccak256(abi.encodePacked(_traceUid))].traceDataVerify( _index, keys._values, _dataInfos);
@@ -164,6 +162,10 @@ contract Tracing {
         require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
         require(!dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].status || dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].contains(msg.sender), "Caller is not in whiteList");
         return dataList[keccak256(abi.encodePacked(_traceUid))].getTraceData(keys._values,_index);
+    }
+
+    function getDataInfoLength(string memory _traceUid) external view returns (uint256) {
+        return dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length;
     }
 
     function addUsersToDataWhiteList(string memory _traceUid, uint256 _index, address[] memory _users) external onlyDataOwner(_traceUid,_index) returns (bool) {

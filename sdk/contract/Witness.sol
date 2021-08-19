@@ -161,6 +161,10 @@ contract Witness {
         return dataList.getData(_index);
     }
 
+    function getDataInfoLength() external view returns (uint256) {
+        return dataList._datas.length;
+    }
+
     function addUsersToDataWhiteList(uint256 _index, address[] memory _users) external onlyDataOwner(_index) returns (bool) {
         require(_index < dataList._datas.length, "Data index out of bounds");
         for (uint256 i = 0; i < _users.length; i++) {
