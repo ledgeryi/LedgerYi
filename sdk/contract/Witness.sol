@@ -86,7 +86,7 @@ contract Witness {
     function addUsersToContractWhiteList(address[] memory _users) external onlyContractOwner returns (bool) {
         require(contractWhiteList.status, "The status of white list is disabel");
         for (uint256 i = 0; i < _users.length; i++) {
-            require(contractWhiteList.contains(_users[i]), "The user already exist");
+            require(!contractWhiteList.contains(_users[i]), "The user already exist");
             contractWhiteList.addUser(_users[i]);
         }
         return true;
