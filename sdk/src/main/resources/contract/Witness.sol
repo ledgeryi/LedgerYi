@@ -97,6 +97,15 @@ contract Witness {
         return contractWhiteList.addUser(_user);
     }
 
+    function removeUsersFromContractWhiteList(address[] memory _users) external onlyContractOwner returns (bool) {
+        for (uint256 i = 0; i < _users.length; i++) {
+            if(contractWhiteList.contains(_users[i])){
+                contractWhiteList.remove(_users[i]);
+            }
+        }
+        return true;
+    }
+
     function removeUserFromContractWhiteList(address _user) external onlyContractOwner returns (bool) {
         require(contractWhiteList.contains(_user), "The user does not exist");
         return contractWhiteList.remove(_user);
@@ -177,6 +186,16 @@ contract Witness {
     function addUserToDataWhiteList(uint256 _index, address _user) public onlyDataOwner(_index) returns (bool) {
         require(_index < dataList._datas.length, "Data index out of bounds");
         return dataWhiteList[keccak256(abi.encodePacked(_index))].addUser(_user);
+    }
+
+    function removeUsersFromDataWhiteList(uint256 _index, address[] memory _users) external onlyDataOwner(_index) returns (bool) {
+        require(_index < dataList._datas.length, "Data index out of bounds");
+        for (uint256 i = 0; i < _users.length; i++) {
+            if(dataWhiteList[keccak256(abi.encodePacked(_index))].contains(_users[i])) {
+                dataWhiteList[keccak256(abi.encodePacked(_index))].remove(_users[i]);
+            }
+        }
+        return true;
     }
 
     function removeUserFromDataWhiteList(uint256 _index, address _user) external onlyDataOwner(_index) returns (bool) {

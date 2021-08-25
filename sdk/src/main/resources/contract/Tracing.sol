@@ -96,6 +96,15 @@ contract Tracing {
         return contractWhiteList.addUser(_user);
     }
 
+    function removeUsersFromContractWhiteList(address[] memory _users) external onlyContractOwner returns (bool) {
+        for (uint256 i = 0; i < _users.length; i++) {
+            if(contractWhiteList.contains(_users[i])){
+                contractWhiteList.remove(_users[i]);
+            }
+        }
+        return true;
+    }
+
     function removeUserFromContractWhiteList(address _user) external onlyContractOwner returns (bool) {
         require(contractWhiteList.contains(_user), "The user does not exist");
         return contractWhiteList.remove(_user);
@@ -144,7 +153,7 @@ contract Tracing {
         return _key;
     }
 
-    function dataVerify(string memory _traceUid, uint256 _index, string[] memory _dataInfos) external view returns (bool) {
+    function dataVerify(string memory _traceUid, uint256 _index,string[] memory _dataInfos) external view returns (bool) {
         require(0 != dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Trace id invalid");
         require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
         return dataList[keccak256(abi.encodePacked(_traceUid))].traceDataVerify( _index, keys._values, _dataInfos);
@@ -180,6 +189,17 @@ contract Tracing {
         require(0 != dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Trace id invalid");
         require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
         return dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].addUser(_user);
+    }
+
+    function removeUsersFromDataWhiteList(string memory _traceUid, uint256 _index, address[] memory _users) external onlyDataOwner(_traceUid,_index) returns (bool) {
+        require(0 != dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Trace id invalid");
+        require(_index < dataList[keccak256(abi.encodePacked(_traceUid))]._datas.length, "Data index out of bounds");
+        for (uint256 i = 0; i < _users.length; i++) {
+            if(dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].contains(_users[i])){
+                dataWhiteList[keccak256(abi.encodePacked(_traceUid))][keccak256(abi.encodePacked(_index))].remove(_users[i]);
+            }
+        }
+        return true;
     }
 
     function removeUserFromDataWhiteList(string memory _traceUid, uint256 _index, address _user) external onlyDataOwner(_traceUid,_index) returns (bool) {

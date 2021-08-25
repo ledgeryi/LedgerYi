@@ -321,7 +321,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 返回验证结果
      */
     public boolean traceDataVerify(String callAddress, String contractAddress,
-                                     String traceId, long dataVersion, Map<String,String> data) throws AddressException {
+                                   String traceId, long dataVersion, Map<String,String> data) throws AddressException {
         Map<String, String> dataInfo = getDataInfo(callAddress, contractAddress, traceId, dataVersion);
         return data != null && data.equals(dataInfo);
     }
@@ -336,7 +336,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 返回验证结果
      */
     public boolean traceDataVerifyPermissionless(String callAddress, String contractAddress,
-                                   String traceId, long dataVersion, Map<String,String> data) throws CallContractExecption, AddressException {
+                                                 String traceId, long dataVersion, Map<String,String> data) throws CallContractExecption, AddressException {
         String method = "dataVerify(string,uint256,string[])";
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
@@ -385,7 +385,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 返回验证结果
      */
     public boolean witnessDataVerifyPermissionless(String callAddress, String contractAddress,
-                                   long dataVersion, Map<String,String> data) throws CallContractExecption, AddressException {
+                                                   long dataVersion, Map<String,String> data) throws CallContractExecption, AddressException {
         String method = "dataVerify(uint256,string[])";
         List<Object> params = new ArrayList<>();
         List<String> keys = getWitnessInfo(callAddress, contractAddress);
@@ -565,7 +565,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param users 被添加的批量用户地址
      */
     public boolean addUsersToContractWhiteList(String callAddress, String privateKey,
-                                              String contractAddress, List<String> users) throws AddressException {
+                                               String contractAddress, List<String> users) throws AddressException {
         if (users.size() > 50) {
             return false;
         }
@@ -592,6 +592,28 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         verifyAddress(user);
         String method = "removeUserFromContractWhiteList(address)";
         List<Object> args = Collections.singletonList(user);
+        TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = contractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
+    }
+
+    /**
+     * 存证合约、溯源合约：从合约白名单移除批量用户
+     * @param callAddress 合约拥有者
+     * @param privateKey 合约拥有者私钥
+     * @param contractAddress 合约地址
+     * @param users 被移除的用户地址
+     */
+    public boolean removeUsersToContractWhiteList(String callAddress, String privateKey,
+                                                  String contractAddress, List<String> users) throws AddressException, CallContractExecption {
+        if (users.size() > 50) {
+            throw new CallContractExecption("The size of users cannot exceed 50");
+        }
+        for (String user : users) {
+            verifyAddress(user);
+        }
+        String method = "removeUsersFromContractWhiteList(address[])";
+        List<Object> args = Collections.singletonList(JSONObject.toJSON(users));
         TriggerContractReturn contractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
         ByteString contractResult = contractReturn.getCallResult();
         return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
@@ -679,7 +701,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param users 被添加的批量用户地址
      */
     public boolean addUsersToDataWhiteList(String callAddress, String privateKey,
-                                          String contractAddress, long dataIndex, List<String> users) throws AddressException, CallContractExecption {
+                                           String contractAddress, long dataIndex, List<String> users) throws AddressException, CallContractExecption {
         if (users.size() > 50) {
             throw new CallContractExecption("The size of users cannot exceed 50");
         }
@@ -723,8 +745,8 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @param users 被添加的批量用户地址
      */
     public boolean addUsersToDataWhiteList(String callAddress, String privateKey,
-                                          String contractAddress, String traceId,
-                                          long dataIndex, List<String> users) throws AddressException, CallContractExecption {
+                                           String contractAddress, String traceId,
+                                           long dataIndex, List<String> users) throws AddressException, CallContractExecption {
         if (users.size() > 50) {
             throw new CallContractExecption("The size of users cannot exceed 50");
         }
@@ -757,6 +779,29 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
     }
 
     /**
+     * 存证合约：向某次存证数据白名单移除批量用户
+     * @param callAddress 数据拥有者地址
+     * @param privateKey 数据拥有者私钥
+     * @param contractAddress 合约地址
+     * @param dataIndex 数据索引（版本号）
+     * @param users 被移除的用户
+     */
+    public boolean removeUsersToDataWhiteList(String callAddress, String privateKey,
+                                              String contractAddress,long dataIndex, List<String> users) throws AddressException, CallContractExecption {
+        if (users.size() > 50) {
+            throw new CallContractExecption("The size of users cannot exceed 50");
+        }
+        for (String user : users) {
+            verifyAddress(user);
+        }
+        String method = "removeUsersFromDataWhiteList(uint256,address[])";
+        List<Object> args = Arrays.asList(dataIndex,JSONObject.toJSON(users));
+        TriggerContractReturn triggerContractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = triggerContractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
+    }
+
+    /**
      * 溯源合约：向某次存证数据白名单移除用户
      * @param callAddress 数据拥有者地址
      * @param privateKey 数据拥有者私钥
@@ -771,6 +816,31 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
         verifyAddress(user);
         String method = "removeUserFromDataWhiteList(string,uint256,address)";
         List<Object> args = Arrays.asList(traceId,dataIndex,user);
+        TriggerContractReturn triggerContractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
+        ByteString contractResult = triggerContractReturn.getCallResult();
+        return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
+    }
+
+    /**
+     * 溯源合约：向某次存证数据白名单移除批量用户
+     * @param callAddress 数据拥有者地址
+     * @param privateKey 数据拥有者私钥
+     * @param contractAddress 合约地址
+     * @param dataIndex 数据索引（版本号）
+     * @param traceId 溯源ID
+     * @param users 被移除的用户
+     */
+    public boolean removeUsersToDataWhiteList(String callAddress, String privateKey,
+                                              String contractAddress,String traceId,
+                                              long dataIndex, List<String> users) throws AddressException, CallContractExecption {
+        if (users.size() > 50) {
+            throw new CallContractExecption("The size of users cannot exceed 50");
+        }
+        for (String user : users) {
+            verifyAddress(user);
+        }
+        String method = "removeUsersFromDataWhiteList(string,uint256,address[])";
+        List<Object> args = Arrays.asList(traceId,dataIndex,JSONObject.toJSON(users));
         TriggerContractReturn triggerContractReturn = triggerContract(callAddress,privateKey,contractAddress,method,args);
         ByteString contractResult = triggerContractReturn.getCallResult();
         return ByteUtil.bytesToBigInteger(contractResult.toByteArray()).equals(BigInteger.ONE);
@@ -1077,7 +1147,7 @@ public class LedgerYiStccApiService extends LedgerYiApiService {
      * @return 溯源合约地址
      */
     public String getContractInTraceLink(String callAddress, String proxyContractAddress,
-                                              String linkName, long contractIndex) throws AddressException {
+                                         String linkName, long contractIndex) throws AddressException {
         String method = "getTraceContractAddress(string,uint256)";
         List<Object> args = Arrays.asList(linkName,contractIndex);
         TriggerContractReturn callReturn = triggerConstantContract(callAddress,proxyContractAddress,method,args);
