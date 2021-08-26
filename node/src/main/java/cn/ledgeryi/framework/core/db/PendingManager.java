@@ -1,6 +1,5 @@
 package cn.ledgeryi.framework.core.db;
 
-import cn.ledgeryi.chainbase.core.capsule.BlockCapsule;
 import cn.ledgeryi.chainbase.core.capsule.TransactionCapsule;
 import cn.ledgeryi.chainbase.core.db.TransactionTrace;
 import lombok.Getter;
@@ -15,10 +14,16 @@ public class PendingManager implements AutoCloseable {
   @Getter
   private List<TransactionCapsule> tmpTransactions = new ArrayList<>();
   private Manager dbManager;
+  private long timeout = 60_000;
 
-  public PendingManager(Manager db, BlockCapsule block) {
+  public PendingManager(Manager db) {
     this.dbManager = db;
-    tmpTransactions.addAll(block.getTransactions());
+    db.getPendingTransactions().forEach(transactionCapsule -> {
+      if (System.currentTimeMillis() - transactionCapsule.getTime() < timeout) {
+        tmpTransactions.add(transactionCapsule);
+      }
+    });
+    db.getPendingTransactions().clear();
     db.getSession().reset();
   }
 
@@ -27,7 +32,8 @@ public class PendingManager implements AutoCloseable {
 
     for (TransactionCapsule tx : tmpTransactions) {
       try {
-        if (tx.getTxTrace() != null) {
+        if (tx.getTxTrace() != null &&
+                tx.getTxTrace().getTimeResultType().equals(TransactionTrace.TimeResultType.NORMAL)) {
           dbManager.getRepushTransactions().put(tx);
         }
       } catch (InterruptedException e) {

@@ -216,7 +216,7 @@ public class Manager {
         return this.masterScheduleStore;
     }
 
-    private List<TransactionCapsule> getPendingTransactions() {
+    public List<TransactionCapsule> getPendingTransactions() {
         return this.pendingTransactions;
     }
 
@@ -592,8 +592,7 @@ public class Manager {
             DupTransactionException, TransactionExpirationException, BadNumberBlockException,
             BadBlockException, NonCommonBlockException, ReceiptCheckErrException, AuthorizeException {
         long start = System.currentTimeMillis();
-        //PendingManager pm = new PendingManager(this, block);
-        try (PendingManager pm = new PendingManager(this, block))  {
+        try (PendingManager pm = new PendingManager(this))  {
             if (!block.generatedByMyself) {
                 if (!block.validateSignature(this.dynamicPropertiesStore, this.accountStore)) {
                     log.error("The signature is not validated.");
